@@ -52,3 +52,18 @@ Unless specifically added and verified in code:
 
 ## Local bootstrap fallback
 If lifecycle scripts fail in restricted environments, contributors can use `npm install --ignore-scripts` for local verification only, then run typecheck/tests manually. Production/release flows should keep normal install behavior.
+
+
+## Verification
+
+Preferred contributor flow:
+
+```bash
+npm run verify:changelog-hygiene
+npm run verify:core
+npm run verify:all
+```
+
+- `verify:core` reports deterministic `PASS/WARN/FAIL` status across changelog hygiene, typecheck, lint, and targeted control-plane/probe/governed-routing suites.
+- `verify:all` runs strict mode and fails for both repository failures and missing required toolchain/dependencies.
+- In restricted local environments, `npm install --ignore-scripts` is a local diagnosis fallback only and must not be used for release packaging or CI baselines.

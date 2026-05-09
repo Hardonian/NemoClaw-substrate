@@ -1,0 +1,47 @@
+# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
+name: Verify
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.16.0
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Changelog hygiene
+        run: npm run verify:changelog-hygiene
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Typecheck CLI
+        run: npm run typecheck:cli
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Targeted verification suites
+        run: |
+          npm run verify:control-plane
+          npm run verify:local-probes
+          npm run verify:remote-probes
+          npm run verify:governed-routing
+
+      - name: Clean git diff check
+        run: git diff --check
