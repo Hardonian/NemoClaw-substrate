@@ -57,3 +57,7 @@ Opt-in governed provider routing is available behind `NEMOCLAW_GOVERNED_ROUTING=
 - HTTP remote execution adapter is scaffolded/guarded only; SSH execution is not implemented.
 - No background daemon, no distributed orchestration, no Dynamo integration, no automatic provider/worker routing changes.
 - Policy + approval gates block attempts before transport; receipts/events/diagnostics capture outcomes.
+
+## 2026-05-09 guarded dispatch integration
+- Integrated heterogeneous bridge at runtime/provider dispatch seam behind explicit flags.
+- Receipts/events are emitted only when governed heterogeneous path is active.

@@ -201,3 +201,5 @@ This phase adds explicit manual local probe execution and diagnostics summaries,
 - Remote candidates are excluded when policy denies or requires unprovided approval.
 - No SSH execution, no Dynamo/GPU balancing claims, and no background daemon/autonomous worker routing.
 - Telemetry confidence and degraded states reflect observed registry/probe data only.
+
+- [x] Integrate heterogeneous bridge at runtime/provider dispatch seam with strict flag gating and explicit blocked/degraded outcomes (2026-05-09).

@@ -30,3 +30,7 @@ Default NemoClaw provider routing remains unchanged unless `NEMOCLAW_GOVERNED_RO
 - Remote candidates are excluded when policy denies or requires unprovided approval.
 - No SSH execution, no Dynamo/GPU balancing claims, and no background daemon/autonomous worker routing.
 - Telemetry confidence and degraded states reflect observed registry/probe data only.
+
+## 2026-05-09 dispatch boundary wiring
+- The runtime/provider dispatch seam now calls the heterogeneous bridge through `runtime-dispatch-integration.ts` under explicit flags.
+- Disabled or partially enabled flags preserve existing local provider dispatch exactly.
