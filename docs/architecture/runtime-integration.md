@@ -51,3 +51,9 @@ Opt-in governed provider routing is available behind `NEMOCLAW_GOVERNED_ROUTING=
 - Remote execution remains disabled in this phase; governed routing remains opt-in.
 - Telemetry fields can be unavailable/stale and are surfaced truthfully without fabrication.
 - Dynamo integration is planned only and not implemented.
+
+## 2026-05-09 guarded remote execution adapter update
+- Added opt-in remote execution seam behind `NEMOCLAW_REMOTE_EXECUTION=1`.
+- HTTP remote execution adapter is scaffolded/guarded only; SSH execution is not implemented.
+- No background daemon, no distributed orchestration, no Dynamo integration, no automatic provider/worker routing changes.
+- Policy + approval gates block attempts before transport; receipts/events/diagnostics capture outcomes.

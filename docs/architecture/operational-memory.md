@@ -17,3 +17,6 @@ Operational memory is append-only, supervised, inspectable, and deterministic. I
 
 ## 2026-05-09 adapter/dry-run update
 Worker/provider adapter contracts and scheduler-to-provider dry-run bridge are implemented for diagnostics and receipt/event emission only. Live provider routing is unchanged. Remote execution, Dynamo adapters, and GPU telemetry remain planned future work.
+
+## 2026-05-09 remote execution memory update
+- Remote execution attempts now emit receipt-linked operational events for disabled, denied, approval-required, degraded, failed, and succeeded outcomes.
