@@ -29,7 +29,8 @@ describe("remote runtime probes", () => {
     vi.stubGlobal("fetch", fetchSpy);
     const out = await runRemoteHttpHealthProbe({ requestId: "r1b", nodeId: "n1", runtime: "vllm", endpoint: "https://user:pass@worker/health", nowIso: "2026-05-09T00:00:00.000Z" });
     expect(out.status).toBe("succeeded");
-    expect(String(fetchSpy.mock.calls[0]?.[0])).toBe("https://worker/health");
+    const fetchUrl = (fetchSpy.mock.calls as unknown as Array<[URL]>)[0]?.[0];
+    expect(String(fetchUrl)).toBe("https://worker/health");
   });
 
   it("handles auth rejection", async () => {

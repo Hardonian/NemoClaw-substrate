@@ -15,10 +15,14 @@ import {
 } from "./execution-plans";
 import type { NodeDescriptor } from "./types";
 
-const allowPolicy: PolicyBundle = { version: "1", bundleId: "b1", defaultEffect: "allow", rules: [] };
-const denyPolicy: PolicyBundle = { version: "1", bundleId: "b2", defaultEffect: "deny", rules: [] };
-const approvalPolicy: PolicyBundle = { version: "1", bundleId: "b3", defaultEffect: "deny", rules: [{ id: "a", order: 1, description: "a", effect: "approval_required", reasonCode: "policy_rule_approval_required", matches: () => true }] };
+const allowPolicy: PolicyBundle = { version: "1", id: "b1", defaultEffect: "allow", rules: [] };
+const denyPolicy: PolicyBundle = { version: "1", id: "b2", defaultEffect: "deny", rules: [] };
+const approvalPolicy: PolicyBundle = { version: "1", id: "b3", defaultEffect: "deny", rules: [{ id: "a", order: 1, description: "a", effect: "approval_required", reasonCode: "policy_rule_approval_required", matches: () => true }] };
 const now = "2026-05-09T00:00:00.000Z";
+
+const receiptLineage = (receipt: unknown) =>
+  (receipt as { executionLineage?: { executionPlanId?: string; executionApprovalId?: string } })
+    .executionLineage;
 
 function trustedWorker(): NodeDescriptor {
   return {
@@ -45,7 +49,7 @@ function approvedPlan() {
   const registry = createDeviceRegistry();
   registry.registerNode(node);
   const request = { version: "1", requestId: "r-plan", receivedAt: now, source: "test", actor: "operator", action: "worker:execute", constraints: [], metadata: { target: "worker-1" } };
-  const policy = evaluatePolicy(approvalPolicy, { request, actionClass: "runtime" });
+  const policy = evaluatePolicy(approvalPolicy, { request, actionClass: "remote_node" });
   const intent = { requestId: "r-plan", actor: "operator", action: "worker:execute", command: "run:model", targetNodeId: "worker-1", executionMode: "remote" as const, metadata: {} };
   const plan = createExecutionPlan({
     intent,
@@ -74,7 +78,7 @@ describe("remote execution", () => {
     const transport = { execute: vi.fn().mockResolvedValue({ status: 200, body: JSON.stringify({ status: "ok", output: "done" }) }) };
     const out = await runRemoteExecution({ request: { requestId: "r-default", nowIso: now, action: "worker:execute", command: "echo hi", targetEndpoint: "https://worker", approved: true }, config: { enabled: true, source: "env" }, transport, policyBundle: allowPolicy, registry: createDeviceRegistry() });
     expect(out.status).toBe("succeeded");
-    expect(out.receipt.executionLineage).toBeUndefined();
+    expect(receiptLineage(out.receipt)).toBeUndefined();
     expect(transport.execute).toHaveBeenCalledTimes(1);
   });
 
@@ -218,8 +222,8 @@ describe("remote execution", () => {
     const transport = { execute: vi.fn().mockResolvedValue({ status: 200, body: JSON.stringify({ status: "ok", output: "lineage" }) }) };
     const out = await runRemoteExecution({ request: { requestId: "r-plan", nowIso: now, action: "worker:execute", command: "run:model", nodeId: "worker-1", approved: true, executionPlanRequired: true }, config: { enabled: true, source: "env" }, transport, policyBundle: approvalPolicy, registry, executionPlan: plan, executionApproval: approval });
     expect(out.status).toBe("succeeded");
-    expect(out.receipt.executionLineage?.executionPlanId).toBe(plan.planId);
-    expect(out.receipt.executionLineage?.executionApprovalId).toBe(approval.approvalId);
+    expect(receiptLineage(out.receipt)?.executionPlanId).toBe(plan.planId);
+    expect(receiptLineage(out.receipt)?.executionApprovalId).toBe(approval.approvalId);
     expect(transport.execute).toHaveBeenCalledTimes(1);
   });
 
@@ -243,7 +247,7 @@ describe("remote execution", () => {
   it("diagnostics expose execution-plan authorization lineage", async () => {
     const { registry, plan, approval } = approvedPlan();
     const out = await runRemoteExecution({ request: { requestId: "r-plan", nowIso: now, action: "worker:execute", command: "run:model", nodeId: "worker-1", approved: true, executionPlanRequired: true }, config: { enabled: true, source: "env" }, transport: { execute: vi.fn().mockResolvedValue({ status: 200, body: JSON.stringify({ status: "ok" }) }) }, policyBundle: approvalPolicy, registry, executionPlan: plan, executionApproval: approval });
-    const diagnostics = summarizeRemoteExecutionDiagnostics({ enabled: true, source: "env" }, { status: out.status, receiptId: out.receipt.receiptId, lineage: out.receipt.executionLineage }).join("\n");
+    const diagnostics = summarizeRemoteExecutionDiagnostics({ enabled: true, source: "env" }, { status: out.status, receiptId: out.receipt.receiptId, lineage: receiptLineage(out.receipt) }).join("\n");
     expect(diagnostics).toContain("Execution plan:");
     expect(diagnostics).toContain("Approval state: recorded");
     expect(diagnostics).toContain("Authorization state: recorded");

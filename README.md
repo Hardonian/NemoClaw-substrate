@@ -32,6 +32,16 @@ The fork prioritizes deterministic and auditable control over opaque autonomy. I
 - PR verification/reporting guide: [docs/contributing/pr-template-guide.md](docs/contributing/pr-template-guide.md)
 - Branch strategy: [docs/contributing/branch-strategy.md](docs/contributing/branch-strategy.md)
 
+## Security hardening doctrine
+
+- Security threat model: [docs/architecture/security-threat-model.md](docs/architecture/security-threat-model.md)
+- Security policy model: [docs/architecture/security-policy-model.md](docs/architecture/security-policy-model.md)
+- Transport security: [docs/architecture/transport-security.md](docs/architecture/transport-security.md)
+- Secret redaction doctrine: [docs/architecture/secret-redaction-doctrine.md](docs/architecture/secret-redaction-doctrine.md)
+- Command execution safety: [docs/architecture/command-execution-safety.md](docs/architecture/command-execution-safety.md)
+- Local-stack security profiles: [docs/architecture/local-stack-security-profiles.md](docs/architecture/local-stack-security-profiles.md)
+- Security verification matrix: [docs/verification/security-verification-matrix.md](docs/verification/security-verification-matrix.md)
+
 ## Control-plane discipline
 
 Control-plane discipline means decisions are governed by inspectable contracts, policy artifacts, and verifiable receipts; not by hidden fallbacks or prompt-only instructions.

@@ -1,2 +1,12 @@
-.container { display: flex; flex-direction: column; gap: 0.5rem; }
-.title { font-size: 0.9375rem; font-weight: 600; color: var(--color-text-primary); margin: 0; }
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.title {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin: 0;
+}

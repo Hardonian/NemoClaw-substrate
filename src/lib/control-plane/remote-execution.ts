@@ -31,6 +31,15 @@ export interface RemoteExecutionTransport { execute(input: { endpoint: string; c
 export interface RemoteExecutionError { code: string; message: string; retryable: boolean; }
 export interface RemoteExecutionReceiptContext { transport: "http"; target: string; policyDecision: "allow" | "deny" | "approval_required" | "disabled"; redactedAuth: Record<string, string>; }
 export interface RemoteExecutionConfig { enabled: boolean; source: "env" | "default"; }
+export interface RemoteExecutionLineageSummary {
+  executionPlanId?: string;
+  executionApprovalId?: string;
+  authorizationLineageId?: string;
+  executionPolicySnapshotHash?: string;
+  executionTrustSnapshotHash?: string;
+  executionIntentHash?: string;
+  replayReferenceId?: string;
+}
 
 export function parseRemoteExecutionConfig(env: NodeJS.ProcessEnv): RemoteExecutionConfig {
   const enabled = env.NEMOCLAW_REMOTE_EXECUTION === "1";
@@ -45,7 +54,7 @@ function redact(auth?: { headerName?: string; token?: string }): Record<string, 
 export async function runRemoteExecution(input: { request: RemoteExecutionRequest; config: RemoteExecutionConfig; transport: RemoteExecutionTransport; policyBundle: PolicyBundle; registry: DeviceRegistry; operationalMemory?: OperationalMemoryLog; executionPlan?: ExecutionPlan; executionApproval?: ExecutionApproval }): Promise<RemoteExecutionResult> {
   const { request } = input;
   const target = request.nodeId ?? request.targetEndpoint ?? "unresolved";
-  const policyEval = evaluatePolicy(input.policyBundle, { request: { version: "1", requestId: request.requestId, receivedAt: request.nowIso, source: "remote-execution", actor: "runtime", action: request.action, requestedModel: undefined, constraints: [], metadata: { target } }, actionClass: "runtime" });
+  const policyEval = evaluatePolicy(input.policyBundle, { request: { version: "1", requestId: request.requestId, receivedAt: request.nowIso, source: "remote-execution", actor: "runtime", action: request.action, requestedModel: undefined, constraints: [], metadata: { target } }, actionClass: "remote_node" });
   const policyDecision = !input.config.enabled ? "disabled" : (policyEval.requiredApproval ? "approval_required" : policyEval.allowed ? "allow" : "deny");
   const receiptBase = { version: "1" as const, receiptId: `remote-exec-${request.requestId}`, requestId: request.requestId, createdAt: request.nowIso, phases: [{ phase: "received", at: request.nowIso, notes: "execution_requested" }], toolInvocations: [], timing: { totalMs: 0 }, fallbackAttempts: [], operatorOverrides: [], provenance: { source: "remote-execution", lineage: ["worker", "remote"], replayVersion: "1" as const } };
   const context: RemoteExecutionReceiptContext = { transport: "http", target, policyDecision, redactedAuth: redact(request.auth) };
@@ -127,7 +136,7 @@ export async function runRemoteExecution(input: { request: RemoteExecutionReques
   }
 }
 
-export function summarizeRemoteExecutionDiagnostics(config: RemoteExecutionConfig, last?: { status: RemoteExecutionStatus; target?: string; receiptId?: string; reason?: string; lineage?: ExecutionReceipt["executionLineage"] }): string[] {
+export function summarizeRemoteExecutionDiagnostics(config: RemoteExecutionConfig, last?: { status: RemoteExecutionStatus; target?: string; receiptId?: string; reason?: string; lineage?: RemoteExecutionLineageSummary }): string[] {
   return [
     `Remote execution: ${config.enabled ? "enabled" : "disabled"} (${config.source})`,
     `Last status: ${last?.status ?? "none"}`,

@@ -15,13 +15,16 @@ export function DegradedInspector({ states }: DegradedInspectorProps) {
   if (states.length === 0) {
     return <EmptyState title="No degraded states" description="All subsystems are operating normally." />;
   }
+
   const grouped = groupByCategory(states);
+
   return (
     <div className={styles.container}>
       <div className={styles.summary}>
         <span className={styles.count}>{states.length} degraded state(s)</span>
         <span className={styles.categories}>{Object.keys(grouped).length} category(ies)</span>
       </div>
+
       {Object.entries(grouped).map(([category, items]) => (
         <section key={category} className={styles.group} aria-labelledby={`category-${category}`}>
           <div className={styles.groupHeader}>
@@ -31,7 +34,15 @@ export function DegradedInspector({ states }: DegradedInspectorProps) {
           <div className={styles.groupContent}>
             <DataTable
               columns={degradedColumns}
-              rows={items.map((d) => ({ reasonCode: d.reasonCode, explanation: d.explanation, subsystem: d.affectedSubsystem, severity: <StatusBadge status={severityToStatus(d.severity)} label={d.severity} />, source: d.sourceComponent, timestamp: <Timestamp value={d.timestamp} />, recovery: d.recoverySuggestion ?? "None" }))}
+              rows={items.map((d) => ({
+                reasonCode: d.reasonCode,
+                explanation: d.explanation,
+                subsystem: d.affectedSubsystem,
+                source: d.sourceComponent,
+                severity: <StatusBadge status={severityToStatus(d.severity)} label={d.severity} />,
+                timestamp: <Timestamp value={d.timestamp} />,
+                recovery: d.recoverySuggestion ?? "None",
+              }))}
               caption={`Degraded states: ${category}`}
             />
           </div>
@@ -48,16 +59,24 @@ const degradedColumns: ColumnDef[] = [
   { key: "severity", header: "Severity" },
   { key: "source", header: "Source" },
   { key: "timestamp", header: "Timestamp" },
-  { key: "recovery", header: "Recovery" },
+  { key: "recovery", header: "Recovery Suggestion" },
 ];
 
 function groupByCategory(states: DegradedState[]): Record<string, DegradedState[]> {
   const groups: Record<string, DegradedState[]> = {};
-  for (const s of states) { if (!groups[s.category]) groups[s.category] = []; groups[s.category].push(s); }
+  for (const s of states) {
+    if (!groups[s.category]) groups[s.category] = [];
+    groups[s.category].push(s);
+  }
   return Object.fromEntries(Object.entries(groups).sort(([a], [b]) => a.localeCompare(b)));
 }
 
 function severityToStatus(severity: string): "info" | "warning" | "error" | "critical" | "success" | "unknown" {
-  const map: Record<string, "info" | "warning" | "error" | "critical" | "success" | "unknown"> = { info: "info", warning: "warning", error: "error", critical: "critical" };
+  const map: Record<string, "info" | "warning" | "error" | "critical" | "success" | "unknown"> = {
+    info: "info",
+    warning: "warning",
+    error: "error",
+    critical: "critical",
+  };
   return map[severity] ?? "unknown";
 }

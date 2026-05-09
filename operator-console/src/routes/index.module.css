@@ -1,4 +1,8 @@
-.container { margin { }
+.container {
+  max-width: 96rem;
+  margin: 0 auto;
+}
+
 .pageTitle { font-size: 1.25rem; font-weight: 700; color: var(--color-text-primary); margin: 0 0 0.25rem; }
 .pageSubtitle { font-size: 0.875rem; color: var(--color-text-secondary); margin: 0 0 1.5rem; }
 .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(20rem, 1fr)); gap: 1rem; }

@@ -12,7 +12,7 @@ export function DiagnosticsSummaryPanel({ lines, title }: DiagnosticsSummaryProp
   return (
     <div className={styles.container}>
       {title && <h3 className={styles.title}>{title}</h3>}
-      <CodeBlock code={content} language="text" title={title ?? "Diagnostics Summary"} />
+      <CodeBlock code={content} title={title ?? "Diagnostics Summary"} />
     </div>
   );
 }
