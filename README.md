@@ -1,88 +1,50 @@
-<!--
-  SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
-  SPDX-License-Identifier: Apache-2.0
--->
+<!-- SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved. -->
+<!-- SPDX-License-Identifier: Apache-2.0 -->
 
-# NemoClaw Fork: Local Operator-Grade AI Execution and Governance
+# NemoClaw Fork: Local Operator-Grade Execution and Governance
 
-This repository is a fork of NVIDIA NemoClaw. It preserves NemoClaw's existing sandbox orchestration base and focuses this fork on operator-grade local execution control, policy governance, and truthful operations reporting.
+This fork of NemoClaw is being shaped into a local operator-grade AI execution and governance system for heterogeneous local infrastructure.
 
-## Fork Purpose
+## Why this fork exists
 
-This fork exists to make local AI operations safer and more governable when running across heterogeneous devices and model runtimes.
+The fork prioritizes deterministic and auditable control over opaque autonomy. It focuses on:
+- execution plane and control plane separation,
+- truthful degraded-state reporting,
+- execution receipts/provenance,
+- supervised policy promotion,
+- explainable routing/control decisions.
 
-Core intent:
+## Current state vs roadmap
 
-- **Local operator-grade execution and governance:** controls should be explicit, inspectable, and durable.
-- **Heterogeneous device awareness:** device and runtime differences must be first-class inputs to execution decisions.
-- **Deterministic control:** equivalent inputs and policy should produce equivalent routing/control decisions.
-- **Truthful degraded-state reporting:** degraded behavior must be surfaced explicitly, never hidden behind "healthy" language.
-- **Policy outside prompts:** policy must be enforced by code/config paths, not only natural-language prompts.
-- **Supervised policy intelligence:** repeated operator decisions should become reviewable policy improvements, not silent behavioral drift.
+- **Current state:** existing CLI/plugin/sandbox orchestration and inference onboarding flows are present.
+- **Roadmap state:** deterministic scheduler, dedicated device registry, policy engine promotions, and unified receipt framework are target-state and not yet fully implemented.
 
-## Current State (Grounded in Repo Today)
+## Architecture and planning docs
 
-Current implemented baseline (inherited from upstream NemoClaw architecture in this repo):
+- Fork rationale: [docs/fork-rationale.md](docs/fork-rationale.md)
+- Current-state architecture audit: [docs/architecture/current-state.md](docs/architecture/current-state.md)
+- Target-state architecture: [docs/architecture/target-state.md](docs/architecture/target-state.md)
+- Roadmap and dependencies: [docs/roadmap.md](docs/roadmap.md)
+- Verification matrix: [docs/verification/verification-matrix.md](docs/verification/verification-matrix.md)
+- PR verification/reporting guide: [docs/contributing/pr-template-guide.md](docs/contributing/pr-template-guide.md)
+- Branch strategy: [docs/contributing/branch-strategy.md](docs/contributing/branch-strategy.md)
 
-- CLI launcher and command stack (`bin/`, `src/lib/`).
-- NemoClaw plugin code and blueprint runtime logic (`nemoclaw/src/`).
-- Blueprint and network-policy definitions (`nemoclaw-blueprint/`).
-- Setup, automation, and validation scripts (`scripts/`).
-- User/reference docs and contributor-facing docs (`docs/`).
+## Control-plane discipline
 
-This is an alpha codebase whose interfaces may change.
+Control-plane discipline means decisions are governed by inspectable contracts, policy artifacts, and verifiable receipts; not by hidden fallbacks or prompt-only instructions.
 
-## Intended Roadmap (Not Yet Fully Implemented)
+## Contribution guidance
 
-This fork is evolving toward:
+When contributing:
+1. Distinguish current repository truth from target-state design.
+2. Avoid implementation claims unless backed by code and tests in the same PR.
+3. Include verification commands and observed outcomes in PR descriptions.
 
-- stronger deterministic control-plane semantics,
-- heterogeneous device-aware scheduling and routing,
-- structured execution receipts/provenance,
-- explicit degraded-state contracts,
-- supervised policy-promotion workflows based on repeated operator decisions.
+## Not implemented yet (do not over-interpret)
 
-See `docs/roadmap.md` for sequencing and workstreams.
-
-## Operational Goals
-
-1. Preserve least-astonishment operations for local operators.
-2. Make routing/control behavior explicit and testable.
-3. Expose degraded truth quickly and clearly.
-4. Keep governance enforceable through repository-managed policy artifacts.
-5. Increase auditability and replayability as control capabilities evolve.
-
-## Non-Goals
-
-- Claiming capabilities not present in the current codebase.
-- Hiding degraded behavior behind optimistic UX or logs.
-- Prompt-only governance with no enforceable policy path.
-- Silent auto-tuning that changes control behavior without operator review.
-
-## Roadmap Themes
-
-- Documentation and contributor workflow foundation.
-- Deterministic control-plane scaffolding.
-- Device capability awareness and scheduling contracts.
-- Policy evaluation/versioning and supervised promotion.
-- Receipt/provenance and degraded-state semantics.
-- Hardening, observability, and verification depth.
-
-## Contribution Expectations
-
-Contributors are expected to:
-
-- Keep claims grounded in repository truth today.
-- Clearly separate **current state** from **intended roadmap** in docs/PRs.
-- Use branch naming, commit style, and PR structure conventions:
-  - `docs/contributing/branch-strategy.md`
-  - `docs/contributing/pr-template-guide.md`
-- Include verification notes in every PR: commands run, outcomes, and known limitations.
-
-## Additional Fork Docs
-
-- Fork rationale: `docs/fork-rationale.md`
-- Roadmap: `docs/roadmap.md`
-- Branch strategy: `docs/contributing/branch-strategy.md`
-- PR template guide: `docs/contributing/pr-template-guide.md`
-- Changelog: `CHANGELOG.md`
+Unless specifically added and verified in code:
+- no dedicated deterministic scheduler,
+- no dedicated device registry,
+- no dedicated policy-promotion engine,
+- no unified execution receipt framework,
+- no Dynamo-style orchestration integration.
