@@ -34,6 +34,12 @@ All notable changes to this fork are documented in this file.
 - Added guarded remote probe contracts: authenticated remote HTTP health-check seam with strict URL/timeout validation, redacted auth metadata, degraded-state mapping, SSH `not_implemented` placeholder, and registry/receipt/diagnostic integration without remote execution.
 - Wired heterogeneous routing bridge into the runtime/provider dispatch seam behind explicit `NEMOCLAW_HETEROGENEOUS_ROUTING`, `NEMOCLAW_GOVERNED_ROUTING`, and `NEMOCLAW_REMOTE_EXECUTION` guards, preserving default local behavior when disabled.
 
+
+### telemetry
+- add remote runtime telemetry enrichment and parser adapters (Ollama/vLLM/llama.cpp/NIM/generic)
+- define explicit registry telemetry persistence policy (observed/partial/unavailable/stale/conflict provenance)
+- expand diagnostics and runtime events for telemetry source/confidence and registry update decisions
+
 ### Changed
 
 - README updated to clarify fork purpose, current-state vs roadmap, architecture doc locations, and PR verification expectations.

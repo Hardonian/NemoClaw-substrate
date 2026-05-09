@@ -12,3 +12,7 @@ Telemetry availability is explicit. If GPU telemetry is unavailable, diagnostics
 - No background polling daemons are introduced.
 - Telemetry is observed only through explicit probes; future scheduling use is planned and remains unavailable unless observed.
 - Routing defaults remain unchanged; telemetry is non-authoritative metadata.
+
+## Telemetry adapters evidence policy
+
+Remote/local telemetry adapters are evidence-only and may return unavailable without failing routing. No background polling is introduced.

@@ -26,3 +26,7 @@ Worker/provider adapter contracts and scheduler-to-provider dry-run bridge are i
 - No background polling daemons are introduced.
 - Telemetry is observed only through explicit probes; future scheduling use is planned and remains unavailable unless observed.
 - Routing defaults remain unchanged; telemetry is non-authoritative metadata.
+
+## Telemetry registry provenance
+
+Device registry telemetry snapshots preserve source attribution and stale/conflict markers. Unavailable telemetry does not clear previously observed inventory.

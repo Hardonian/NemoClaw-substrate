@@ -211,3 +211,6 @@ This phase adds explicit manual local probe execution and diagnostics summaries,
 - No background polling daemons are introduced.
 - Telemetry is observed only through explicit probes; future scheduling use is planned and remains unavailable unless observed.
 - Routing defaults remain unchanged; telemetry is non-authoritative metadata.
+
+- Remote telemetry enrichment is evidence-only, with parser-specific metadata extraction and explicit persistence policy.
+- No automatic optimization, autonomous routing, background telemetry polling, Dynamo orchestration, or GPU balancing in this phase.

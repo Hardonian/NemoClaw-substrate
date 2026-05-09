@@ -33,3 +33,7 @@ Local diagnostics summary includes:
 - No background polling daemons are introduced.
 - Telemetry is observed only through explicit probes; future scheduling use is planned and remains unavailable unless observed.
 - Routing defaults remain unchanged; telemetry is non-authoritative metadata.
+
+## Remote vs local telemetry diagnostics
+
+Diagnostics explicitly report source (local/remote), parser confidence (observed/partial/unavailable/stale), registry update applied/skipped reason codes, and model/GPU known-vs-unknown state.

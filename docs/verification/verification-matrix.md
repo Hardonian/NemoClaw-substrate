@@ -67,3 +67,6 @@ node scripts/verify-core.js --strict
 - No background polling daemons are introduced.
 - Telemetry is observed only through explicit probes; future scheduling use is planned and remains unavailable unless observed.
 - Routing defaults remain unchanged; telemetry is non-authoritative metadata.
+
+- Remote parser adapters (Ollama/vLLM/llama.cpp/NIM/generic) validated with mocked fixtures only.
+- Registry telemetry update policy validated for observed/partial/unavailable/stale/conflict states.
