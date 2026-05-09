@@ -1,17 +1,16 @@
 import type {
   DegradedState,
   ExecutionReceipt,
-  SchedulingDecision,
-  PolicyDecision,
   OperationalEvent,
   WorkerTrustDecision,
   WorkerCapabilityAttestation,
   WorkerIdentity,
   NodeDescriptor,
   ReplayEnvelope,
-  PolicyCandidate,
   HeterogeneousRoutingResult,
   HeterogeneousCandidate,
+  SchedulerDryRunResult,
+  LocalProbeSummary,
 } from "../data/types";
 
 export const T = "2026-05-09T00:00:00.000Z";
@@ -48,12 +47,12 @@ export function makeExecutionReceipt(overrides?: Partial<ExecutionReceipt>): Exe
       selected: { nodeId: "node-a", modelId: "nvidia/model", score: 100, reasons: [{ code: "local_default", explanation: "Local node selected", source: "scheduler" }] },
       rejected: [],
       reasons: [{ code: "local_default", explanation: "Local node selected", source: "scheduler" }],
-    } as SchedulingDecision,
+    },
     policyDecision: {
       allowed: true,
       requiredApproval: false,
       reasons: [{ code: "policy_default_allow", explanation: "Default allow policy", source: "default" }],
-    } as PolicyDecision,
+    },
     degradedEvents: [],
     fallbackAttempts: [],
     toolInvocations: [],
@@ -157,18 +156,6 @@ export function makeNodeDescriptor(nodeId: string, overrides?: Partial<NodeDescr
   };
 }
 
-export function makePolicyCandidate(overrides?: Partial<PolicyCandidate>): PolicyCandidate {
-  return {
-    key: "degraded_state:none:sandbox-default",
-    reason: "repeated_degraded",
-    eventIds: ["op-001", "op-002"],
-    count: 2,
-    firstSeenAt: T,
-    lastSeenAt: T,
-    ...overrides,
-  };
-}
-
 export function makeHeterogeneousCandidate(overrides?: Partial<HeterogeneousCandidate>): HeterogeneousCandidate {
   return {
     candidateId: "local:openai:nvidia/model",
@@ -182,6 +169,52 @@ export function makeHeterogeneousCandidate(overrides?: Partial<HeterogeneousCand
     reasonCodes: ["local_default"],
     score: 100,
     status: "eligible",
+    ...overrides,
+  };
+}
+
+export function makeHeterogeneousRoutingResult(overrides?: Partial<HeterogeneousRoutingResult>): HeterogeneousRoutingResult {
+  return {
+    provider: "openai",
+    model: "nvidia/model",
+    selectedCandidate: makeHeterogeneousCandidate(),
+    excludedCandidates: [],
+    allCandidates: [makeHeterogeneousCandidate()],
+    receipt: makeExecutionReceipt(),
+    events: [],
+    ...overrides,
+  };
+}
+
+export function makeSchedulerDryRunResult(overrides?: Partial<SchedulerDryRunResult>): SchedulerDryRunResult {
+  return {
+    requestId: "req-001",
+    selectedCandidate: "node-a:nvidia/model",
+    excludedCandidates: [],
+    policyResult: "allow",
+    degradedStates: [],
+    receipt: makeExecutionReceipt(),
+    events: [],
+    noExecution: true,
+    ...overrides,
+  };
+}
+
+export function makeLocalProbeSummary(overrides?: Partial<LocalProbeSummary>): LocalProbeSummary {
+  return {
+    outcomes: [{ probe: "provider-metadata", state: "healthy", detail: "provider=openai" }],
+    degradedStates: [],
+    telemetryAvailable: true,
+    telemetry: {
+      capturedAt: T,
+      runtimeHealth: { state: "observed", value: "healthy", observedAt: T },
+      backendVersion: { state: "observed", value: "1.0.0", observedAt: T },
+      modelInventory: { state: "observed", value: ["nvidia/model"], observedAt: T },
+      gpus: { state: "observed", observedAt: T, value: [{ vendor: "nvidia", model: "L40S", vramMb: 48000, uuid: "gpu-001" }] },
+      runtimeMetrics: {},
+    },
+    receipt: makeExecutionReceipt(),
+    events: [],
     ...overrides,
   };
 }
@@ -242,7 +275,7 @@ export const sampleReceipts: ExecutionReceipt[] = [
       allowed: true,
       requiredApproval: true,
       reasons: [{ code: "policy_rule_approval_required", explanation: "High-risk action requires approval.", source: "policy-rule-1" }],
-    } as PolicyDecision,
+    },
     degradedEvents: [
       makeDegradedState({ category: "approval_blocked", reason: "awaiting operator approval", affectedSubsystem: "governance", severity: "warning", reasonCode: "approval_required", explanation: "Request blocked pending operator approval.", sourceComponent: "governance" }),
     ],
@@ -286,32 +319,36 @@ export const sampleWorkerAttestations: WorkerCapabilityAttestation[] = [
 
 export const sampleNodes: NodeDescriptor[] = [
   makeNodeDescriptor("node-a", { role: "local", health: "healthy" }),
-  makeNodeDescriptor("node-b", { role: "remote", health: "healthy", trustClass: "trusted", workerTrustLevel: "trusted_local", workerAttestationStatus: "operator_approved", workerLastAttestedAt: T, workerAttestationSource: "operator_approved" }),
-  makeNodeDescriptor("node-c", { role: "remote", health: "stale", trustClass: "restricted", workerTrustLevel: "observed", workerAttestationStatus: "probe_observed" }),
-  makeNodeDescriptor("node-d", { role: "edge", health: "unreachable", trustClass: "untrusted", workerTrustLevel: "unknown", workerAttestationStatus: "none" }),
+  makeNodeDescriptor("node-b", { role: "remote", health: "healthy", trustClass: "trusted" }),
+  makeNodeDescriptor("node-c", { role: "remote", health: "stale", trustClass: "restricted" }),
+  makeNodeDescriptor("node-d", { role: "edge", health: "unreachable", trustClass: "untrusted" }),
 ];
 
-export const sampleRoutingResult: HeterogeneousRoutingResult = {
+export const sampleRoutingResult: HeterogeneousRoutingResult = makeHeterogeneousRoutingResult({
   provider: "openai",
   model: "nvidia/model",
   selectedCandidate: makeHeterogeneousCandidate(),
   excludedCandidates: [
-    makeHeterogeneousCandidate({ candidateId: "remote:node-c:nvidia/model", kind: "remote_worker", identity: "node-c", capabilitySnapshotRef: "node-c@2026-05-09T00:00:00.000Z", policyEligibility: "approval_required", degradedStates: ["stale"], telemetryConfidence: "low", executionMode: "remote", reasonCodes: ["excluded"], score: 120, status: "excluded" }),
-    makeHeterogeneousCandidate({ candidateId: "remote:node-d:nvidia/model", kind: "remote_worker", identity: "node-d", capabilitySnapshotRef: "node-d@2026-05-09T00:00:00.000Z", policyEligibility: "deny", degradedStates: ["unreachable"], telemetryConfidence: "low", executionMode: "remote", reasonCodes: ["excluded"], score: 120, status: "excluded" }),
+    makeHeterogeneousCandidate({ candidateId: "remote:node-c:nvidia/model", kind: "remote_worker", identity: "node-c", capabilitySnapshotRef: "node-c@ts", policyEligibility: "approval_required", degradedStates: ["stale"], telemetryConfidence: "low", executionMode: "remote", reasonCodes: ["excluded"], score: 120, status: "excluded" }),
+    makeHeterogeneousCandidate({ candidateId: "remote:node-d:nvidia/model", kind: "remote_worker", identity: "node-d", capabilitySnapshotRef: "node-d@ts", policyEligibility: "deny", degradedStates: ["unreachable"], telemetryConfidence: "low", executionMode: "remote", reasonCodes: ["excluded"], score: 120, status: "excluded" }),
   ],
   allCandidates: [
     makeHeterogeneousCandidate(),
-    makeHeterogeneousCandidate({ candidateId: "remote:node-c:nvidia/model", kind: "remote_worker", identity: "node-c", capabilitySnapshotRef: "node-c@2026-05-09T00:00:00.000Z", policyEligibility: "approval_required", degradedStates: ["stale"], telemetryConfidence: "low", executionMode: "remote", reasonCodes: ["excluded"], score: 120, status: "excluded" }),
-    makeHeterogeneousCandidate({ candidateId: "remote:node-d:nvidia/model", kind: "remote_worker", identity: "node-d", capabilitySnapshotRef: "node-d@2026-05-09T00:00:00.000Z", policyEligibility: "deny", degradedStates: ["unreachable"], telemetryConfidence: "low", executionMode: "remote", reasonCodes: ["excluded"], score: 120, status: "excluded" }),
+    makeHeterogeneousCandidate({ candidateId: "remote:node-c:nvidia/model", kind: "remote_worker", identity: "node-c", capabilitySnapshotRef: "node-c@ts", policyEligibility: "approval_required", degradedStates: ["stale"], telemetryConfidence: "low", executionMode: "remote", reasonCodes: ["excluded"], score: 120, status: "excluded" }),
+    makeHeterogeneousCandidate({ candidateId: "remote:node-d:nvidia/model", kind: "remote_worker", identity: "node-d", capabilitySnapshotRef: "node-d@ts", policyEligibility: "deny", degradedStates: ["unreachable"], telemetryConfidence: "low", executionMode: "remote", reasonCodes: ["excluded"], score: 120, status: "excluded" }),
   ],
-  receipt: makeExecutionReceipt(),
-  events: [],
-};
+});
 
-export const samplePolicyCandidates: PolicyCandidate[] = [
-  makePolicyCandidate({ key: "degraded_state:transport_unreachable:sandbox-default", reason: "repeated_degraded", count: 3, eventIds: ["op-004", "op-011", "op-012"] }),
-  makePolicyCandidate({ key: "fallback:remote_timeout:sandbox-default", reason: "repeated_fallback", count: 2, eventIds: ["op-005", "op-013"] }),
-];
+export const sampleDryRunResult: SchedulerDryRunResult = makeSchedulerDryRunResult();
+
+export const sampleProbeSummary: LocalProbeSummary = makeLocalProbeSummary({
+  outcomes: [
+    { probe: "provider-metadata", state: "healthy", detail: "provider=openai" },
+    { probe: "command-availability", state: "healthy", detail: "commands=3" },
+    { probe: "gpu-nvidia-smi", state: "healthy", detail: "observed" },
+    { probe: "gpu-rocm", state: "unavailable", detail: "not implemented" },
+  ],
+});
 
 export const validReplayEnvelope: ReplayEnvelope = {
   version: "1",
@@ -327,4 +364,12 @@ export const emptyReplayEnvelope: ReplayEnvelope = {
   eventCount: 0,
   events: [],
   digest: "",
+};
+
+export const invalidReplayEnvelope: ReplayEnvelope = {
+  version: "1",
+  exportedAt: T,
+  eventCount: 99,
+  events: [],
+  digest: "wrong-digest",
 };

@@ -86,6 +86,58 @@ describe("remote execution", () => {
     expect(transport.execute).not.toHaveBeenCalled();
   });
 
+  it("blocks transport for unsafe command descriptors", async () => {
+    const transport = { execute: vi.fn() };
+    const out = await runRemoteExecution({
+      request: {
+        requestId: "r-command-shell",
+        nowIso: now,
+        action: "worker:execute",
+        command: "echo ok",
+        commandDescriptor: { name: "echo", argv: ["ok"], shell: true as false },
+        targetEndpoint: "https://worker",
+        approved: true,
+      },
+      config: { enabled: true, source: "env" },
+      transport,
+      policyBundle: allowPolicy,
+      registry: createDeviceRegistry(),
+    });
+    expect(out.status).toBe("failed");
+    expect(out.degradedReason).toBe("command_shell_denied");
+    expect(transport.execute).not.toHaveBeenCalled();
+  });
+
+  it("blocks transport for command allowlist denial", async () => {
+    const transport = { execute: vi.fn() };
+    const out = await runRemoteExecution({
+      request: {
+        requestId: "r-command-allowlist",
+        nowIso: now,
+        action: "worker:execute",
+        command: "curl https://example.com",
+        commandPolicy: {
+          allowlist: ["nvidia-smi"],
+          denylist: [],
+          timeoutCeilingMs: 10_000,
+          defaultTimeoutMs: 2_000,
+          stdoutMaxBytes: 100,
+          stderrMaxBytes: 100,
+          requireShellFalse: true,
+        },
+        targetEndpoint: "https://worker",
+        approved: true,
+      },
+      config: { enabled: true, source: "env" },
+      transport,
+      policyBundle: allowPolicy,
+      registry: createDeviceRegistry(),
+    });
+    expect(out.status).toBe("failed");
+    expect(out.degradedReason).toBe("command_allowlist_denied");
+    expect(transport.execute).not.toHaveBeenCalled();
+  });
+
   it("policy deny and approval gate block transport until approved", async () => {
     const transport = { execute: vi.fn() };
     const denied = await runRemoteExecution({ request: { requestId: "r2", nowIso: "2026-05-09T00:00:00.000Z", action: "worker:execute", command: "echo hi", targetEndpoint: "https://worker" }, config: { enabled: true, source: "env" }, transport, policyBundle: denyPolicy, registry: createDeviceRegistry() });
@@ -157,6 +209,7 @@ describe("remote execution", () => {
     expect(t3.status).toBe("succeeded");
     expect(transport.execute).toHaveBeenCalledTimes(3);
     expect(JSON.stringify(t3.receipt)).not.toContain("secret");
+    expect(JSON.stringify(log.list())).not.toContain("secret");
     expect(log.list().length).toBeGreaterThan(0);
   });
 
