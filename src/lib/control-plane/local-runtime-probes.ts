@@ -25,13 +25,14 @@ const defaultCommandRunner: CommandRunner = async (command, args, timeoutMs) => 
   if (!commandDecision.decision.allowed || !commandDecision.descriptor) {
     return { code: 126, stdout: "", stderr: commandDecision.decision.reasonCode };
   }
+  const descriptor = commandDecision.descriptor;
   const { spawn } = await import("node:child_process");
   return new Promise((resolve) => {
-    const child = spawn(commandDecision.descriptor.name, [...commandDecision.descriptor.argv], { shell: false });
+    const child = spawn(descriptor.name, [...descriptor.argv], { shell: false });
     let stdout = ""; let stderr = ""; let done = false;
-    const timer = setTimeout(() => { if (!done) { done = true; child.kill("SIGTERM"); resolve({ code: 124, stdout: stdout.slice(0, commandDecision.descriptor.stdoutMaxBytes), stderr: `${stderr} timeout`.slice(0, commandDecision.descriptor.stderrMaxBytes) }); } }, commandDecision.descriptor.timeoutMs);
-    child.stdout.on("data", (d) => { stdout = (stdout + String(d)).slice(0, commandDecision.descriptor.stdoutMaxBytes); });
-    child.stderr.on("data", (d) => { stderr = (stderr + String(d)).slice(0, commandDecision.descriptor.stderrMaxBytes); });
+    const timer = setTimeout(() => { if (!done) { done = true; child.kill("SIGTERM"); resolve({ code: 124, stdout: stdout.slice(0, descriptor.stdoutMaxBytes), stderr: `${stderr} timeout`.slice(0, descriptor.stderrMaxBytes) }); } }, descriptor.timeoutMs);
+    child.stdout.on("data", (d) => { stdout = (stdout + String(d)).slice(0, descriptor.stdoutMaxBytes); });
+    child.stderr.on("data", (d) => { stderr = (stderr + String(d)).slice(0, descriptor.stderrMaxBytes); });
     child.on("error", () => { if (!done) { done = true; clearTimeout(timer); resolve({ code: 127, stdout: "", stderr: "not_found" }); } });
     child.on("exit", (code) => { if (!done) { done = true; clearTimeout(timer); resolve({ code: code ?? 1, stdout, stderr }); } });
   });

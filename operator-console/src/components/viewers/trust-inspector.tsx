@@ -1,5 +1,5 @@
 import React from "react";
-import type { WorkerTrustDecision, WorkerCapabilityAttestation, WorkerIdentity, WorkerTrustReasonCode } from "../data/types";
+import type { WorkerTrustDecision, WorkerCapabilityAttestation, WorkerIdentity } from "../data/types";
 import { StateLabel } from "../primitives/state-label";
 import { StatusBadge } from "../primitives/status-badge";
 import { Timestamp } from "../primitives/timestamp";
@@ -22,7 +22,7 @@ export function TrustInspector({ decisions, attestations, identities }: TrustIns
         {decisions.length === 0 ? (
           <EmptyState title="No trust decisions" description="No worker trust decisions have been recorded." />
         ) : (
-          <DataTable columns={trustColumns} rows={decisions.map((d) => ({ workerId: d.workerId, trustLevel: d.trustLevel, eligibleForRemoteExecution: d.eligibleForRemoteExecution, attestationStatus: d.attestationStatus, reasonCodes: d.reasonCodes.map(codeLabel).join(", "), decidedAt: d.decidedAt }))} caption="Worker trust decisions" />
+          <DataTable columns={trustColumns} rows={trustRows(decisions)} caption="Worker trust decisions" />
         )}
       </section>
 
@@ -45,7 +45,7 @@ export function TrustInspector({ decisions, attestations, identities }: TrustIns
                 { key: "Last Attested", value: att.lastAttestedAt ? <Timestamp value={att.lastAttestedAt} /> : "Unknown" },
                 { key: "Stale", value: att.stale ? "Yes" : "No" },
                 { key: "Conflict", value: att.conflict ? "Yes" : "No" },
-                { key: "Reason Codes", value: att.reasonCodes.length > 0 ? att.reasonCodes.map(codeLabel).join(", ") : "None" },
+                { key: "Reason Codes", value: att.reasonCodes.length > 0 ? att.reasonCodes.map((c) => c.replace(/_/g, " ")).join(", ") : "None" },
                 { key: "Source Reference", value: att.provenance.sourceRef },
                 { key: "Claim IDs", value: att.provenance.claimIds.length > 0 ? att.provenance.claimIds.join(", ") : "None" },
               ]} />
@@ -59,7 +59,7 @@ export function TrustInspector({ decisions, attestations, identities }: TrustIns
         {identities.length === 0 ? (
           <EmptyState title="No worker identities" description="No worker identities have been observed." />
         ) : (
-          <DataTable columns={identityColumns} rows={identities.map((i) => ({ workerId: i.workerId, safeLabel: i.safeLabel, provider: i.provider ?? "Unknown", endpoint: i.endpoint ?? "Unknown" }))} caption="Worker identities" />
+          <DataTable columns={identityColumns} rows={identityRows(identities)} caption="Worker identities" />
         )}
       </section>
     </div>
@@ -71,7 +71,7 @@ const trustColumns: ColumnDef[] = [
   { key: "trustLevel", header: "Trust Level", render: (v) => <StateLabel state={String(v)} /> },
   { key: "eligibleForRemoteExecution", header: "Remote Exec.", render: (v) => v === true ? "Yes" : "No" },
   { key: "attestationStatus", header: "Attestation", render: (v) => <StateLabel state={String(v)} /> },
-  { key: "reasonCodes", header: "Reason Codes" },
+  { key: "reasonCodes", header: "Reason Codes", render: (v) => (v as string[]).map((c) => c.replace(/_/g, " ")).join(", ") },
   { key: "decidedAt", header: "Decided At", render: (v) => <Timestamp value={String(v)} /> },
 ];
 
@@ -82,4 +82,22 @@ const identityColumns: ColumnDef[] = [
   { key: "endpoint", header: "Endpoint" },
 ];
 
-function codeLabel(code: string): string { return code.replace(/_/g, " "); }
+function trustRows(decisions: WorkerTrustDecision[]): Record<string, unknown>[] {
+  return decisions.map((d) => ({
+    workerId: d.workerId,
+    trustLevel: d.trustLevel,
+    eligibleForRemoteExecution: d.eligibleForRemoteExecution,
+    attestationStatus: d.attestationStatus,
+    reasonCodes: d.reasonCodes,
+    decidedAt: d.decidedAt,
+  }));
+}
+
+function identityRows(identities: WorkerIdentity[]): Record<string, unknown>[] {
+  return identities.map((i) => ({
+    workerId: i.workerId,
+    safeLabel: i.safeLabel,
+    provider: i.provider ?? "Unknown",
+    endpoint: i.endpoint ?? "Unknown",
+  }));
+}
