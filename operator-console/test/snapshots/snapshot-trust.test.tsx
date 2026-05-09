@@ -3,16 +3,28 @@ import { render } from "@testing-library/react";
 import { TrustInspector } from "../../src/components/viewers/trust-inspector";
 import { sampleWorkerTrustDecisions, sampleWorkerAttestations, sampleWorkerIdentities } from "../../src/data/fixtures";
 
-describe("TrustInspector snapshot", () => {
-  it("renders trust decisions snapshot", () => {
-    const { container } = render(<TrustInspector decisions={sampleWorkerTrustDecisions} attestations={sampleWorkerAttestations} identities={sampleWorkerIdentities} />);
-    const text = container.textContent;
-    expect(text).toContain("4 Worker Trust Decisions");
-    expect(text).toContain("trusted_local");
-    expect(text).toContain("observed");
-    expect(text).toContain("unknown");
-    expect(text).toContain("untrusted");
-    expect(text).toContain("4 Worker Attestations");
-    expect(text).toContain("3 Worker Identities");
+describe("Snapshot: TrustInspector", () => {
+  it("renders trust data deterministically", () => {
+    const { container } = render(
+      <TrustInspector
+        decisions={sampleWorkerTrustDecisions}
+        attestations={sampleWorkerAttestations}
+        identities={sampleWorkerIdentities}
+      />
+    );
+    expect(container.textContent).toContain("Worker Trust Decisions (4)");
+    expect(container.textContent).toContain("Worker Attestations (4)");
+    expect(container.textContent).toContain("Worker Identities (3)");
+    expect(container.textContent).toMatchSnapshot();
+  });
+
+  it("renders empty trust data deterministically", () => {
+    const { container } = render(
+      <TrustInspector decisions={[]} attestations={[]} identities={[]} />
+    );
+    expect(container.textContent).toContain("No trust decisions");
+    expect(container.textContent).toContain("No attestations");
+    expect(container.textContent).toContain("No worker identities");
+    expect(container.textContent).toMatchSnapshot();
   });
 });
