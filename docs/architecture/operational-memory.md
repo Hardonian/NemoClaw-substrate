@@ -28,3 +28,7 @@ Worker/provider adapter contracts and scheduler-to-provider dry-run bridge are i
 - Remote candidates are excluded when policy denies or requires unprovided approval.
 - No SSH execution, no Dynamo/GPU balancing claims, and no background daemon/autonomous worker routing.
 - Telemetry confidence and degraded states reflect observed registry/probe data only.
+## 2026-05-09 telemetry operational taxonomy hardening
+- Added dedicated telemetry operational event kinds for probe lifecycle, parser outcomes, availability/staleness/conflict signals, and registry update decisions.
+- Event payloads carry runtime/source attribution, confidence, and degraded reason codes while avoiding secret-bearing fields.
+- Legacy consumers that read `degraded_state` / `runtime_action` continue to function; telemetry adds explicit categories for higher-fidelity replay and observability.

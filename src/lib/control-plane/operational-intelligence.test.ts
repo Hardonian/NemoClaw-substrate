@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 import { OperationalMemoryLog } from "./operational-memory";
 import { buildReplayEnvelope, validateReplayEnvelope } from "./replay";
 import { buildPromotionProposals, generatePolicyCandidates } from "./policy-promotion";
-import { summarizeDegradedTimeline, summarizeFallbackFrequency, summarizePolicyOutcomes } from "./observability";
+import { summarizeDegradedTimeline, summarizeFallbackFrequency, summarizePolicyOutcomes, summarizeTelemetryDimensions, summarizeTelemetryEventCounts } from "./observability";
 
 describe("operational intelligence substrate", () => {
   it("keeps append ordering and deterministic ids", () => {
@@ -40,5 +40,14 @@ describe("operational intelligence substrate", () => {
     log.append({ occurredAt: "2026-05-09T00:00:01.000Z", category: "fallback", source: "test", provenance: {}, payload: { fallback: { reason: "provider_timeout" } } });
     expect(summarizeDegradedTimeline(log.list())[0]).toContain("heartbeat_stale");
     expect(summarizeFallbackFrequency(log.list())).toEqual({ provider_timeout: 1 });
+  });
+
+  it("aggregates telemetry dimensions", () => {
+    const log = new OperationalMemoryLog();
+    log.append({ occurredAt: "2026-05-09T00:00:00.000Z", category: "telemetry_probe_started", source: "worker-probes", provenance: {}, payload: { confidence: "low" } });
+    log.append({ occurredAt: "2026-05-09T00:00:01.000Z", category: "telemetry_parse_partial", source: "worker-probes", provenance: {}, payload: { confidence: "medium" } });
+    log.append({ occurredAt: "2026-05-09T00:00:02.000Z", category: "telemetry_registry_update_skipped", source: "worker-probes", provenance: {}, payload: { confidence: "low" } });
+    expect(summarizeTelemetryEventCounts(log.list())).toEqual({ telemetry_parse_partial: 1, telemetry_probe_started: 1, telemetry_registry_update_skipped: 1 });
+    expect(summarizeTelemetryDimensions(log.list()).confidence).toEqual({ low: 2, medium: 1 });
   });
 });

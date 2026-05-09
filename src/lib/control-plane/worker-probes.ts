@@ -70,10 +70,14 @@ export function applyProbeToRegistry(registry: DeviceRegistry, node: NodeDescrip
 
 export function emitProbeEvents(log: OperationalMemoryLog, probe: WorkerProbeResult, receiptId: string): void {
   const replayRef = { lineage: ["worker-probes", probe.request.nodeId], replayVersion: "1" };
-  log.append({ occurredAt: probe.request.nowIso, category: "runtime_action", source: "worker-probes", provenance: { requestId: probe.request.requestId, receiptId }, replayRef, payload: { phase: "probe_started", nodeId: probe.request.nodeId } });
-  if (probe.telemetry.gpus.state === "unavailable") {
-    log.append({ occurredAt: probe.request.nowIso, category: "degraded_state", source: "worker-probes", provenance: { requestId: probe.request.requestId, receiptId }, replayRef, payload: { degraded: { reasonCode: "capability_missing", reason: "gpu_unavailable" } } });
+  const base = { occurredAt: probe.request.nowIso, source: "worker-probes", provenance: { requestId: probe.request.requestId, receiptId }, replayRef };
+  log.append({ ...base, category: "telemetry_probe_started", payload: { nodeId: probe.request.nodeId, runtime: probe.request.runtime, transport: probe.request.transport, confidence: probe.telemetry.runtimeHealth.state } });
+  if (probe.telemetry.runtimeHealth.state === "stale") {
+    log.append({ ...base, category: "telemetry_stale", payload: { reasonCode: probe.telemetry.runtimeHealth.reason ?? "stale", confidence: "low", sourceRuntime: probe.request.runtime } });
   }
-  const phase = probe.status === "succeeded" ? "probe_succeeded" : probe.status === "degraded" ? "probe_degraded" : "probe_failed";
-  log.append({ occurredAt: probe.request.nowIso, category: "runtime_action", source: "worker-probes", provenance: { requestId: probe.request.requestId, receiptId }, replayRef, payload: { phase, status: probe.status, degradedReasons: probe.degradedStates.map((d) => d.reasonCode) } });
+  if (probe.telemetry.gpus.state === "unavailable") {
+    log.append({ ...base, category: "telemetry_unavailable", payload: { reasonCode: probe.telemetry.gpus.reason === "command_unavailable" ? "nvidia_smi_unavailable" : "capability_missing", subsystem: "gpu", confidence: "low", sourceRuntime: probe.request.runtime } });
+  }
+  const phase = probe.status === "succeeded" ? "telemetry_probe_succeeded" : "telemetry_probe_failed";
+  log.append({ ...base, category: phase, payload: { status: probe.status, degradedReasons: probe.degradedStates.map((d) => d.reasonCode), confidence: probe.telemetry.runtimeHealth.state, sourceRuntime: probe.request.runtime } });
 }
