@@ -16,7 +16,10 @@ export function summarizeLocalDiagnostics(input: {
     `Local probes: ${input.probeSummary.outcomes.length}`,
     `Probe degraded states: ${input.probeSummary.degradedStates.length ? input.probeSummary.degradedStates.map((d) => d.reasonCode).join(",") : "none"}`,
     `Registered nodes: ${input.registry.list().length}`,
-    `Telemetry availability: ${input.probeSummary.telemetryAvailable ? "available" : "unavailable"}`,
+    `Telemetry availability: ${input.probeSummary.telemetryAvailable ? "available" : "unavailable"}` ,
+    `GPU telemetry: ${input.probeSummary.telemetry.gpus.state}` ,
+    `Runtime metadata: version=${input.probeSummary.telemetry.backendVersion.state}, models=${input.probeSummary.telemetry.modelInventory.state}` ,
+    `Observed at: ${input.probeSummary.telemetry.capturedAt}` ,
     `Governed routing: ${input.governedRouting.enabled ? "enabled" : "disabled"} (${input.governedRouting.source})`,
     `Dry-run result: ${input.dryRun ? input.dryRun.policyResult : "none"}`,
   ];

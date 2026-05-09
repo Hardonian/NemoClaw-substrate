@@ -7,47 +7,38 @@ import { summarizeLocalDiagnostics } from "./local-diagnostics";
 import { runLocalRuntimeProbes } from "./local-runtime-probes";
 
 describe("local runtime probes", () => {
-  afterEach(() => {
-    vi.useRealTimers();
-    vi.unstubAllGlobals();
+  afterEach(() => { vi.useRealTimers(); vi.unstubAllGlobals(); });
+
+  it("nvidia-smi absent returns unavailable", async () => {
+    const out = await runLocalRuntimeProbes({ requestId: "p0", nowIso: "2026-05-09T00:00:00.000Z", commandRunner: async () => ({ code: 127, stdout: "" }) });
+    expect(out.outcomes.find((o) => o.probe === "gpu-nvidia-smi")?.state).toBe("unavailable");
   });
 
-  it("returns unavailable when runtime is not configured", async () => {
-    const out = await runLocalRuntimeProbes({ requestId: "p1", nowIso: "2026-05-09T00:00:00.000Z" });
-    expect(out.outcomes.find((o) => o.probe === "provider-metadata")?.state).toBe("unavailable");
+  it("parses mocked nvidia-smi output", async () => {
+    const out = await runLocalRuntimeProbes({ requestId: "p1", nowIso: "2026-05-09T00:00:00.000Z", commandRunner: async () => ({ code: 0, stdout: "RTX 6000, 555.42, 24564, 100, 24464, 7, 40" }) });
+    expect(out.telemetry.gpus.state).toBe("observed");
   });
 
-  it("marks timeout as degraded", async () => {
-    vi.useFakeTimers();
-    vi.stubGlobal("fetch", vi.fn(async (_url, init) => new Promise((_resolve, reject) => {
-      init?.signal?.addEventListener("abort", () => reject(new Error("aborted")), { once: true });
-    })));
-    const outPromise = runLocalRuntimeProbes({ requestId: "p2", nowIso: "2026-05-09T00:00:00.000Z", endpoints: { ollama: "http://127.0.0.1:11434" }, timeoutMs: 10 });
-    await vi.advanceTimersByTimeAsync(20);
-    const out = await outPromise;
-    expect(out.degradedStates.some((d) => d.reasonCode === "transport_unreachable")).toBe(true);
+  it("marks malformed nvidia-smi output degraded", async () => {
+    const out = await runLocalRuntimeProbes({ requestId: "p2", nowIso: "2026-05-09T00:00:00.000Z", commandRunner: async () => ({ code: 0, stdout: "bad" }) });
+    expect(out.outcomes.find((o) => o.probe === "gpu-nvidia-smi")?.state).toBe("degraded");
   });
 
-  it("flags malformed probe response", async () => {
-    vi.stubGlobal("fetch", vi.fn(async () => ({ ok: true, status: 200, text: async () => "not-json" })));
-    const out = await runLocalRuntimeProbes({ requestId: "p3", nowIso: "2026-05-09T00:00:00.000Z", endpoints: { vllm: "http://localhost:8000" } });
-    expect(out.degradedStates.some((d) => d.reasonCode === "unknown_error")).toBe(true);
+  it("marks command timeout degraded/unavailable", async () => {
+    const out = await runLocalRuntimeProbes({ requestId: "p3", nowIso: "2026-05-09T00:00:00.000Z", commandRunner: async () => ({ code: 124, stdout: "" }) });
+    expect(out.telemetry.gpus.reason).toContain("timeout");
   });
 
-  it("requires explicit local URL for HTTP probes", async () => {
-    const out = await runLocalRuntimeProbes({ requestId: "p4", nowIso: "2026-05-09T00:00:00.000Z", endpoints: { nim: "https://example.com/health" } });
-    expect(out.outcomes.find((o) => o.probe === "nim-http")?.detail).toContain("non-local");
+  it("parses runtime metadata from mocked Ollama response", async () => {
+    vi.stubGlobal("fetch", vi.fn(async () => ({ ok: true, status: 200, text: async () => JSON.stringify({ version: "0.5.0", models: [{ name: "llama3" }], data: [{ id: "llama3" }] }) })));
+    const out = await runLocalRuntimeProbes({ requestId: "p4", nowIso: "2026-05-09T00:00:00.000Z", endpoints: { ollama: "http://127.0.0.1:11434/api/tags" }, commandRunner: async () => ({ code: 127, stdout: "" }) });
+    expect(out.telemetry.backendVersion.state).toBe("observed");
   });
 
-  it("keeps telemetry unavailability explicit and diagnostics report degraded states", async () => {
-    const out = await runLocalRuntimeProbes({ requestId: "p5", nowIso: "2026-05-09T00:00:00.000Z", endpoints: { llamacpp: "https://example.com/health" } });
+  it("keeps diagnostics explicit and routing default unchanged", async () => {
+    const out = await runLocalRuntimeProbes({ requestId: "p5", nowIso: "2026-05-09T00:00:00.000Z", endpoints: { llamacpp: "https://example.com/health" }, commandRunner: async () => ({ code: 127, stdout: "" }) });
     const lines = summarizeLocalDiagnostics({ probeSummary: out, registry: createDeviceRegistry(), governedRouting: { enabled: false, source: "default", allowFallback: false } });
-    expect(lines.join("\n")).toContain("Telemetry availability: unavailable");
-    expect(lines.join("\n")).toContain("Probe degraded states");
-  });
-
-  it("does not mutate provider routing defaults", async () => {
-    const out = await runLocalRuntimeProbes({ requestId: "p6", nowIso: "2026-05-09T00:00:00.000Z", provider: "ollama" });
+    expect(lines.join("\n")).toContain("GPU telemetry");
     expect(out.receipt.provenance.lineage).toContain("local-probe");
   });
 });

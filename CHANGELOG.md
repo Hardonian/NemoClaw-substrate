@@ -6,6 +6,7 @@
 All notable changes to this fork are documented in this file.
 
 ## [Unreleased]
+- telemetry: added explicit local GPU telemetry adapters (`nvidia-smi` observed/unavailable/malformed/timeout states), runtime metadata parsing for configured local runtime probes, registry/diagnostics/event integration, and non-fatal unavailable telemetry behavior while preserving routing defaults.
 
 ### Added
 
