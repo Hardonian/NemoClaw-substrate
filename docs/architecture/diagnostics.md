@@ -22,3 +22,6 @@ Local diagnostics summary includes:
 - Remote candidates are excluded when policy denies or requires unprovided approval.
 - No SSH execution, no Dynamo/GPU balancing claims, and no background daemon/autonomous worker routing.
 - Telemetry confidence and degraded states reflect observed registry/probe data only.
+
+## 2026-05-09 dispatch diagnostics
+- Heterogeneous dispatch wrapper diagnostics now report bridge enablement, governed state, remote execution state, selected candidate, and receipt id.

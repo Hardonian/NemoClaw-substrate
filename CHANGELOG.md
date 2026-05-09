@@ -31,6 +31,7 @@ All notable changes to this fork are documented in this file.
 - Added failure-injection tests for local probe unavailable/timeout/malformed/non-local URL behavior and diagnostics degraded-state visibility.
 
 - Added guarded remote probe contracts: authenticated remote HTTP health-check seam with strict URL/timeout validation, redacted auth metadata, degraded-state mapping, SSH `not_implemented` placeholder, and registry/receipt/diagnostic integration without remote execution.
+- Wired heterogeneous routing bridge into the runtime/provider dispatch seam behind explicit `NEMOCLAW_HETEROGENEOUS_ROUTING`, `NEMOCLAW_GOVERNED_ROUTING`, and `NEMOCLAW_REMOTE_EXECUTION` guards, preserving default local behavior when disabled.
 
 ### Changed
 
@@ -51,5 +52,4 @@ All notable changes to this fork are documented in this file.
 - Telemetry fields can be unavailable/stale and are surfaced truthfully without fabrication.
 - Dynamo integration is planned only and not implemented.
 
-## Unreleased
 - execution: add guarded remote execution adapter seam behind `NEMOCLAW_REMOTE_EXECUTION=1` with policy/approval gating, HTTP scaffold transport, receipt/event emission, replay-safe records, and diagnostics visibility.

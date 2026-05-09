@@ -9,3 +9,7 @@
 - Remote execution still requires a separate `NEMOCLAW_REMOTE_EXECUTION=1` opt-in.
 - Remote candidates are policy-gated and can be excluded as denied or approval-required.
 - No SSH execution, no Dynamo orchestration, and no autonomous orchestration are implemented.
+
+## 2026-05-09 runtime dispatch seam integration
+- Added a thin guarded wrapper at provider dispatch boundary to invoke heterogeneous routing only when both heterogeneous and governed flags are enabled.
+- Remote routing is explicit and blocked unless remote execution is enabled.

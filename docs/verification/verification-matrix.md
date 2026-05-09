@@ -57,3 +57,5 @@ node scripts/verify-core.js --strict
 - Remote candidates are excluded when policy denies or requires unprovided approval.
 - No SSH execution, no Dynamo/GPU balancing claims, and no background daemon/autonomous worker routing.
 - Telemetry confidence and degraded states reflect observed registry/probe data only.
+
+- Runtime dispatch integration wrapper verification added (flag gating, policy block behavior, governed receipts/diagnostics).
