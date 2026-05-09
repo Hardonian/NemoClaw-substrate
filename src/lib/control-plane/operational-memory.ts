@@ -23,6 +23,14 @@ export type OperationalEventCategory =
   | "telemetry_conflict_detected"
   | "telemetry_registry_update_applied"
   | "telemetry_registry_update_skipped"
+  | "worker_identity_observed"
+  | "capability_claim_recorded"
+  | "capability_attestation_observed"
+  | "capability_attestation_conflict"
+  | "worker_trust_elevated"
+  | "worker_trust_denied"
+  | "worker_trust_revoked"
+  | "worker_attestation_expired"
   | "diagnostics_snapshot"
   | "replay_metadata";
 

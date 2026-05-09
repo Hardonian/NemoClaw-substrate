@@ -38,6 +38,55 @@ export interface DegradedState {
 export type NodeRole = "local" | "remote" | "edge" | "control";
 export type NodeTransport = "unix" | "http" | "https" | "grpc" | "ssh" | "unknown";
 export type DeviceHealthStatus = "healthy" | "stale" | "unreachable" | "unknown";
+export type WorkerTrustLevel = "unknown" | "untrusted" | "observed" | "trusted_local" | "trusted_remote" | "revoked";
+export type WorkerAttestationStatus = "none" | "self_reported" | "probe_observed" | "operator_approved" | "expired" | "revoked" | "conflict_detected";
+export type WorkerTrustReasonCode =
+  | "trust_unknown"
+  | "self_reported_not_sufficient"
+  | "probe_observed_requires_approval"
+  | "operator_approved"
+  | "policy_denied"
+  | "worker_revoked"
+  | "attestation_expired"
+  | "attestation_conflict"
+  | "attestation_missing";
+
+export interface WorkerIdentity {
+  workerId: string;
+  safeLabel: string;
+  provider?: string;
+  endpoint?: string;
+}
+
+export interface WorkerCapabilityClaim {
+  claimId: string;
+  workerId: string;
+  claimedAt: string;
+  source: "self_reported" | "probe_observed" | "operator_approved";
+  capabilities: Pick<CapabilitySnapshot, "runtimeBackend" | "executionMode" | "models" | "gpus">;
+  provenance: { sourceRef: string; requestId?: string; receiptId?: string };
+}
+
+export interface WorkerCapabilityAttestation {
+  attestationId: string;
+  workerId: string;
+  status: WorkerAttestationStatus;
+  lastAttestedAt?: string;
+  source: "self_reported" | "probe_observed" | "operator_approved";
+  stale: boolean;
+  conflict: boolean;
+  reasonCodes: WorkerTrustReasonCode[];
+  provenance: { sourceRef: string; claimIds: string[] };
+}
+
+export interface WorkerTrustDecision {
+  workerId: string;
+  trustLevel: WorkerTrustLevel;
+  eligibleForRemoteExecution: boolean;
+  attestationStatus: WorkerAttestationStatus;
+  reasonCodes: WorkerTrustReasonCode[];
+  decidedAt: string;
+}
 
 export interface GpuCapability {
   vendor: string;
@@ -90,6 +139,13 @@ export interface NodeDescriptor {
   health: DeviceHealthStatus;
   metadata: Record<string, string | number | boolean>;
   capabilities: CapabilitySnapshot;
+  workerIdentity?: WorkerIdentity;
+  workerTrustLevel?: WorkerTrustLevel;
+  workerAttestationStatus?: WorkerAttestationStatus;
+  workerLastAttestedAt?: string;
+  workerAttestationSource?: string;
+  workerTrustReasonCodes?: WorkerTrustReasonCode[];
+  workerCapabilityClaimProvenance?: { sourceRef: string; claimIds: string[] };
 }
 
 export interface ControlRequestEnvelope {

@@ -5,6 +5,7 @@ import { deterministicSerialize } from "./serde";
 import type { DeviceRegistry } from "./device-registry";
 import type { OperationalMemoryLog } from "./operational-memory";
 import type { CapabilitySnapshot, DegradedState, NodeDescriptor } from "./types";
+import { buildWorkerIdentity, createCapabilityClaimFromProbe, decideWorkerTrust, markAttestationStatus } from "./worker-trust";
 
 export type WorkerProbeStatus = "succeeded" | "degraded" | "failed" | "not_supported";
 export type WorkerProbeTransport = "local" | "http" | "ssh";
@@ -47,11 +48,22 @@ export function applyProbeToRegistry(registry: DeviceRegistry, node: NodeDescrip
   const preserveModels = telemetryUnavailable ? node.capabilities.models : probe.capability.models.map((modelId) => ({
         modelId, maxContextTokens: 0, flags: { streaming: false, tools: false, batch: false, multimodal: false, quantization: false }, inferenceConstraints: [], executionRestrictions: [],
       }));
+  const claim = createCapabilityClaimFromProbe({ claimId: `claim-${probe.request.requestId}`, workerId: node.nodeId, claimedAt: probe.request.nowIso, sourceRef: nextSource, capabilities: node.capabilities, requestId: probe.request.requestId });
+  const attestation = markAttestationStatus({ workerId: node.nodeId, nowIso: probe.request.nowIso, claim, maxAgeMs: 30 * 60_000 });
+  const trustDecision = decideWorkerTrust({ workerId: node.nodeId, nowIso: probe.request.nowIso, attestation, policyAllowsElevation: false, requireFreshAttestation: false });
+
   const next: NodeDescriptor = {
     ...node,
     lastHeartbeatAt: probe.request.nowIso,
     health: probe.status === "failed" ? "unreachable" : stale ? "stale" : "healthy",
     metadata: { ...node.metadata, probeStatus: probe.status, probeRuntime: probe.request.runtime, probeTransport: probe.request.transport, telemetryCapturedAt: probe.telemetry.capturedAt, telemetrySource: nextSource, telemetryConfidence: probe.telemetry.runtimeHealth.state, telemetryUpdatePolicy: telemetryUnavailable ? "retained_previous_observed" : "applied_observed" },
+    workerIdentity: buildWorkerIdentity({ workerId: node.nodeId, endpoint: node.endpoint }),
+    workerTrustLevel: trustDecision.trustLevel,
+    workerAttestationStatus: attestation.status,
+    workerLastAttestedAt: attestation.lastAttestedAt,
+    workerAttestationSource: attestation.source,
+    workerTrustReasonCodes: trustDecision.reasonCodes,
+    workerCapabilityClaimProvenance: attestation.provenance,
     capabilities: {
       ...node.capabilities,
       capturedAt: probe.telemetry.capturedAt,
@@ -86,6 +98,12 @@ export function emitProbeEvents(log: OperationalMemoryLog, probe: WorkerProbeRes
   if (stale || probe.telemetry.runtimeHealth.reason === "source_conflict") {
     log.append({ ...base, category: "telemetry_conflict_detected", payload: { nodeId: probe.request.nodeId, sourceRuntime: probe.request.runtime, telemetrySource: nextSource, reasonCode: "source_conflict", confidence: "low" } });
   }
+  log.append({ ...base, category: "worker_identity_observed", payload: { workerId: probe.request.nodeId, safeLabel: probe.request.nodeId } });
+  log.append({ ...base, category: "capability_claim_recorded", payload: { workerId: probe.request.nodeId, attestationStatus: "probe_observed", provenance: { sourceRef: nextSource } } });
+  log.append({ ...base, category: "capability_attestation_observed", payload: { workerId: probe.request.nodeId, attestationStatus: "probe_observed", trustDecision: "observed" } });
+  if (stale || probe.telemetry.runtimeHealth.reason === "source_conflict") log.append({ ...base, category: "capability_attestation_conflict", payload: { workerId: probe.request.nodeId, reasonCode: "attestation_conflict" } });
+  if (stale) log.append({ ...base, category: "worker_attestation_expired", payload: { workerId: probe.request.nodeId, reasonCode: "attestation_expired" } });
+
   if (probe.telemetry.gpus.state === "unavailable") {
     log.append({ ...base, category: "telemetry_unavailable", payload: { nodeId: probe.request.nodeId, reasonCode: probe.telemetry.gpus.reason === "command_unavailable" ? "nvidia_smi_unavailable" : "capability_missing", subsystem: "gpu", confidence: "low", sourceRuntime: probe.request.runtime, telemetrySource: nextSource } });
   }
