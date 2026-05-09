@@ -9,3 +9,7 @@ Implemented scaffold in `src/lib/control-plane/replay.ts`.
 Replay envelopes preserve deterministic event ordering, reason codes, and payload integrity via deterministic serialization and digest validation.
 
 Current replay is in-process and export-oriented. Future adapters can persist envelopes externally without mutating source records.
+## 2026-05-09 telemetry operational taxonomy hardening
+- Added dedicated telemetry operational event kinds for probe lifecycle, parser outcomes, availability/staleness/conflict signals, and registry update decisions.
+- Event payloads carry runtime/source attribution, confidence, and degraded reason codes while avoiding secret-bearing fields.
+- Legacy consumers that read `degraded_state` / `runtime_action` continue to function; telemetry adds explicit categories for higher-fidelity replay and observability.

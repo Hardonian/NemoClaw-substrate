@@ -12,6 +12,17 @@ export type OperationalEventCategory =
   | "scheduler_outcome"
   | "operator_override"
   | "runtime_action"
+  | "telemetry_probe_started"
+  | "telemetry_probe_succeeded"
+  | "telemetry_probe_failed"
+  | "telemetry_parse_succeeded"
+  | "telemetry_parse_partial"
+  | "telemetry_parse_failed"
+  | "telemetry_unavailable"
+  | "telemetry_stale"
+  | "telemetry_conflict_detected"
+  | "telemetry_registry_update_applied"
+  | "telemetry_registry_update_skipped"
   | "diagnostics_snapshot"
   | "replay_metadata";
 

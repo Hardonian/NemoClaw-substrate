@@ -32,8 +32,18 @@ describe("worker probes", () => {
     const log = new OperationalMemoryLog();
     emitProbeEvents(log, probe("failed"), "receipt-1");
     const events = log.list();
-    expect(events.length).toBeGreaterThanOrEqual(2);
-    expect(events.some((e) => e.category === "degraded_state")).toBe(true);
+    expect(events.length).toBeGreaterThanOrEqual(3);
+    expect(events.some((e) => e.category === "telemetry_probe_started")).toBe(true);
+    expect(events.some((e) => e.category === "telemetry_unavailable")).toBe(true);
+    expect(events.some((e) => e.category === "telemetry_probe_failed")).toBe(true);
+  });
+
+  it("treats degraded probes as succeeded lifecycle events", () => {
+    const log = new OperationalMemoryLog();
+    emitProbeEvents(log, probe("degraded"), "receipt-2");
+    const events = log.list();
+    expect(events.some((e) => e.category === "telemetry_probe_succeeded")).toBe(true);
+    expect(events.some((e) => e.category === "telemetry_probe_failed")).toBe(false);
   });
 
   it("surfaces probe diagnostics including unknown gpu state", () => {

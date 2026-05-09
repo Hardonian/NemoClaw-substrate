@@ -12,6 +12,7 @@ describe("local runtime probes", () => {
   it("nvidia-smi absent returns unavailable", async () => {
     const out = await runLocalRuntimeProbes({ requestId: "p0", nowIso: "2026-05-09T00:00:00.000Z", commandRunner: async () => ({ code: 127, stdout: "" }) });
     expect(out.outcomes.find((o) => o.probe === "gpu-nvidia-smi")?.state).toBe("unavailable");
+    expect(out.events.some((e) => e.category === "telemetry_unavailable")).toBe(true);
   });
 
   it("parses mocked nvidia-smi output", async () => {
@@ -22,6 +23,7 @@ describe("local runtime probes", () => {
   it("marks malformed nvidia-smi output degraded", async () => {
     const out = await runLocalRuntimeProbes({ requestId: "p2", nowIso: "2026-05-09T00:00:00.000Z", commandRunner: async () => ({ code: 0, stdout: "bad" }) });
     expect(out.outcomes.find((o) => o.probe === "gpu-nvidia-smi")?.state).toBe("degraded");
+    expect(out.events.some((e) => e.category === "telemetry_parse_failed")).toBe(true);
   });
 
   it("marks command timeout degraded/unavailable", async () => {

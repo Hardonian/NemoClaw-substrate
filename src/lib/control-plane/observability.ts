@@ -39,3 +39,24 @@ export function summarizeStaleNodes(nodes: NodeDescriptor[], now: string, staleA
     .sort((a, b) => a.nodeId.localeCompare(b.nodeId))
     .map((n) => `${n.nodeId}: observed ${n.health}`);
 }
+
+const TELEMETRY_KINDS = new Set([
+  "telemetry_probe_started", "telemetry_probe_succeeded", "telemetry_probe_failed", "telemetry_parse_succeeded", "telemetry_parse_partial", "telemetry_parse_failed", "telemetry_unavailable", "telemetry_stale", "telemetry_conflict_detected", "telemetry_registry_update_applied", "telemetry_registry_update_skipped",
+]);
+
+export function summarizeTelemetryEventCounts(events: OperationalEvent[]): Record<string, number> {
+  const out: Record<string, number> = {};
+  for (const event of events) if (TELEMETRY_KINDS.has(event.category)) out[event.category] = (out[event.category] ?? 0) + 1;
+  return Object.fromEntries(Object.entries(out).sort(([a], [b]) => a.localeCompare(b)));
+}
+
+export function summarizeTelemetryDimensions(events: OperationalEvent[]): { confidence: Record<string, number>; source: Record<string, number> } {
+  const confidence: Record<string, number> = {};
+  const source: Record<string, number> = {};
+  for (const event of events.filter((e) => TELEMETRY_KINDS.has(e.category))) {
+    source[event.source] = (source[event.source] ?? 0) + 1;
+    const value = String((event.payload["confidence"] ?? "unknown"));
+    confidence[value] = (confidence[value] ?? 0) + 1;
+  }
+  return { confidence, source };
+}

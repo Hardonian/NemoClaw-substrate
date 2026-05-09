@@ -70,3 +70,7 @@ node scripts/verify-core.js --strict
 
 - Remote parser adapters (Ollama/vLLM/llama.cpp/NIM/generic) validated with mocked fixtures only.
 - Registry telemetry update policy validated for observed/partial/unavailable/stale/conflict states.
+
+## 2026-05-09 telemetry taxonomy verification additions
+- `npx vitest run src/lib/control-plane/local-runtime-probes.test.ts src/lib/control-plane/worker-probes.test.ts src/lib/control-plane/operational-intelligence.test.ts`
+- verify dedicated telemetry event categories, mapping coverage, replay-safe ordering assumptions, and observability aggregation output.

@@ -214,3 +214,7 @@ This phase adds explicit manual local probe execution and diagnostics summaries,
 
 - Remote telemetry enrichment is evidence-only, with parser-specific metadata extraction and explicit persistence policy.
 - No automatic optimization, autonomous routing, background telemetry polling, Dynamo orchestration, or GPU balancing in this phase.
+## 2026-05-09 telemetry operational taxonomy hardening
+- Added dedicated telemetry operational event kinds for probe lifecycle, parser outcomes, availability/staleness/conflict signals, and registry update decisions.
+- Event payloads carry runtime/source attribution, confidence, and degraded reason codes while avoiding secret-bearing fields.
+- Legacy consumers that read `degraded_state` / `runtime_action` continue to function; telemetry adds explicit categories for higher-fidelity replay and observability.
