@@ -9,7 +9,11 @@ export function summarizeDryRunDiagnostics(nodes: NodeDescriptor[], result?: Sch
 
   const lines = [`Registered nodes: ${nodes.length}`];
   for (const node of nodes) {
-    lines.push(`- ${node.nodeId} health=${node.health} models=${node.capabilities.models.length} gpus=${node.capabilities.gpus.length || "unknown"}`);
+    const probeStatus = String(node.metadata["probeStatus"] ?? "unprobed");
+    const runtime = String(node.metadata["probeRuntime"] ?? node.capabilities.runtimeBackend);
+    const telemetryAt = String(node.metadata["telemetryCapturedAt"] ?? node.capabilities.capturedAt);
+    const gpuState = node.capabilities.gpus.length > 0 ? "known" : "unknown";
+    lines.push(`- ${node.nodeId} health=${node.health} probe=${probeStatus} runtime=${runtime} models=${node.capabilities.models.length} gpu_state=${gpuState} telemetry_at=${telemetryAt}`);
   }
   if (!result) return lines;
   lines.push(`Policy result: ${result.policyResult}`);

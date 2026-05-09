@@ -40,3 +40,10 @@ All notable changes to this fork are documented in this file.
 - Added deterministic governance foundation: policy evaluator, task classification, scheduler primitives, governed fallback records, and initial receipt/scheduling seams.
 - Added foundational control-plane contracts, device registry service, degraded-state taxonomy, and receipt primitives (scaffolded integration only).
 - Added tests for policy/classification/scheduler determinism and fallback explicitness.
+
+
+## Worker probe and telemetry adapter note (2026-05-09)
+- Probes are explicit operator-invoked actions (manual/invoked-only), not autonomous loops.
+- Remote execution remains disabled in this phase; governed routing remains opt-in.
+- Telemetry fields can be unavailable/stale and are surfaced truthfully without fabrication.
+- Dynamo integration is planned only and not implemented.
