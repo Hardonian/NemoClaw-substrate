@@ -23,7 +23,5 @@ All notable changes to this fork are documented in this file.
 
 - Fixed CHANGELOG header/content duplication from prior PR and normalized single SPDX/changelog header.
 - Added deterministic governance foundation: policy evaluator, task classification, scheduler primitives, governed fallback records, and initial receipt/scheduling seams.
-- Added tests for policy/classification/scheduler determinism and fallback explicitness.
-
-## 2026-05-09
 - Added foundational control-plane contracts, device registry service, degraded-state taxonomy, and receipt primitives (scaffolded integration only).
+- Added tests for policy/classification/scheduler determinism and fallback explicitness.

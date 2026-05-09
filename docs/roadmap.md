@@ -169,3 +169,5 @@ Rationale:
 
 ## Governance foundation (May 2026)
 Implemented deterministic policy, classification, and scheduler planning primitives. Runtime routing remains intentionally unchanged; full enforcement and receipt wiring are follow-up work.
+
+- Runtime policy/receipt integration in safe seams delivered; broad runtime governance and scheduler handoff remain planned future work.
