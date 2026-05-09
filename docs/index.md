@@ -377,7 +377,7 @@ Network Policies <reference/network-policies>
 Troubleshooting <reference/troubleshooting>
 ```
 
-```{toctree}
+``` {toctree}
 :caption: Governance
 :hidden:
 
@@ -388,9 +388,12 @@ Capability Status <architecture/capability-status-matrix>
 Governance Flows <architecture/governance-flows>
 Replay Lineage <architecture/replay-lineage>
 Event Taxonomy <architecture/event-taxonomy-map>
+Diagnostics Surface <architecture/diagnostics-surface>
+Evidence Lifecycle <architecture/evidence-lifecycle>
+Dependency Governance <architecture/dependency-governance>
 ```
 
-```{toctree}
+``` {toctree}
 :caption: Verification
 :hidden:
 

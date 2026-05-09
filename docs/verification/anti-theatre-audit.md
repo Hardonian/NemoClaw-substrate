@@ -17,19 +17,27 @@ This document performs a semantic audit of the repository's claims to ensure str
 ## Detailed Findings
 
 ### 1. Implied Orchestration
+
 **Flag:** Some architecture diagrams show remote execution flows that might imply a background orchestrator or queue manager.
+
 **Correction:** Explicitly label these as "Synchronous Remote Dispatch" and note the absence of distributed queues or retries in the [Capability Status Matrix](../architecture/capability-status-matrix.md).
 
 ### 2. Autonomous vs. Reactive
+
 **Flag:** The term "always-on assistants" in `AGENTS.md` might imply autonomous self-healing loops.
+
 **Correction:** Clarify that "always-on" refers to persistence of the governed environment, not autonomous agency. All agent actions are reactive to explicit triggers in the current substrate.
 
 ### 3. GPU Balancing and Dynamo
+
 **Flag:** Frequent mentions of Dynamo integration and GPU balancing in "planned" sections.
+
 **Correction:** Ensure every mention is paired with "Contingent on stable local control contracts" to prevent the perception of imminent delivery.
 
 ### 4. Self-Healing Claims
+
 **Flag:** Any mention of "self-healing" or "automatic recovery".
+
 **Correction:** Remove or replace with "Explicit Fail-Closed and Manual Recovery" until a supervised recovery engine is implemented.
 
 ## Audit Rules for Contributors

@@ -25,6 +25,7 @@ graph LR
 ## Lineage Requirements
 
 Every control decision must include the following lineage metadata:
+
 - **`parent_receipt_id`:** Link to the preceding decision in the execution chain.
 - **`lineage_hash`:** A stable hash of the input envelope (registry, policy, request).
 - **`governance_reason`:** An explainable string or code justifying the selection/rejection.
@@ -33,6 +34,7 @@ Every control decision must include the following lineage metadata:
 ## Governance Reason Requirements
 
 Governance reasons must be:
+
 - **Machine-readable:** Using typed reason codes (e.g., `POLICY_DENY`, `CAPABILITY_MATCH`).
 - **Human-explainable:** Including a concise description of the logic applied.
 - **Attributable:** Linked to a specific policy version or registry snapshot.
@@ -40,6 +42,7 @@ Governance reasons must be:
 ## Deterministic Ordering and Tie-Breaks
 
 To ensure replay integrity, all candidate evaluations must use stable, deterministic ordering.
+
 - **Registry Inputs:** Sorted by stable identifier (e.g., UUID or Device ID).
 - **Policy Rules:** Evaluated in a fixed, documented order.
 - **Tie-Breaks:** Using stable secondary attributes (e.g., lexical sort on candidate name) rather than random selection.

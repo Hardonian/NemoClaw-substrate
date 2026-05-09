@@ -20,4 +20,5 @@ This index tracks the foundational architectural decisions for the NemoClaw gove
 These ADRs provide the decision foundation for the workstreams defined in the [Roadmap](../roadmap.md).
 
 ## Verification Strategy
+
 Every ADR includes specific verification implications that must be satisfied before the corresponding implementation is considered "Release Ready" according to the [Status Matrix](../architecture/capability-status-matrix.md).
