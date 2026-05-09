@@ -5,6 +5,7 @@
         "openclaw",
         "proofpack",
         "rollups",
+        "serde",
         "TOCTOU",
         "unauditable",
         "unredacted"
