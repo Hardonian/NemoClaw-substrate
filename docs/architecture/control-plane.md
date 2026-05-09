@@ -45,3 +45,5 @@ Implemented deterministic policy, classification, and scheduler planning primiti
 ## Runtime integration update (2026-05-09)
 
 Control-plane primitives now have a safe runtime seam adapter for action descriptors, policy checks, and receipt emission in low-risk flows. Scheduler routing is still scaffolded and does not alter provider selection yet.
+
+- **Implemented (2026-05-09):** operational memory, replay envelope validation, supervised policy-promotion proposals, and deterministic observability helpers (all scaffolded, no auto-mutation).

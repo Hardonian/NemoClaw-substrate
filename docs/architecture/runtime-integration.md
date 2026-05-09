@@ -35,3 +35,6 @@ This document tracks low-risk runtime seams where governed execution primitives 
 - Default behavior remains pass-through unless policy explicitly returns deny or approval_required.
 - Denials and approval requirements are surfaced as explicit operator-facing errors.
 - Scheduler primitives remain scaffolded and are not yet altering runtime routing decisions.
+
+- Runtime diagnostics summary now reports operational event counts from receipt-derived append-only events.
+- Routing behavior remains unchanged; scheduler routing handoff is still planned.

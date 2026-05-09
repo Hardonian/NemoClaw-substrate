@@ -171,3 +171,5 @@ Rationale:
 Implemented deterministic policy, classification, and scheduler planning primitives. Runtime routing remains intentionally unchanged; full enforcement and receipt wiring are follow-up work.
 
 - Runtime policy/receipt integration in safe seams delivered; broad runtime governance and scheduler handoff remain planned future work.
+
+- Operational intelligence substrate phase started: supervised operational memory + replay/observability scaffolding implemented; worker/device orchestration adapters remain planned.

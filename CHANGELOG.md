@@ -15,6 +15,10 @@ All notable changes to this fork are documented in this file.
 - Roadmap update with dependency graph and phased workstreams (`docs/roadmap.md`).
 - Verification matrix for documentation, contracts, scheduler, policy, receipts, degraded states, observability, and release-readiness (`docs/verification/verification-matrix.md`).
 
+- Operational intelligence substrate scaffolding: append-only operational memory, deterministic replay envelope validation, observability aggregations, and supervised policy-promotion proposals.
+- Runtime seam diagnostics now include operational event counts without changing routing behavior.
+- Hygiene test for duplicate CHANGELOG/SPDX header detection.
+
 ### Changed
 
 - README updated to clarify fork purpose, current-state vs roadmap, architecture doc locations, and PR verification expectations.
