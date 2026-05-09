@@ -1,10 +1,10 @@
 import React from "react";
 import type { LocalProbeSummary } from "../data/types";
-import { StateLabel } from "../primitives/state-label";
-import { DataTable, type ColumnDef } from "../primitives/data-table";
-import { Timestamp } from "../primitives/timestamp";
-import { Card } from "../primitives/card";
-import { KVTable } from "../primitives/key-value-table";
+import { StateLabel } from "../components/primitives/state-label";
+import { DataTable, type ColumnDef } from "../components/primitives/data-table";
+import { Timestamp } from "../components/primitives/timestamp";
+import { Card } from "../components/primitives/card";
+import { KVTable } from "../components/primitives/key-value-table";
 import styles from "./route-common.module.css";
 
 export interface TelemetryRouteProps {

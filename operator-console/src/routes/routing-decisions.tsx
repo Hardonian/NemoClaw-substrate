@@ -1,8 +1,8 @@
 import React from "react";
 import type { HeterogeneousRoutingResult } from "../data/types";
-import { StateLabel } from "../primitives/state-label";
-import { DataTable, type ColumnDef } from "../primitives/data-table";
-import { Card } from "../primitives/card";
+import { StateLabel } from "../components/primitives/state-label";
+import { DataTable, type ColumnDef } from "../components/primitives/data-table";
+import { Card } from "../components/primitives/card";
 import styles from "./route-common.module.css";
 
 export interface RoutingDecisionsRouteProps {

@@ -1,6 +1,6 @@
 import React from "react";
 import type { DegradedState } from "../data/types";
-import { DegradedInspector } from "../viewers/degraded-inspector";
+import { DegradedInspector } from "../components/viewers/degraded-inspector";
 
 export interface DegradedStatesRouteProps {
   states: DegradedState[];

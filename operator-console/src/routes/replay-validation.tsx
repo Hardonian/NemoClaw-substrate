@@ -1,7 +1,7 @@
 import React from "react";
 import type { ReplayEnvelope } from "../data/types";
-import { ReplayViewer } from "../viewers/replay-viewer";
-import { Card } from "../primitives/card";
+import { ReplayViewer } from "../components/viewers/replay-viewer";
+import { Card } from "../components/primitives/card";
 import styles from "./route-common.module.css";
 
 export interface ReplayValidationRouteProps {

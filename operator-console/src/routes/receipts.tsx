@@ -1,6 +1,6 @@
 import React from "react";
 import type { ExecutionReceipt } from "../data/types";
-import { ReceiptViewer } from "../viewers/receipt-viewer";
+import { ReceiptViewer } from "../components/viewers/receipt-viewer";
 import styles from "./route-common.module.css";
 
 export interface ReceiptsRouteProps {

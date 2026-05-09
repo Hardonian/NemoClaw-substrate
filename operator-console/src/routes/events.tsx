@@ -1,9 +1,9 @@
 import React from "react";
 import type { OperationalEvent } from "../data/types";
-import { DataTable, type ColumnDef } from "../primitives/data-table";
-import { Timestamp } from "../primitives/timestamp";
-import { StateLabel } from "../primitives/state-label";
-import { Card } from "../primitives/card";
+import { DataTable, type ColumnDef } from "../components/primitives/data-table";
+import { Timestamp } from "../components/primitives/timestamp";
+import { StateLabel } from "../components/primitives/state-label";
+import { Card } from "../components/primitives/card";
 import { useState } from "react";
 import styles from "./route-common.module.css";
 

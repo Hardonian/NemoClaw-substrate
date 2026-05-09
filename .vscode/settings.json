@@ -6,6 +6,7 @@
         "proofpack",
         "rollups",
         "TOCTOU",
-        "unauditable"
+        "unauditable",
+        "unredacted"
     ]
 }

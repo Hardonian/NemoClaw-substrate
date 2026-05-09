@@ -1,9 +1,9 @@
 import React from "react";
-import { Card } from "../primitives/card";
-import { StateLabel } from "../primitives/state-label";
-import { StatusBadge } from "../primitives/status-badge";
-import { DataTable, type ColumnDef } from "../primitives/data-table";
-import { Timeline } from "../primitives/timeline";
+import { Card } from "../components/primitives/card";
+import { StateLabel } from "../components/primitives/state-label";
+import { StatusBadge } from "../components/primitives/status-badge";
+import { DataTable, type ColumnDef } from "../components/primitives/data-table";
+import { Timeline } from "../components/primitives/timeline";
 import type { SnapshotData } from "../hooks/use-snapshot";
 import styles from "./overview.module.css";
 

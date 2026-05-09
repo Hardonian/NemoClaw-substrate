@@ -1,7 +1,7 @@
 import React from "react";
 import type { ExecutionReceipt, NodeDescriptor } from "../data/types";
-import { DiagnosticsSummaryPanel } from "../panels/diagnostics-summary";
-import { Card } from "../primitives/card";
+import { DiagnosticsSummaryPanel } from "../components/panels/diagnostics-summary";
+import { Card } from "../components/primitives/card";
 import styles from "./route-common.module.css";
 
 export interface DiagnosticsRouteProps {

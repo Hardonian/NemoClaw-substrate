@@ -1,6 +1,6 @@
 import React from "react";
 import type { WorkerTrustDecision, WorkerCapabilityAttestation, WorkerIdentity } from "../data/types";
-import { TrustInspector } from "../viewers/trust-inspector";
+import { TrustInspector } from "../components/viewers/trust-inspector";
 
 export interface TrustAttestationRouteProps {
   decisions: WorkerTrustDecision[];

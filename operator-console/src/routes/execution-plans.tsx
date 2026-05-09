@@ -1,6 +1,6 @@
 import React from "react";
 import type { ExecutionReceipt } from "../data/types";
-import { ExecutionPlanViewer } from "../viewers/execution-plan-viewer";
+import { ExecutionPlanViewer } from "../components/viewers/execution-plan-viewer";
 
 export interface ExecutionPlansRouteProps {
   receipts: ExecutionReceipt[];
