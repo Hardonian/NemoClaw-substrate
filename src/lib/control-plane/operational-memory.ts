@@ -59,8 +59,8 @@ export class OperationalMemoryLog {
   list(): OperationalEvent[] { return this.store.list(); }
 }
 
-export function buildEventsFromReceipt(receipt: ExecutionReceipt, source = "runtime-seam"): OperationalEvent[] {
-  const log = new OperationalMemoryLog();
+export function buildEventsFromReceipt(receipt: ExecutionReceipt, source = "runtime-seam", existingLog?: OperationalMemoryLog): OperationalEvent[] {
+  const log = existingLog ?? new OperationalMemoryLog();
   const out: OperationalEvent[] = [];
   out.push(log.append({ occurredAt: receipt.createdAt, category: "receipt", source, provenance: { requestId: receipt.requestId, receiptId: receipt.receiptId }, replayRef: receipt.provenance, payload: { receipt } }));
   if (receipt.policyDecision) {

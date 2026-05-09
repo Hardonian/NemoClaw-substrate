@@ -14,3 +14,6 @@ Operational memory is append-only, supervised, inspectable, and deterministic. I
 - No automatic policy mutation.
 - No hidden routing bias.
 - No conversational/chat memory semantics.
+
+## 2026-05-09 adapter/dry-run update
+Worker/provider adapter contracts and scheduler-to-provider dry-run bridge are implemented for diagnostics and receipt/event emission only. Live provider routing is unchanged. Remote execution, Dynamo adapters, and GPU telemetry remain planned future work.

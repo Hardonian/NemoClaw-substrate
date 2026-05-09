@@ -9,6 +9,10 @@ All notable changes to this fork are documented in this file.
 
 ### Added
 
+
+- Added worker/device adapter contracts and local provider capability adapter with explicit unknown-hardware degraded-state reporting.
+- Added scheduler-to-provider dry-run bridge, diagnostics summary helper, and dry-run operational receipt/event emission without changing live routing.
+- Added tests covering worker adapter determinism, dry-run no-execution behavior, diagnostics summaries, and policy-denied summaries.
 - Current-state architecture audit documentation (`docs/architecture/current-state.md`).
 - Target-state architecture documentation (`docs/architecture/target-state.md` + detailed architecture component docs).
 - ADR scaffolding and governance decisions (`docs/adr/0001` through `0007`).
