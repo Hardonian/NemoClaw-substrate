@@ -188,3 +188,8 @@ This phase adds explicit manual local probe execution and diagnostics summaries,
 - Added authenticated remote HTTP health-check probe seam with strict endpoint validation and timeout bounds.
 - Added SSH remote probe placeholder status (`not_implemented`) without shell execution.
 - Added remote probe receipt/event/registry integration seams; governed routing and remote execution remain unchanged/off.
+
+## 2026-05-09 guarded remote execution seam update
+- Added deny-by-default remote execution scaffold behind explicit opt-in flag.
+- Implemented policy/approval-gated HTTP transport seam with redaction and degraded truth reporting.
+- Explicitly out of scope: SSH command execution, daemons, autonomous orchestration, Dynamo integration.

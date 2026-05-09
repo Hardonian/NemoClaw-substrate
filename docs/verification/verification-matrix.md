@@ -47,3 +47,5 @@ node scripts/verify-core.js --strict
 - Remote HTTP probe verification is seam-level and mock-driven.
 - SSH probe remains a placeholder seam and is verified as explicit not-implemented behavior.
 - No claims of distributed execution, autonomous GPU orchestration, or Dynamo integration are made by this verification matrix.
+
+- verify remote execution adapter seam: opt-in gating, policy/approval blocking, degraded path truth, receipt/event emission, diagnostics exposure.

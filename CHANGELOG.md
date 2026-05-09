@@ -49,3 +49,6 @@ All notable changes to this fork are documented in this file.
 - Remote execution remains disabled in this phase; governed routing remains opt-in.
 - Telemetry fields can be unavailable/stale and are surfaced truthfully without fabrication.
 - Dynamo integration is planned only and not implemented.
+
+## Unreleased
+- execution: add guarded remote execution adapter seam behind `NEMOCLAW_REMOTE_EXECUTION=1` with policy/approval gating, HTTP scaffold transport, receipt/event emission, replay-safe records, and diagnostics visibility.
