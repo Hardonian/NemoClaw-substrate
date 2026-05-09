@@ -25,6 +25,7 @@ function seededRegistry() {
   const reg = createDeviceRegistry();
   const probe = new LocalProviderCapabilityAdapter().toNodeDescriptor({ provider: "nvidia-nim", model: "nvidia/nemotron-3-super-120b-a12b", capturedAt: "2026-05-09T00:00:00.000Z", source: "test" });
   reg.register(probe.node);
+  reg.updateHeartbeat(probe.node.nodeId, "2026-05-09T00:00:00.000Z");
   return reg;
 }
 
@@ -43,7 +44,7 @@ describe("governed provider routing", () => {
 
   it("enabled mode invokes scheduler path and emits receipt/event", () => {
     const memory = createOperationalMemoryLog();
-    const out = routeProviderWithGovernance({ requestId: "r2", nowIso: "2026-05-09T00:00:00.000Z", provider: "openai-api", model: "gpt-5.4", registry: seededRegistry(), policyBundle: allowPolicy, config: { enabled: true, source: "env", allowFallback: false }, operationalMemory: memory });
+    const out = routeProviderWithGovernance({ requestId: "r2", nowIso: "2026-05-09T00:00:00.000Z", provider: "nvidia-nim", model: "nvidia/nemotron-3-super-120b-a12b", registry: seededRegistry(), policyBundle: allowPolicy, config: { enabled: true, source: "env", allowFallback: false }, operationalMemory: memory });
     expect(out.receipt?.schedulingDecision).toBeTruthy();
     expect(out.receipt?.policyDecision?.allowed).toBe(true);
     expect(out.events.length).toBeGreaterThan(0);

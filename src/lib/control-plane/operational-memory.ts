@@ -59,6 +59,10 @@ export class OperationalMemoryLog {
   list(): OperationalEvent[] { return this.store.list(); }
 }
 
+export function createOperationalMemoryLog(store?: OperationalMemoryStore): OperationalMemoryLog {
+  return new OperationalMemoryLog(store);
+}
+
 export function buildEventsFromReceipt(receipt: ExecutionReceipt, source = "runtime-seam", existingLog?: OperationalMemoryLog): OperationalEvent[] {
   const log = existingLog ?? new OperationalMemoryLog();
   const out: OperationalEvent[] = [];
