@@ -18,6 +18,19 @@ describe("control-plane foundations", () => {
   it("orders registry nodes deterministically", () => { const r = new DeviceRegistry(); r.registerNode(makeNode("b")); r.registerNode(makeNode("a")); expect(r.listNodes().map((n) => n.nodeId)).toEqual(["a", "b"]); });
   it("returns explicit missing-node semantics", () => { const r = new DeviceRegistry(); expect(r.updateHeartbeat("missing", "2026-05-09T00:00:01.000Z")).toEqual({ ok: false, reasonCode: "node_missing" }); });
   it("marks stale heartbeats deterministically", () => { const r = new DeviceRegistry(); r.registerNode(makeNode("a")); const s = r.summarizeHealth("2026-05-09T00:01:00.000Z", 5000); expect(s.byHealth.stale).toBe(1); });
+  it("registry preserves trust/capability provenance", () => {
+    const r = new DeviceRegistry();
+    const node = makeNode("trusted-1", "2026-05-09T00:00:00.000Z", "remote");
+    node.workerTrustLevel = "trusted_remote";
+    node.workerAttestationStatus = "operator_approved";
+    r.registerNode(node);
+    r.updateCapabilities("trusted-1", { ...node.capabilities, source: "probe://runtime", runtimeTags: ["attestation:operator_approved"] });
+    const stored = r.getNode("trusted-1");
+    expect(stored?.workerTrustLevel).toBe("trusted_remote");
+    expect(stored?.workerAttestationStatus).toBe("operator_approved");
+    expect(stored?.capabilities.source).toBe("probe://runtime");
+    expect(stored?.capabilities.runtimeTags).toContain("attestation:operator_approved");
+  });
   it("validates degraded state semantics", () => { const d: DegradedState = { category: "healthy", reason: "ok", affectedSubsystem: "registry", severity: "info", reasonCode: "heartbeat_stale", explanation: "x", sourceComponent: "test", timestamp: "2026-05-09T00:00:00.000Z" }; expect(validateDegradedState(d)).toContain("healthy category must use reasonCode=none"); });
   it("keeps receipt serialization stable", () => { const rec: ExecutionReceipt = { version: "1", receiptId: "r1", requestId: "q1", createdAt: "2026-05-09T00:00:00.000Z", phases: [{ phase: "received", at: "2026-05-09T00:00:00.000Z" }], degradedEvents: [], fallbackAttempts: [], toolInvocations: [], timing: {}, provenance: { source: "test", lineage: ["root"], replayVersion: "1" }, operatorOverrides: [] }; expect(deterministicSerialize(rec)).toEqual('{"createdAt":"2026-05-09T00:00:00.000Z","degradedEvents":[],"fallbackAttempts":[],"operatorOverrides":[],"phases":[{"at":"2026-05-09T00:00:00.000Z","phase":"received"}],"provenance":{"lineage":["root"],"replayVersion":"1","source":"test"},"receiptId":"r1","requestId":"q1","timing":{},"toolInvocations":[],"version":"1"}'); });
   it("evaluates policy deterministically", () => { const b: PolicyBundle = { id: "default", version: "1", defaultEffect: "allow", rules: [{ id: "z", order: 10, description: "deny shell", effect: "deny", reasonCode: "policy_rule_deny", matches: (c) => c.actionClass === "shell" }] }; expect(evaluatePolicy(b, { request, actionClass: "shell" }).sourceRuleId).toBe("z"); });

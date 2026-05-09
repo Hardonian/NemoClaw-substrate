@@ -18,4 +18,15 @@ describe("changelog hygiene", () => {
     const duplicateBullets = bullets.filter((line, index) => bullets.indexOf(line) !== index);
     expect(duplicateBullets).toEqual([]);
   });
+
+  it("contains no pre-title content beyond SPDX headers", () => {
+    const content = fs.readFileSync(path.join(process.cwd(), "CHANGELOG.md"), "utf8");
+    const lines = content.split(/\r?\n/).map((line) => line.trim());
+    const titleIndex = lines.findIndex((line) => line === "# Changelog");
+    expect(titleIndex).toBeGreaterThanOrEqual(0);
+    const invalid = lines
+      .slice(0, titleIndex)
+      .filter((line) => line && !line.startsWith("<!-- SPDX-FileCopyrightText:") && !line.startsWith("<!-- SPDX-License-Identifier:"));
+    expect(invalid).toEqual([]);
+  });
 });

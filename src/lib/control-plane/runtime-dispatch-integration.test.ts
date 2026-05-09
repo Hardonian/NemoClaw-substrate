@@ -118,6 +118,9 @@ describe("runtime dispatch integration", () => {
     expect(diagnostics).toContain("Excluded candidates:");
     expect(diagnostics).toContain("No-candidate reason:");
     expect(diagnostics).toContain("Fallback:");
+    expect(diagnostics).toContain("Worker trust level:");
+    expect(diagnostics).toContain("Worker attestation status:");
+    expect(diagnostics).toContain("Trust denial reason:");
     expect(diagnostics).toContain("Receipt:");
   });
 });

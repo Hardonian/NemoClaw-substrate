@@ -81,3 +81,12 @@ node scripts/verify-core.js --strict
 
 - `npx vitest run src/lib/control-plane/degraded-state-chaos.test.ts`
 - Verifies deterministic failure-injection coverage across policy deny/approval gating, no-candidate/no-hidden-fallback routing behavior, remote timeout degradation, telemetry non-erasure guarantees, replay digest mismatch detection, and diagnostics empty-state reason reporting.
+
+## Worker trust and attestation constraints (2026-05-09)
+- Self-reported claims are evidence only and are **not automatically trusted**.
+- Probe-observed evidence improves visibility but is **not authorization**.
+- Operator approval is explicit and required before remote trust elevation.
+- Revoked, expired, or conflict-detected workers are blocked/degraded for remote execution paths.
+- Cryptographic attestation is not implemented yet in this phase.
+- Remote execution is disabled by default and requires explicit opt-in flags.
+- No orchestration/Dynamo integration is implemented in this phase.

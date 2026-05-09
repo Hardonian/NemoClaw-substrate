@@ -28,4 +28,12 @@ describe("worker trust attestation", () => {
     const decision = decideWorkerTrust({ workerId: "w3", nowIso: "2026-05-10T00:00:00.000Z", attestation: att, policyAllowsElevation: true, requireFreshAttestation: true });
     expect(decision.eligibleForRemoteExecution).toBe(false);
   });
+
+  it("revoked worker is never eligible", () => {
+    const claim = { ...createCapabilityClaimFromProbe({ claimId: "c4", workerId: "w4", claimedAt: "2026-05-09T00:00:00.000Z", sourceRef: "operator", capabilities: cap }), source: "operator_approved" as const };
+    const att = markAttestationStatus({ workerId: "w4", nowIso: "2026-05-09T00:01:00.000Z", claim, maxAgeMs: 3600000 });
+    const decision = decideWorkerTrust({ workerId: "w4", nowIso: "2026-05-09T00:01:00.000Z", attestation: att, policyAllowsElevation: true, revoked: true });
+    expect(decision.trustLevel).toBe("revoked");
+    expect(decision.eligibleForRemoteExecution).toBe(false);
+  });
 });

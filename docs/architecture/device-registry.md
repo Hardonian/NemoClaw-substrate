@@ -30,3 +30,12 @@ Worker/provider adapter contracts and scheduler-to-provider dry-run bridge are i
 ## Telemetry registry provenance
 
 Device registry telemetry snapshots preserve source attribution and stale/conflict markers. Unavailable telemetry does not clear previously observed inventory.
+
+## Worker trust and attestation constraints (2026-05-09)
+- Self-reported claims are evidence only and are **not automatically trusted**.
+- Probe-observed evidence improves visibility but is **not authorization**.
+- Operator approval is explicit and required before remote trust elevation.
+- Revoked, expired, or conflict-detected workers are blocked/degraded for remote execution paths.
+- Cryptographic attestation is not implemented yet in this phase.
+- Remote execution is disabled by default and requires explicit opt-in flags.
+- No orchestration/Dynamo integration is implemented in this phase.
