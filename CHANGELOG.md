@@ -35,6 +35,7 @@ All notable changes to this fork are documented in this file.
 ### Changed
 
 - README updated to clarify fork purpose, current-state vs roadmap, architecture doc locations, and PR verification expectations.
+- routing: add opt-in heterogeneous scheduler bridge connecting local provider and guarded remote execution candidates, with explicit policy gating, deterministic candidate diagnostics, and receipt-recorded fallback behavior.
 
 ## 2026-05-09
 
