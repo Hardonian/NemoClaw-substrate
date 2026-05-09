@@ -38,7 +38,7 @@ export async function runRemoteExecution(input: { request: RemoteExecutionReques
   if (policyDecision === "deny") return finalize("policy_denied", "policy_denied", "policy_denied", "policy_blocked");
   if (policyDecision === "approval_required" && !request.approved) return finalize("approval_required", "approval_required", "approval_required", "approval_required");
 
-  const node = request.nodeId ? input.registry.get(request.nodeId) : undefined;
+  const node = request.nodeId ? input.registry.getNode(request.nodeId) : undefined;
   if (request.nodeId && !node) return finalize("unavailable", "node_unavailable", "node_not_registered", "transport_unreachable");
   if (node && node.health !== "healthy") return finalize("degraded", "node_degraded", "node_stale_or_unhealthy", "transport_unreachable");
   const endpoint = request.targetEndpoint ?? node?.endpoint;

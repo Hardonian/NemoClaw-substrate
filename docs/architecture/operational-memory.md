@@ -20,3 +20,11 @@ Worker/provider adapter contracts and scheduler-to-provider dry-run bridge are i
 
 ## 2026-05-09 remote execution memory update
 - Remote execution attempts now emit receipt-linked operational events for disabled, denied, approval-required, degraded, failed, and succeeded outcomes.
+
+## 2026-05-09 heterogeneous routing update
+- Default local/provider behavior remains unchanged unless heterogeneous routing is explicitly enabled.
+- Heterogeneous routing is opt-in via `NEMOCLAW_HETEROGENEOUS_ROUTING=1` and does not imply remote execution enablement.
+- Remote execution requires separate `NEMOCLAW_REMOTE_EXECUTION=1` and policy eligibility.
+- Remote candidates are excluded when policy denies or requires unprovided approval.
+- No SSH execution, no Dynamo/GPU balancing claims, and no background daemon/autonomous worker routing.
+- Telemetry confidence and degraded states reflect observed registry/probe data only.
