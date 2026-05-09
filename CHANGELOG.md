@@ -6,6 +6,7 @@
 All notable changes to this fork are documented in this file.
 
 ## [Unreleased]
+- evidence: add deterministic evidence bundle and audit export packaging with stable hashes, manifest validation, JSON/NDJSON export, lineage rejection, replay integrity checks, and secret redaction.
 - hardening: close governed substrate residual matrix with direct replay drift rejection assertions, reserved-event observability guardrails, and docs/status coherence updates (no new runtime features).
 - trust: add worker identity, trust-level and attestation-status records to control-plane node descriptors; add deterministic capability attestation/trust decision helpers; enforce remote execution trust gating for revoked/expired/conflicted/insufficient trust workers; and emit explicit worker trust/attestation operational events.
 - release: completed governed substrate readiness closure pass with claim-audit normalization, status taxonomy docs, and release verification gate wiring.

@@ -27,6 +27,7 @@
 6. operational memory
 7. observability
 8. hardening/replay
+9. evidence bundle exports
 
 Rationale:
 - Scheduler depends on registry because deterministic candidate evaluation requires explicit device/capability inputs.
@@ -34,6 +35,7 @@ Rationale:
 - Operational memory depends on receipts to preserve attributable evidence for recommendations.
 - Observability depends on receipts and registry to explain what happened and where.
 - Hardening depends on prior control-path semantics so fail-closed rules target real contracts.
+- Evidence bundle exports depend on plans, approvals, receipts, operational memory, replay, telemetry, trust, degraded-state, and diagnostics records already existing as explicit evidence.
 - Dynamo/GPU orchestration remains adapter-based future work and should not precede stable local contracts.
 
 ## Workstreams
@@ -158,10 +160,22 @@ Rationale:
 - Suggested commit style: `feat(hardening): ...`
 - Suggested PR title: `feat: add hardening and replayability gates`
 
-### 11) future Dynamo/GPU orchestration adapter
+### 11) evidence bundle exports
+- Purpose: package existing governed-substrate records into deterministic proof artifacts.
+- Deliverables: `EvidenceBundle`, `EvidenceManifest`, `EvidenceArtifact`, JSON/NDJSON export helpers, replay evidence package helper, and validation tests.
+- Dependencies: 5-10.
+- Parallelization potential: medium.
+- Exit criteria: stable bundle hashes, deterministic export order, lineage rejection, replay package integrity, and redaction tests pass.
+- Verification expectations: targeted evidence bundle Vitest suite plus release verification gate.
+- Risks: false audit confidence if lineage is missing or secret redaction is bypassed.
+- Suggested branch name: `evidence/audit-bundle-export`
+- Suggested commit style: `evidence: ...`
+- Suggested PR title: `evidence: implement deterministic evidence and audit bundle exports`
+
+### 12) future Dynamo/GPU orchestration adapter
 - Purpose: optional adapter seam for future external orchestration.
 - Deliverables: interface contracts and compatibility tests.
-- Dependencies: stable local contracts from 3-10.
+- Dependencies: stable local contracts from 3-11.
 - Parallelization potential: low.
 - Exit criteria: adapter does not alter local core contracts.
 - Verification expectations: adapter conformance tests.
@@ -243,3 +257,8 @@ This phase adds explicit manual local probe execution and diagnostics summaries,
 
 ## Residual matrix closure update (2026-05-09)
 Closure pass completed for direct branch assertions and docs/status coherence. No new runtime behavior was introduced; work was limited to replay/observability/trust-policy-fallback verification hardening and claim hygiene.
+
+## 2026-05-09 evidence bundle export update
+- Added deterministic evidence bundle and audit export packaging for existing plans, approvals, receipts, replay envelopes, operational events, telemetry, trust/attestation, degraded-state, and diagnostics records.
+- Export helpers are pure packaging and validation primitives. They do not orchestrate work, mutate policy, mutate trust, or change runtime routing.
+- JSON and NDJSON exports preserve stable artifact ordering, manifest hashes, bundle hashes, lineage validation, replay integrity checks, and secret redaction.

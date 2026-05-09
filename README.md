@@ -16,7 +16,7 @@ The fork prioritizes deterministic and auditable control over opaque autonomy. I
 
 ## Current state vs roadmap
 
-- **Implemented:** existing CLI/plugin/sandbox orchestration and inference onboarding flows; control-plane verification gates.
+- **Implemented:** existing CLI/plugin/sandbox orchestration and inference onboarding flows; control-plane verification gates; deterministic evidence bundle and audit export packaging for existing governed-substrate records.
 - **Scaffolded:** remote execution and telemetry adapter seams with explicit degraded-state reporting.
 - **Opt-in:** governed routing (`NEMOCLAW_GOVERNED_ROUTING=1`) and heterogeneous bridge (`NEMOCLAW_HETEROGENEOUS_ROUTING=1`).
 - **Planned:** external orchestration adapter integrations after stable local contracts.
@@ -27,8 +27,11 @@ The fork prioritizes deterministic and auditable control over opaque autonomy. I
 - Fork rationale: [docs/fork-rationale.md](docs/fork-rationale.md)
 - Current-state architecture audit: [docs/architecture/current-state.md](docs/architecture/current-state.md)
 - Target-state architecture: [docs/architecture/target-state.md](docs/architecture/target-state.md)
+- Evidence bundles: [docs/architecture/evidence-bundles.md](docs/architecture/evidence-bundles.md)
+- Audit exports: [docs/architecture/audit-exports.md](docs/architecture/audit-exports.md)
 - Roadmap and dependencies: [docs/roadmap.md](docs/roadmap.md)
 - Verification matrix: [docs/verification/verification-matrix.md](docs/verification/verification-matrix.md)
+- Evidence bundle verification: [docs/verification/evidence-bundle-verification.md](docs/verification/evidence-bundle-verification.md)
 - PR verification/reporting guide: [docs/contributing/pr-template-guide.md](docs/contributing/pr-template-guide.md)
 - Branch strategy: [docs/contributing/branch-strategy.md](docs/contributing/branch-strategy.md)
 
@@ -66,6 +69,7 @@ If lifecycle scripts fail in restricted environments, contributors can use `npm 
 Preferred contributor flow:
 
 ```bash
+npx vitest run src/lib/control-plane/evidence-bundles.test.ts
 npm run verify:changelog-hygiene
 npm run verify:core
 npm run verify:release

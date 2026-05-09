@@ -26,6 +26,8 @@ This matrix provides a truthful inventory of the substrate's capabilities, disti
 | **Self-Healing** | - | - | - | ✅ | - | N/A | N/A |
 | **Policy Learning** | - | - | - | ✅ | - | N/A | N/A |
 | **Crypto Attestation** | - | - | ✅ | - | - | N/A | N/A |
+| **Diagnostics Surface** | ✅ | - | - | - | - | Medium | Enabled |
+| **Evidence Export** | ✅ | - | - | - | - | Medium | Manual |
 
 ## Explicit Classifications
 

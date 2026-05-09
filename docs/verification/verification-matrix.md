@@ -49,4 +49,4 @@ The following verification automation is prioritized for the next release:
 
 ---
 
-*Last Updated: March 2026*
+Last Updated: March 2026
