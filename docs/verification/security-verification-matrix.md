@@ -8,7 +8,7 @@ This matrix maps each security doctrine requirement to its verification command 
 ## Verification commands
 
 | ID | Domain | Verification command | Expected result |
-|----|--------|---------------------|-----------------|
+| --- | --- | --- | --- |
 | SEC-V01 | Secret redaction (CLI output) | `npx vitest run src/lib/security/redact.test.ts` | PASS — token patterns redacted, URL sanitization works |
 | SEC-V02 | Secret redaction (shell fallback) | `npx vitest run src/lib/security/redact.test.ts` | PASS — EXPECTED_SHELL_PREFIXES consistency |
 | SEC-V03 | Credential stripping | `npx vitest run src/lib/security/credential-filter.test.ts` | PASS — credential fields stripped, sensitive files excluded |
@@ -24,7 +24,7 @@ This matrix maps each security doctrine requirement to its verification command 
 ## Cross-reference to doctrine documents
 
 | Doctrine document | Verification IDs |
-|-------------------|-----------------|
+| --- | --- |
 | `security-threat-model.md` | SEC-V01 through SEC-V10 |
 | `security-policy-model.md` | SEC-V05, SEC-V07, SEC-V10 |
 | `transport-security.md` | SEC-V05, SEC-V06, SEC-V07 |
@@ -36,7 +36,7 @@ This matrix maps each security doctrine requirement to its verification command 
 ## Cross-reference to threat model
 
 | Threat ID | Verification IDs |
-|-----------|-----------------|
+| --- | --- |
 | THREAT-001: Credential leakage via CLI | SEC-V01, SEC-V02 |
 | THREAT-002: Credential persistence | SEC-V03 |
 | THREAT-003: Credential leakage via URLs | SEC-V01 |

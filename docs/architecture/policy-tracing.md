@@ -23,4 +23,3 @@ Policy traces form the bedrock of operational intelligence. Changes to policy pa
 - Digested policy snapshots.
 - Lineage linked to explicit operator attribution.
 - Drift detection ensures evaluated traces correlate strictly to known policy digests.
-

@@ -1,13 +1,16 @@
 {
     "cSpell.words": [
+        "metacharacters",
         "NEMOCLAW",
         "nvapi",
+        "Ollama",
         "openclaw",
         "proofpack",
         "rollups",
         "serde",
         "TOCTOU",
         "unauditable",
-        "unredacted"
+        "unredacted",
+        "workstreams"
     ]
 }

@@ -39,8 +39,8 @@ export function DegradedInspector({ states }: DegradedInspectorProps) {
                 explanation: d.explanation,
                 subsystem: d.affectedSubsystem,
                 source: d.sourceComponent,
-                severity: <StatusBadge status={severityToStatus(d.severity)} label={d.severity} />,
-                timestamp: <Timestamp value={d.timestamp} />,
+                severity: d.severity,
+                timestamp: d.timestamp,
                 recovery: d.recoverySuggestion ?? "None",
               }))}
               caption={`Degraded states: ${category}`}
@@ -56,9 +56,9 @@ const degradedColumns: ColumnDef[] = [
   { key: "reasonCode", header: "Reason Code" },
   { key: "explanation", header: "Explanation" },
   { key: "subsystem", header: "Subsystem" },
-  { key: "severity", header: "Severity" },
+  { key: "severity", header: "Severity", render: (v) => <StatusBadge status={severityToStatus(String(v))} label={String(v)} /> },
   { key: "source", header: "Source" },
-  { key: "timestamp", header: "Timestamp" },
+  { key: "timestamp", header: "Timestamp", render: (v) => <Timestamp value={String(v)} /> },
   { key: "recovery", header: "Recovery Suggestion" },
 ];
 
