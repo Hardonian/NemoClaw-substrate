@@ -71,12 +71,23 @@ export function applyProbeToRegistry(registry: DeviceRegistry, node: NodeDescrip
 export function emitProbeEvents(log: OperationalMemoryLog, probe: WorkerProbeResult, receiptId: string): void {
   const replayRef = { lineage: ["worker-probes", probe.request.nodeId], replayVersion: "1" };
   const base = { occurredAt: probe.request.nowIso, source: "worker-probes", provenance: { requestId: probe.request.requestId, receiptId }, replayRef };
+  const nextSource = `${probe.request.transport}:${probe.request.runtime}`;
+  const telemetryUnavailable = probe.telemetry.backendVersion.state === "unavailable" && probe.telemetry.modelInventory.state === "unavailable" && probe.telemetry.gpus.state === "unavailable";
+  const stale = probe.telemetry.runtimeHealth.state === "stale";
   log.append({ ...base, category: "telemetry_probe_started", payload: { nodeId: probe.request.nodeId, runtime: probe.request.runtime, transport: probe.request.transport, confidence: probe.telemetry.runtimeHealth.state } });
+  if (telemetryUnavailable) {
+    log.append({ ...base, category: "telemetry_registry_update_skipped", payload: { nodeId: probe.request.nodeId, sourceRuntime: probe.request.runtime, telemetrySource: nextSource, reasonCode: "retained_previous_observed", confidence: "low" } });
+  } else {
+    log.append({ ...base, category: "telemetry_registry_update_applied", payload: { nodeId: probe.request.nodeId, sourceRuntime: probe.request.runtime, telemetrySource: nextSource, reasonCode: "applied_observed", confidence: probe.telemetry.runtimeHealth.state } });
+  }
   if (probe.telemetry.runtimeHealth.state === "stale") {
-    log.append({ ...base, category: "telemetry_stale", payload: { reasonCode: probe.telemetry.runtimeHealth.reason ?? "stale", confidence: "low", sourceRuntime: probe.request.runtime } });
+    log.append({ ...base, category: "telemetry_stale", payload: { nodeId: probe.request.nodeId, sourceRuntime: probe.request.runtime, telemetrySource: nextSource, reasonCode: probe.telemetry.runtimeHealth.reason ?? "stale", confidence: "low" } });
+  }
+  if (stale || probe.telemetry.runtimeHealth.reason === "source_conflict") {
+    log.append({ ...base, category: "telemetry_conflict_detected", payload: { nodeId: probe.request.nodeId, sourceRuntime: probe.request.runtime, telemetrySource: nextSource, reasonCode: "source_conflict", confidence: "low" } });
   }
   if (probe.telemetry.gpus.state === "unavailable") {
-    log.append({ ...base, category: "telemetry_unavailable", payload: { reasonCode: probe.telemetry.gpus.reason === "command_unavailable" ? "nvidia_smi_unavailable" : "capability_missing", subsystem: "gpu", confidence: "low", sourceRuntime: probe.request.runtime } });
+    log.append({ ...base, category: "telemetry_unavailable", payload: { nodeId: probe.request.nodeId, reasonCode: probe.telemetry.gpus.reason === "command_unavailable" ? "nvidia_smi_unavailable" : "capability_missing", subsystem: "gpu", confidence: "low", sourceRuntime: probe.request.runtime, telemetrySource: nextSource } });
   }
   const phase = probe.status === "failed" ? "telemetry_probe_failed" : "telemetry_probe_succeeded";
   log.append({ ...base, category: phase, payload: { status: probe.status, degradedReasons: probe.degradedStates.map((d) => d.reasonCode), confidence: probe.telemetry.runtimeHealth.state, sourceRuntime: probe.request.runtime } });

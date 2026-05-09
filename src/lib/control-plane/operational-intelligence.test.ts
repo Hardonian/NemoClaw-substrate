@@ -23,6 +23,14 @@ describe("operational intelligence substrate", () => {
     expect(validateReplayEnvelope(envelope).ok).toBe(true);
   });
 
+  it("preserves telemetry event kind and reasonCode through replay", () => {
+    const log = new OperationalMemoryLog();
+    log.append({ occurredAt: "2026-05-09T00:00:00.000Z", category: "telemetry_registry_update_skipped", source: "worker-probes", provenance: {}, payload: { reasonCode: "retained_previous_observed", confidence: "low" } });
+    const envelope = buildReplayEnvelope(log.list(), "2026-05-09T00:00:02.000Z");
+    expect(envelope.events[0]?.category).toBe("telemetry_registry_update_skipped");
+    expect(envelope.events[0]?.payload.reasonCode).toBe("retained_previous_observed");
+  });
+
   it("groups policy candidates and remains proposal-only", () => {
     const log = new OperationalMemoryLog();
     log.append({ occurredAt: "2026-05-09T00:00:00.000Z", category: "fallback", source: "test", provenance: {}, payload: { fallback: { reason: "policy_blocked" } } });
@@ -47,7 +55,10 @@ describe("operational intelligence substrate", () => {
     log.append({ occurredAt: "2026-05-09T00:00:00.000Z", category: "telemetry_probe_started", source: "worker-probes", provenance: {}, payload: { confidence: "low" } });
     log.append({ occurredAt: "2026-05-09T00:00:01.000Z", category: "telemetry_parse_partial", source: "worker-probes", provenance: {}, payload: { confidence: "medium" } });
     log.append({ occurredAt: "2026-05-09T00:00:02.000Z", category: "telemetry_registry_update_skipped", source: "worker-probes", provenance: {}, payload: { confidence: "low" } });
-    expect(summarizeTelemetryEventCounts(log.list())).toEqual({ telemetry_parse_partial: 1, telemetry_probe_started: 1, telemetry_registry_update_skipped: 1 });
-    expect(summarizeTelemetryDimensions(log.list()).confidence).toEqual({ low: 2, medium: 1 });
+    log.append({ occurredAt: "2026-05-09T00:00:03.000Z", category: "telemetry_registry_update_applied", source: "worker-probes", provenance: {}, payload: { confidence: "high" } });
+    log.append({ occurredAt: "2026-05-09T00:00:04.000Z", category: "telemetry_conflict_detected", source: "worker-probes", provenance: {}, payload: { confidence: "low" } });
+    log.append({ occurredAt: "2026-05-09T00:00:05.000Z", category: "telemetry_stale", source: "worker-probes", provenance: {}, payload: { confidence: "low" } });
+    expect(summarizeTelemetryEventCounts(log.list())).toEqual({ telemetry_conflict_detected: 1, telemetry_parse_partial: 1, telemetry_probe_started: 1, telemetry_registry_update_applied: 1, telemetry_registry_update_skipped: 1, telemetry_stale: 1 });
+    expect(summarizeTelemetryDimensions(log.list()).confidence).toEqual({ high: 1, low: 4, medium: 1 });
   });
 });

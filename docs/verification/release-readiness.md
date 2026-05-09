@@ -12,3 +12,5 @@
 - Security: event payloads avoid auth tokens and secret material.
 - Environment/bootstrap risks: command/tool availability can yield `telemetry_unavailable` and must remain non-fatal.
 - Known non-goals: no orchestration, no Dynamo/GPU balancing, no autonomous policy actions.
+
+- Registry telemetry persistence is verified for applied/skipped/conflict/stale event emission with deterministic ordering and replay-safe payloads.
