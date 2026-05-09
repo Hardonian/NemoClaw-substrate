@@ -16,8 +16,20 @@ describe("remote runtime probes", () => {
   });
 
   it("rejects unsupported scheme", async () => {
+    const fetchSpy = vi.fn();
+    vi.stubGlobal("fetch", fetchSpy);
     const out = await runRemoteHttpHealthProbe({ requestId: "r1", nodeId: "n1", runtime: "vllm", endpoint: "ftp://host/health", nowIso: "2026-05-09T00:00:00.000Z" });
     expect(out.status).toBe("failed");
+    expect(out.error?.message).toBe("unsupported_scheme");
+    expect(fetchSpy).not.toHaveBeenCalled();
+  });
+
+  it("strips embedded URL credentials before fetch", async () => {
+    const fetchSpy = vi.fn(async () => ({ ok: true, status: 200, text: async () => "{\"version\":\"1\"}" }));
+    vi.stubGlobal("fetch", fetchSpy);
+    const out = await runRemoteHttpHealthProbe({ requestId: "r1b", nodeId: "n1", runtime: "vllm", endpoint: "https://user:pass@worker/health", nowIso: "2026-05-09T00:00:00.000Z" });
+    expect(out.status).toBe("succeeded");
+    expect(String(fetchSpy.mock.calls[0]?.[0])).toBe("https://worker/health");
   });
 
   it("handles auth rejection", async () => {
