@@ -30,6 +30,8 @@ All notable changes to this fork are documented in this file.
 - Added contributor local bootstrap guidance including environment-restricted `npm install --ignore-scripts` verification fallback (local verification only).
 - Added failure-injection tests for local probe unavailable/timeout/malformed/non-local URL behavior and diagnostics degraded-state visibility.
 
+- Added guarded remote probe contracts: authenticated remote HTTP health-check seam with strict URL/timeout validation, redacted auth metadata, degraded-state mapping, SSH `not_implemented` placeholder, and registry/receipt/diagnostic integration without remote execution.
+
 ### Changed
 
 - README updated to clarify fork purpose, current-state vs roadmap, architecture doc locations, and PR verification expectations.
