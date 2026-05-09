@@ -1,43 +1,163 @@
-<!--
-  SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
-  SPDX-License-Identifier: Apache-2.0
--->
-
+<!-- SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved. -->
+<!-- SPDX-License-Identifier: Apache-2.0 -->
 # Fork Roadmap
 
-This roadmap describes intended direction. It does **not** imply every capability is implemented today.
+## Dependency map
 
-## Roadmap themes
+### Parallel-safe early work
+- docs/foundation
+- architecture audit
+- ADRs
+- verification matrix
 
-1. **Documentation and governance foundation**
-   - Maintain clear current-state vs intended-state docs.
-   - Keep contributor process explicit and auditable.
-2. **Deterministic control-plane scaffolding**
-   - Define stable control inputs/outputs and decision envelopes.
-3. **Heterogeneous device awareness**
-   - Establish explicit capability/health contracts for local devices and runtimes.
-4. **Deterministic scheduling and routing**
-   - Use explicit policy + state to drive repeatable routing decisions.
-5. **Policy intelligence with supervision**
-   - Convert repeated operator decisions into reviewable policy recommendations and promotions.
-6. **Truthful degraded-state semantics**
-   - Standardize degraded/fallback/error reporting to avoid false healthy signals.
-7. **Receipts, provenance, and observability**
-   - Increase evidence quality for audit, replay, and incident analysis.
-8. **Security hardening and verification depth**
-   - Strengthen fail-closed behavior on sensitive paths and improve test coverage.
+### Core dependency chain
+1. control-plane contracts
+2. device registry contracts
+3. receipt/degraded-state primitives
+4. policy engine
+5. deterministic scheduler
+6. operational memory
+7. observability
+8. hardening/replay
 
-## Suggested sequencing
+Rationale:
+- Scheduler depends on registry because deterministic candidate evaluation requires explicit device/capability inputs.
+- Scheduler must consult policy to ensure decisions are governable and enforceable.
+- Operational memory depends on receipts to preserve attributable evidence for recommendations.
+- Observability depends on receipts and registry to explain what happened and where.
+- Hardening depends on prior control-path semantics so fail-closed rules target real contracts.
+- Dynamo/GPU orchestration remains adapter-based future work and should not precede stable local contracts.
 
-- **Phase 1:** Docs/governance baseline + control-plane scaffolding.
-- **Phase 2:** Device-awareness contracts + deterministic scheduler contracts.
-- **Phase 3:** Supervised policy-promotion flow + degraded-state/receipt contracts.
-- **Phase 4:** Expanded observability, hardening, and regression verification.
+## Workstreams
 
-## Delivery expectations by theme
+### 1) docs/foundation
+- Purpose: establish truthful architecture/governance documentation baseline.
+- Deliverables: fork rationale, README clarity, architecture index links.
+- Dependencies: none.
+- Parallelization potential: high.
+- Exit criteria: contributors can distinguish current truth vs roadmap quickly.
+- Verification expectations: docs build passes.
+- Risks: over-claiming implementation.
+- Suggested branch name: `docs/foundation-baseline`
+- Suggested commit style: `docs(scope): ...`
+- Suggested PR title: `docs: establish fork documentation foundation`
 
-For each roadmap contribution:
+### 2) architecture audit
+- Purpose: repository-truth inventory of execution/control-adjacent surfaces.
+- Deliverables: `docs/architecture/current-state.md`.
+- Dependencies: none.
+- Parallelization potential: high.
+- Exit criteria: audit sections completed with file-grounded statements.
+- Verification expectations: peer audit spot-checks.
+- Risks: stale findings as code evolves.
+- Suggested branch name: `docs/architecture-current-state`
+- Suggested commit style: `docs(architecture): ...`
+- Suggested PR title: `docs: add current-state architecture audit`
 
-- Document what is implemented now vs what remains target-state.
-- Provide reproducible verification notes in PRs.
-- Avoid claims of runtime behavior unless backed by code/tests in-branch.
+### 3) control-plane scaffolding
+- Purpose: define contract-first control-plane seams.
+- Deliverables: request/decision type contracts and baseline tests.
+- Dependencies: workstreams 1-2.
+- Parallelization potential: medium.
+- Exit criteria: execution entrypoints consume control-plane decision contract.
+- Verification expectations: deterministic contract tests.
+- Risks: interface churn.
+- Suggested branch name: `feat/control-plane-contracts`
+- Suggested commit style: `feat(control-plane): ...`
+- Suggested PR title: `feat: scaffold deterministic control-plane contracts`
+
+### 4) device registry
+- Purpose: represent heterogeneous local devices as schedulable inputs.
+- Deliverables: device and capability snapshot contracts/storage.
+- Dependencies: 3.
+- Parallelization potential: medium.
+- Exit criteria: registry APIs and validation tests merged.
+- Verification expectations: schema + snapshot integrity tests.
+- Risks: stale health data.
+- Suggested branch name: `feat/device-registry-contracts`
+- Suggested commit style: `feat(registry): ...`
+- Suggested PR title: `feat: add device registry contract layer`
+
+### 5) receipts and degraded states
+- Purpose: enforce truthful evidence and degradation semantics.
+- Deliverables: receipt schema and degraded taxonomy primitives.
+- Dependencies: 3.
+- Parallelization potential: medium-high.
+- Exit criteria: control decisions emit typed receipts/degraded codes.
+- Verification expectations: schema and end-to-end assertions.
+- Risks: incomplete coverage across paths.
+- Suggested branch name: `feat/receipts-degraded-primitives`
+- Suggested commit style: `feat(receipts): ...`
+- Suggested PR title: `feat: introduce receipt and degraded-state primitives`
+
+### 6) policy engine and approvals
+- Purpose: evaluate inspectable policy and gate promotions.
+- Deliverables: policy evaluator, approval workflow contracts.
+- Dependencies: 3, 5.
+- Parallelization potential: medium.
+- Exit criteria: policy verdict required for scheduling.
+- Verification expectations: policy golden tests and approval flow tests.
+- Risks: policy sprawl.
+- Suggested branch name: `feat/policy-engine-approvals`
+- Suggested commit style: `feat(policy): ...`
+- Suggested PR title: `feat: add policy engine and approval gates`
+
+### 7) deterministic scheduler
+- Purpose: deterministic selection across eligible candidates.
+- Deliverables: scheduler module with explainable outcomes.
+- Dependencies: 4, 6.
+- Parallelization potential: low-medium.
+- Exit criteria: stable tie-break and rejection reasons in outputs.
+- Verification expectations: property + regression tests.
+- Risks: hidden heuristics.
+- Suggested branch name: `feat/deterministic-scheduler`
+- Suggested commit style: `feat(scheduler): ...`
+- Suggested PR title: `feat: implement deterministic scheduler`
+
+### 8) operational memory
+- Purpose: capture repeated operator decisions for supervised recommendations.
+- Deliverables: append-only memory records linked to receipts.
+- Dependencies: 5, 6, 7.
+- Parallelization potential: medium.
+- Exit criteria: memory artifacts produced without policy auto-mutation.
+- Verification expectations: append-only and traceability tests.
+- Risks: accidental policy drift.
+- Suggested branch name: `feat/operational-memory`
+- Suggested commit style: `feat(memory): ...`
+- Suggested PR title: `feat: add operational memory scaffolding`
+
+### 9) observability
+- Purpose: unify control-path evidence and diagnostics.
+- Deliverables: structured events with receipt correlation.
+- Dependencies: 4, 5, 7.
+- Parallelization potential: medium.
+- Exit criteria: explainable event trail for each decision.
+- Verification expectations: event schema + correlation tests.
+- Risks: partial visibility.
+- Suggested branch name: `feat/control-observability`
+- Suggested commit style: `feat(observability): ...`
+- Suggested PR title: `feat: add control-plane observability contracts`
+
+### 10) hardening and replayability
+- Purpose: strengthen fail-closed behavior and replay discipline.
+- Deliverables: hardening rules and replay tooling/tests.
+- Dependencies: 3-9.
+- Parallelization potential: low.
+- Exit criteria: replay passes and sensitive paths enforce fail-closed semantics.
+- Verification expectations: security checks + replay tests.
+- Risks: false confidence if contracts incomplete.
+- Suggested branch name: `feat/hardening-replay`
+- Suggested commit style: `feat(hardening): ...`
+- Suggested PR title: `feat: add hardening and replayability gates`
+
+### 11) future Dynamo/GPU orchestration adapter
+- Purpose: optional adapter seam for future external orchestration.
+- Deliverables: interface contracts and compatibility tests.
+- Dependencies: stable local contracts from 3-10.
+- Parallelization potential: low.
+- Exit criteria: adapter does not alter local core contracts.
+- Verification expectations: adapter conformance tests.
+- Risks: premature coupling.
+- Suggested branch name: `feat/dynamo-adapter-seam`
+- Suggested commit style: `feat(adapter): ...`
+- Suggested PR title: `feat: scaffold Dynamo-style orchestration adapter seam`

@@ -1,7 +1,5 @@
-<!--
-  SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
-  SPDX-License-Identifier: Apache-2.0
--->
+<!-- SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved. -->
+<!-- SPDX-License-Identifier: Apache-2.0 -->
 
 # Changelog
 
@@ -11,7 +9,12 @@ All notable changes to this fork are documented in this file.
 
 ### Added
 
-- Documentation foundation for fork purpose, goals, non-goals, roadmap themes, and contribution expectations.
-- Fork rationale document for local operator-grade execution and governance posture.
-- Roadmap document separating current state from intended direction.
-- Contributor docs for branch naming, commit conventions, PR structure, and required verification notes.
+- Current-state architecture audit documentation (`docs/architecture/current-state.md`).
+- Target-state architecture documentation (`docs/architecture/target-state.md` + detailed architecture component docs).
+- ADR scaffolding and governance decisions (`docs/adr/0001` through `0007`).
+- Roadmap update with dependency graph and phased workstreams (`docs/roadmap.md`).
+- Verification matrix for documentation, contracts, scheduler, policy, receipts, degraded states, observability, and release-readiness (`docs/verification/verification-matrix.md`).
+
+### Changed
+
+- README updated to clarify fork purpose, current-state vs roadmap, architecture doc locations, and PR verification expectations.
