@@ -108,3 +108,10 @@ Worker/provider adapter contracts and scheduler-to-provider dry-run bridge are i
 
 ## 2026-05-09 governed routing update
 Opt-in governed provider routing is available behind `NEMOCLAW_GOVERNED_ROUTING=1` (default off). Default routing is preserved when disabled. Remote worker execution, Dynamo orchestration, and GPU telemetry adapters are not implemented in this phase.
+
+
+## 2026-05-09 local probe hardening update
+- Added `npm run verify:changelog-hygiene` for duplicate SPDX/title/bullet changelog integrity checks.
+- Added local runtime probe failure-injection tests (unavailable, timeout, malformed response, non-local URL rejection).
+- Added local diagnostics summary verification for degraded-state and telemetry-unavailable reporting.
+- Remote execution remains disabled; all probe verification is local-safe and mock-driven.

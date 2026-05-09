@@ -24,6 +24,11 @@ All notable changes to this fork are documented in this file.
 - Operational intelligence substrate scaffolding: append-only operational memory, deterministic replay envelope validation, observability aggregations, and supervised policy-promotion proposals.
 - Runtime seam diagnostics now include operational event counts without changing routing behavior.
 - Hygiene test for duplicate CHANGELOG/SPDX header detection.
+- Added `scripts/verify-changelog-hygiene.js` and extended changelog hygiene tests to detect duplicate SPDX headers, duplicate `# Changelog`, and duplicate exact bullet entries.
+- Added explicit local runtime probe execution helper with deterministic ordering, bounded timeouts, local-only URL guardrails, degraded-state surfacing, and operational event emission.
+- Added local diagnostics summary helper exposing probe/degraded state, registry summary, telemetry availability, governed routing state, and optional dry-run result.
+- Added contributor local bootstrap guidance including environment-restricted `npm install --ignore-scripts` verification fallback (local verification only).
+- Added failure-injection tests for local probe unavailable/timeout/malformed/non-local URL behavior and diagnostics degraded-state visibility.
 
 ### Changed
 

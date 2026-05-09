@@ -48,3 +48,7 @@ Unless specifically added and verified in code:
 - no dedicated policy-promotion engine,
 - no unified execution receipt framework,
 - no Dynamo-style orchestration integration.
+
+
+## Local bootstrap fallback
+If lifecycle scripts fail in restricted environments, contributors can use `npm install --ignore-scripts` for local verification only, then run typecheck/tests manually. Production/release flows should keep normal install behavior.
