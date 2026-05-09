@@ -11,3 +11,6 @@ Local diagnostics summary includes:
 - governed routing flag state
 - optional scheduler dry-run summary
 - degraded-state reason codes
+
+## 2026-05-09 remote execution diagnostics update
+- Diagnostics now include remote execution enablement state and last execution status/reason/receipt reference when available.
