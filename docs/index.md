@@ -378,6 +378,27 @@ Troubleshooting <reference/troubleshooting>
 ```
 
 ```{toctree}
+:caption: Architecture
+:hidden:
+
+Security Policy <architecture/security-policy>
+Transport Security <architecture/transport-security>
+Secret Redaction <architecture/secret-redaction>
+Network Policy <architecture/network-policy>
+Command Safety <architecture/command-safety>
+```
+
+```{toctree}
+:caption: Verification
+:hidden:
+
+Verification Matrix <verification/verification-matrix>
+Security Hardening <verification/security-hardening>
+Release Checklist <verification/release-checklist>
+Release Readiness <verification/release-readiness>
+```
+
+```{toctree}
 :caption: Resources
 :hidden:
 
