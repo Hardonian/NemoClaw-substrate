@@ -1,85 +1,108 @@
 import React from "react";
-import type { SnapshotData } from "../../hooks/use-snapshot";
-import { Card } from "../../components/primitives/card";
-import { KVTable } from "../../components/primitives/key-value-table";
-import { StateLabel } from "../../components/primitives/state-label";
-import { StatusBadge } from "../../components/primitives/status-badge";
-import { Timestamp } from "../../components/primitives/timestamp";
-import { DataTable, type ColumnDef } from "../../components/primitives/data-table";
-import styles from "./index.module.css";
+import { Card } from "../primitives/card";
+import { StateLabel } from "../primitives/state-label";
+import { StatusBadge } from "../primitives/status-badge";
+import { DataTable, type ColumnDef } from "../primitives/data-table";
+import { Timeline } from "../primitives/timeline";
+import type { SnapshotData } from "../hooks/use-snapshot";
+import styles from "./overview.module.css";
 
-export interface OverviewRouteProps {
+export interface OverviewProps {
   snapshot: SnapshotData;
 }
 
-export function OverviewRoute({ snapshot }: OverviewRouteProps) {
-  const { degradedStates, receipts, events, workerTrustDecisions, nodes, policyOutcomes, telemetryCounts, staleNodes } = snapshot;
-
-  const categoryCounts = countCategories(events);
-
+export function OverviewRoute({ snapshot }: OverviewProps) {
   return (
     <div className={styles.container}>
-      <h2 className={styles.pageTitle}>Overview</h2>
-      <p className={styles.pageSubtitle}>Snapshot of all subsystem states. Data is deterministic and non-live.</p>
+      <h2 className={styles.pageTitle}>Dashboard Overview</h2>
 
       <div className={styles.grid}>
-        <Card title="Execution Receipts" subtitle={`${receipts.length} total`}>
-          <KVTable
-            entries={[
-              { key: "Total", value: receipts.length },
-              { key: "With Degraded Events", value: receipts.filter((r) => r.degradedEvents.length > 0).length },
-              { key: "With Overrides", value: receipts.filter((r) => r.operatorOverrides.length > 0).length },
-            ]}
-          />
+        <Card title="Execution Plans" subtitle={`${snapshot.receipts.length} receipt(s)`} status="info">
+          <p className={styles.stat}>{snapshot.receipts.length} receipts recorded</p>
+          <p className={styles.subtext}>Unique requests: {new Set(snapshot.receipts.map((r) => r.requestId)).size}</p>
         </Card>
 
-        <Card title="Degraded States" subtitle={`${degradedStates.length} total`}>
-          <KVTable
-            entries={countByCategory(degradedStates).map(([k, v]) => ({ key: k, value: v }))}
-          />
+        <Card title="Degraded States" subtitle={`${snapshot.degradedStates.length} state(s)`} status="warning">
+          <p className={styles.stat}>{snapshot.degradedStates.length} degraded states</p>
+          <p className={styles.subtext}>Categories: {new Set(snapshot.degradedStates.map((s) => s.category)).size}</p>
         </Card>
 
-        <Card title="Operational Events" subtitle={`${events.length} total`}>
-          <KVTable
-            entries={Object.entries(categoryCounts).map(([k, v]) => ({ key: k, value: v }))}
-          />
+        <Card title="Operational Events" subtitle={`${snapshot.events.length} event(s)`} status="info">
+          <p className={styles.stat}>{snapshot.events.length} events</p>
+          <p className={styles.subtext}>Categories: {new Set(snapshot.events.map((e) => e.category)).size}</p>
         </Card>
 
-        <Card title="Worker Trust" subtitle={`${workerTrustDecisions.length} decisions`}>
-          {workerTrustDecisions.length === 0 ? (
-            <p className={styles.empty}>No trust decisions.</p>
-          ) : (
-            <KVTable
-              entries={workerTrustDecisions.map((d) => ({ key: d.workerId, value: <StateLabel state={d.trustLevel} /> }))}
-            />
-          )}
+        <Card title="Worker Trust" subtitle={`${snapshot.workerTrustDecisions.length} decision(s)`} status="info">
+          <p className={styles.stat}>{snapshot.workerTrustDecisions.length} trust decisions</p>
+          <p className={styles.subtext}>Attestations: {snapshot.workerAttestations.length}</p>
         </Card>
 
         <Card title="Policy Outcomes" status="info">
-          <KVTable
-            entries={Object.entries(policyOutcomes).map(([k, v]) => ({ key: k, value: v }))}
-          />
+          <div className={styles.policySummary}>
+            {Object.entries(snapshot.policyOutcomes).map(([k, v]) => (
+              <span key={k} className={styles.policyItem}>
+                {k}: <strong>{v}</strong>
+              </span>
+            ))}
+          </div>
         </Card>
 
-        <Card title="Telemetry" status="info">
-          <KVTable
-            entries={Object.entries(telemetryCounts).map(([k, v]) => ({ key: k, value: v }))}
-          />
+        <Card title="Telemetry" subtitle={`${Object.values(snapshot.telemetryCounts).reduce((a, b) => a + b, 0)} event(s)`} status={Object.keys(snapshot.telemetryCounts).length > 0 ? "success" : "unknown"}>
+          <p className={styles.stat}>{Object.keys(snapshot.telemetryCounts).length} telemetry categories</p>
+          <p className={styles.subtext}>Stale nodes: {snapshot.staleNodes.length}</p>
         </Card>
+      </div>
 
-        <Card title="Node Health" subtitle={`${nodes.length} nodes`}>
-          <DataTable
-            columns={nodeColumns}
-            rows={nodes.map((n) => ({ nodeId: n.nodeId, role: n.role, health: <StateLabel state={n.health} />, heartbeat: <Timestamp value={n.lastHeartbeatAt} /> }))}
-            caption="Registered nodes"
-          />
-        </Card>
-
-        <Card title="Stale Nodes" status={staleNodes.length > 0 ? "error" : "success"} subtitle={staleNodes.length === 0 ? "None detected" : `${staleNodes.length} stale`}>
-          {staleNodes.length === 0 ? (
-            <p className={styles.empty}>All nodes are healthy.</p>
+      <div className={styles.section}>
+        <Card title="Recent Degraded States" status="warning">
+          {snapshot.degradedStates.length === 0 ? (
+            <p className={styles.empty}>No degraded states to display.</p>
           ) : (
-            <ul className={styles.list}>{staleNodes.map((s, idx) => (<li key={idx} className={styles.listItem}>{s}</li>))}</ul>
+            <DataTable
+              columns={degradedSummaryColumns}
+              rows={snapshot.degradedStates.slice(0, 5).map((s) => ({
+                category: <StateLabel state={s.category} />,
+                reason: s.reasonCode,
+                subsystem: s.affectedSubsystem,
+                severity: <StatusBadge status={severityToStatus(s.severity)} label={s.severity} />,
+              }))}
+              caption="Recent degraded states"
+            />
+          )}
+        </Card>
+      </div>
+
+      <div className={styles.section}>
+        <Card title="Recent Events" status="info">
+          {snapshot.events.length === 0 ? (
+            <p className={styles.empty}>No events to display.</p>
+          ) : (
+            <Timeline
+              items={snapshot.events.slice(0, 5).map((e) => ({
+                timestamp: e.occurredAt,
+                label: e.category,
+                detail: e.eventId,
+              }))}
+            />
+          )}
+        </Card>
+      </div>
+
+      <div className={styles.section}>
+        <Card title="Node Registry" status="info">
+          {snapshot.nodes.length === 0 ? (
+            <p className={styles.empty}>No nodes registered.</p>
+          ) : (
+            <DataTable
+              columns={nodeColumns}
+              rows={snapshot.nodes.map((n) => ({
+                nodeId: n.nodeId,
+                role: n.role,
+                health: <StateLabel state={n.health} />,
+                trustClass: n.trustClass,
+              }))}
+              caption="Registered nodes"
+            />
           )}
         </Card>
       </div>
@@ -87,21 +110,26 @@ export function OverviewRoute({ snapshot }: OverviewRouteProps) {
   );
 }
 
-const nodeColumns: ColumnDef[] = [
-  { key: "nodeId", header: "Node" },
-  { key: "role", header: "Role" },
-  { key: "health", header: "Health" },
-  { key: "heartbeat", header: "Last Heartbeat" },
+const degradedSummaryColumns: ColumnDef[] = [
+  { key: "category", header: "Category" },
+  { key: "reason", header: "Reason Code" },
+  { key: "subsystem", header: "Subsystem" },
+  { key: "severity", header: "Severity" },
 ];
 
-function countCategories(events: Array<{ category: string }>): Record<string, number> {
-  const counts: Record<string, number> = {};
-  for (const e of events) { counts[e.category] = (counts[e.category] ?? 0) + 1; }
-  return counts;
-}
+const nodeColumns: ColumnDef[] = [
+  { key: "nodeId", header: "Node ID" },
+  { key: "role", header: "Role" },
+  { key: "health", header: "Health" },
+  { key: "trustClass", header: "Trust Class" },
+];
 
-function countByCategory(states: Array<{ category: string }>): Array<[string, number]> {
-  const counts: Record<string, number> = {};
-  for (const s of states) { counts[s.category] = (counts[s.category] ?? 0) + 1; }
-  return Object.entries(counts).sort(([a], [b]) => a.localeCompare(b));
+function severityToStatus(severity: string): "info" | "warning" | "error" | "critical" | "success" | "unknown" {
+  const map: Record<string, "info" | "warning" | "error" | "critical" | "success" | "unknown"> = {
+    info: "info",
+    warning: "warning",
+    error: "error",
+    critical: "critical",
+  };
+  return map[severity] ?? "unknown";
 }

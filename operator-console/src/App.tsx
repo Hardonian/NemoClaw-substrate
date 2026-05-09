@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Shell } from "./components/layout/shell";
-import { OverviewRoute } from "./routes/index";
+import { OverviewRoute } from "./routes";
 import { ExecutionPlansRoute } from "./routes/execution-plans";
 import { ReceiptsRoute } from "./routes/receipts";
 import { ReplayValidationRoute } from "./routes/replay-validation";
@@ -12,24 +12,20 @@ import { DiagnosticsRoute } from "./routes/diagnostics";
 import { TelemetryRoute } from "./routes/telemetry";
 import { useSnapshot } from "./hooks/use-snapshot";
 
-function getHash(): string {
-  return window.location.hash.replace("#", "");
-}
-
 export function App() {
-  const [hash, setHash] = useState(getHash);
+  const [hash, setHash] = useState(() => window.location.hash.replace("#", ""));
   const snapshot = useSnapshot();
 
   useEffect(() => {
-    const onHashChange = () => setHash(getHash());
+    const onHashChange = () => setHash(window.location.hash.replace("#", ""));
     window.addEventListener("hashchange", onHashChange);
     return () => window.removeEventListener("hashchange", onHashChange);
   }, []);
 
-  const navigate = (newHash: string) => {
+  const navigate = useCallback((newHash: string) => {
     window.location.hash = newHash;
     setHash(newHash);
-  };
+  }, []);
 
   const renderRoute = () => {
     switch (hash) {
@@ -38,19 +34,19 @@ export function App() {
       case "receipts":
         return <ReceiptsRoute receipts={snapshot.receipts} />;
       case "replay-validation":
-        return <ReplayValidationRoute validEnvelope={snapshot.validReplayEnvelope} emptyEnvelope={snapshot.emptyReplayEnvelope} />;
+        return <ReplayValidationRoute valid={snapshot.validReplayEnvelope} empty={snapshot.emptyReplayEnvelope} invalid={snapshot.invalidReplayEnvelope} />;
       case "degraded-states":
         return <DegradedStatesRoute states={snapshot.degradedStates} />;
       case "trust-attestation":
         return <TrustAttestationRoute decisions={snapshot.workerTrustDecisions} attestations={snapshot.workerAttestations} identities={snapshot.workerIdentities} />;
       case "routing-decisions":
-        return <RoutingDecisionsRoute result={snapshot.routingResult} diagnostics={snapshot.routingDiagnostics} />;
+        return <RoutingDecisionsRoute result={snapshot.routingResult} />;
       case "events":
         return <EventsRoute events={snapshot.events} />;
       case "diagnostics":
-        return <DiagnosticsRoute lines={snapshot.routingDiagnostics} />;
+        return <DiagnosticsRoute receipts={snapshot.receipts} nodes={snapshot.nodes} />;
       case "telemetry":
-        return <TelemetryRoute probeSummary={snapshot.probeSummary} />;
+        return <TelemetryRoute probeSummary={snapshot.probeSummary} telemetryCounts={snapshot.telemetryCounts} />;
       default:
         return <OverviewRoute snapshot={snapshot} />;
     }
