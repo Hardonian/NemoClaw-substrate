@@ -36,6 +36,7 @@ describe("worker probes", () => {
     expect(events.some((e) => e.category === "telemetry_probe_started")).toBe(true);
     expect(events.some((e) => e.category === "telemetry_unavailable")).toBe(true);
     expect(events.some((e) => e.category === "telemetry_probe_failed")).toBe(true);
+    expect(events.some((e) => e.category === "telemetry_registry_update_applied")).toBe(true);
   });
 
   it("treats degraded probes as succeeded lifecycle events", () => {
@@ -86,5 +87,28 @@ describe("registry telemetry policy", () => {
     const updated = applyProbeToRegistry(reg, node, p);
     expect(updated.health).toBe("stale");
     expect(updated.capabilities.runtimeTags).toContain("telemetry:conflict");
+  });
+
+  it("emits skipped/applied/conflict/stale telemetry events with deterministic ordering", () => {
+    const log = new OperationalMemoryLog();
+    const p = probe("degraded");
+    p.telemetry.backendVersion = { state: "unavailable", reason: "missing" };
+    p.telemetry.modelInventory = { state: "unavailable", reason: "missing" };
+    p.telemetry.gpus = { state: "unavailable", reason: "missing" };
+    p.telemetry.runtimeHealth = { state: "stale", reason: "source_conflict" };
+    emitProbeEvents(log, p, "receipt-3");
+    const categories = log.list().map((e) => e.category);
+    expect(categories).toEqual([
+      "telemetry_probe_started",
+      "telemetry_registry_update_skipped",
+      "telemetry_stale",
+      "telemetry_conflict_detected",
+      "telemetry_unavailable",
+      "telemetry_probe_succeeded",
+    ]);
+    const skipped = log.list().find((e) => e.category === "telemetry_registry_update_skipped");
+    expect(skipped?.payload.reasonCode).toBe("retained_previous_observed");
+    const conflict = log.list().find((e) => e.category === "telemetry_conflict_detected");
+    expect(conflict?.payload.reasonCode).toBe("source_conflict");
   });
 });

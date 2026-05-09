@@ -24,3 +24,5 @@ Outputs distinguish observed/unavailable states and avoid fabricated orchestrati
 - Added dedicated telemetry operational event kinds for probe lifecycle, parser outcomes, availability/staleness/conflict signals, and registry update decisions.
 - Event payloads carry runtime/source attribution, confidence, and degraded reason codes while avoiding secret-bearing fields.
 - Legacy consumers that read `degraded_state` / `runtime_action` continue to function; telemetry adds explicit categories for higher-fidelity replay and observability.
+
+- Telemetry observability summaries include registry update applied/skipped counts plus conflict/stale categories to support operator audit trails.

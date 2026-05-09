@@ -74,3 +74,6 @@ node scripts/verify-core.js --strict
 ## 2026-05-09 telemetry taxonomy verification additions
 - `npx vitest run src/lib/control-plane/local-runtime-probes.test.ts src/lib/control-plane/worker-probes.test.ts src/lib/control-plane/operational-intelligence.test.ts`
 - verify dedicated telemetry event categories, mapping coverage, replay-safe ordering assumptions, and observability aggregation output.
+
+- `npx vitest run test/changelog-hygiene.test.ts src/lib/control-plane/worker-probes.test.ts src/lib/control-plane/operational-intelligence.test.ts`
+- Verifies duplicate bullet rejection in `CHANGELOG.md`, deterministic registry telemetry applied/skipped/conflict/stale emission, observability aggregation coverage, and replay reason-code preservation.

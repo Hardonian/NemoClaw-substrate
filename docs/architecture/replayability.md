@@ -13,3 +13,5 @@ Current replay is in-process and export-oriented. Future adapters can persist en
 - Added dedicated telemetry operational event kinds for probe lifecycle, parser outcomes, availability/staleness/conflict signals, and registry update decisions.
 - Event payloads carry runtime/source attribution, confidence, and degraded reason codes while avoiding secret-bearing fields.
 - Legacy consumers that read `degraded_state` / `runtime_action` continue to function; telemetry adds explicit categories for higher-fidelity replay and observability.
+
+- Replay validation covers telemetry registry update applied/skipped, conflict, and stale events with preserved reason codes.
