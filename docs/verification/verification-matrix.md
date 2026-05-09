@@ -77,3 +77,6 @@ node scripts/verify-core.js --strict
 
 - `npx vitest run test/changelog-hygiene.test.ts src/lib/control-plane/worker-probes.test.ts src/lib/control-plane/operational-intelligence.test.ts`
 - Verifies duplicate bullet rejection in `CHANGELOG.md`, deterministic registry telemetry applied/skipped/conflict/stale emission, observability aggregation coverage, and replay reason-code preservation.
+
+- `npx vitest run src/lib/control-plane/degraded-state-chaos.test.ts`
+- Verifies deterministic failure-injection coverage across policy deny/approval gating, no-candidate/no-hidden-fallback routing behavior, remote timeout degradation, telemetry non-erasure guarantees, replay digest mismatch detection, and diagnostics empty-state reason reporting.

@@ -52,3 +52,5 @@ All notable changes to this fork are documented in this file.
 - Remote execution remains disabled in this phase; governed routing remains opt-in.
 - Telemetry fields can be unavailable/stale and are surfaced truthfully without fabrication.
 - Dynamo integration is planned only and not implemented.
+
+- hardening: added deterministic degraded-state chaos verification coverage spanning governed routing denial/no-candidate paths, remote execution disabled/deny/approval/timeout outcomes, telemetry non-erasure under unavailable/malformed probes, replay digest mismatch detection, and diagnostics empty-state assertions.

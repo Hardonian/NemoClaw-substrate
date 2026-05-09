@@ -218,3 +218,7 @@ This phase adds explicit manual local probe execution and diagnostics summaries,
 - Added dedicated telemetry operational event kinds for probe lifecycle, parser outcomes, availability/staleness/conflict signals, and registry update decisions.
 - Event payloads carry runtime/source attribution, confidence, and degraded reason codes while avoiding secret-bearing fields.
 - Legacy consumers that read `degraded_state` / `runtime_action` continue to function; telemetry adds explicit categories for higher-fidelity replay and observability.
+
+## Degraded-state hardening checkpoint (2026-05-09)
+- Added deterministic chaos verification for governed routing, remote execution, probe telemetry truth, replay integrity, and diagnostics reason-code surfacing.
+- Next orchestration increments must keep no-hidden-fallback guarantees and explicit degraded propagation semantics.
