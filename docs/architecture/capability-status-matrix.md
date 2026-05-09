@@ -30,13 +30,17 @@ This matrix provides a truthful inventory of the substrate's capabilities, disti
 ## Explicit Classifications
 
 ### Non-Orchestrated Core
+
 NemoClaw is a **governance substrate**, not an orchestrator. It does not implement distributed queues, retries, or GPU balancing. These are intentionally deferred to external orchestration adapters to maintain a minimal and deterministic core.
 
 ### Deterministic State vs. Autonomy
+
 There are **no autonomous loops** or self-healing behaviors. Every control decision is a deterministic reaction to explicit inputs (registry, policy, request).
 
 ### Supervised Evolution
+
 Policy learning is **intentionally not implemented**. Behavioral evolution is achieved through supervised policy promotion from operational memory recommendations.
 
 ### Trust Boundaries
+
 Cryptographic attestation is planned but currently represented by probe-observed evidence and explicit operator approval gates.
