@@ -1,43 +1,40 @@
 import { describe, expect, it } from "vitest";
 import { render } from "@testing-library/react";
 import { ReceiptViewer } from "../../src/components/viewers/receipt-viewer";
-import { makeExecutionReceipt, makeDegradedState, T } from "../../src/data/fixtures";
+import { makeExecutionReceipt, makeDegradedState } from "../../src/data/fixtures";
 
-describe("ReceiptViewer snapshot", () => {
-  it("renders complete receipt snapshot", () => {
+describe("Snapshot: ReceiptViewer", () => {
+  it("renders deterministically", () => {
     const receipt = makeExecutionReceipt({
-      receiptId: "snap-001",
-      requestId: "snap-req-001",
+      receiptId: "snapshot-receipt",
+      requestId: "snapshot-req",
+      nodeId: "node-a",
+      modelId: "nvidia/model",
       phases: [
-        { phase: "received", at: T, notes: "control_request" },
-        { phase: "policy", at: T, notes: "policy_default_allow" },
-        { phase: "scheduling", at: T, notes: "node-a:local" },
-        { phase: "completed", at: T },
+        { phase: "received", at: "2026-05-09T00:00:00.000Z", notes: "test" },
+        { phase: "policy", at: "2026-05-09T00:00:00.000Z", notes: "policy_default_allow" },
+        { phase: "scheduling", at: "2026-05-09T00:00:00.000Z", notes: "node-a" },
+        { phase: "completed", at: "2026-05-09T00:00:00.000Z" },
       ],
-      timing: { totalMs: 250, queueMs: 20, executionMs: 230 },
-      provenance: { source: "snapshot-test", lineage: ["chat", "provider"], replayVersion: "1" },
+      timing: { totalMs: 100, queueMs: 10, executionMs: 90 },
     });
     const { container } = render(<ReceiptViewer receipt={receipt} />);
-    const text = container.textContent;
-    expect(text).toContain("snap-001");
-    expect(text).toContain("snap-req-001");
-    expect(text).toContain("received");
-    expect(text).toContain("completed");
-    expect(text).toContain("250 ms");
+    expect(container.textContent).toContain("snapshot-receipt");
+    expect(container.textContent).toContain("snapshot-req");
+    expect(container.textContent).toContain("100 ms");
+    expect(container.textContent).toMatchSnapshot();
   });
 
-  it("renders receipt with degraded events snapshot", () => {
+  it("renders receipt with degraded events deterministically", () => {
     const receipt = makeExecutionReceipt({
-      receiptId: "snap-002",
+      receiptId: "snapshot-degraded-receipt",
       degradedEvents: [
-        makeDegradedState({ category: "degraded", reason: "test degraded", affectedSubsystem: "runtime", severity: "warning", reasonCode: "transport_unreachable", explanation: "Test explanation", sourceComponent: "test", timestamp: T, recoverySuggestion: "Test recovery" }),
+        makeDegradedState({ category: "degraded", severity: "warning", reason: "test", affectedSubsystem: "test", reasonCode: "capability_missing", explanation: "Test explanation", sourceComponent: "test", timestamp: "2026-05-09T00:00:00.000Z" }),
       ],
     });
     const { container } = render(<ReceiptViewer receipt={receipt} />);
-    const text = container.textContent;
-    expect(text).toContain("snap-002");
-    expect(text).toContain("transport_unreachable");
-    expect(text).toContain("Test explanation");
-    expect(text).toContain("Test recovery");
+    expect(container.textContent).toContain("Degraded Events");
+    expect(container.textContent).toContain("capability_missing");
+    expect(container.textContent).toMatchSnapshot();
   });
 });

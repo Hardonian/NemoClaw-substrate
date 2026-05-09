@@ -3,52 +3,34 @@ import { render, screen } from "@testing-library/react";
 import { DegradedInspector } from "../../src/components/viewers/degraded-inspector";
 import { makeDegradedState } from "../../src/data/fixtures";
 
-describe("DegradedInspector degraded-state rendering", () => {
-  it("renders healthy category explicitly", () => {
-    const states = [makeDegradedState({ category: "healthy" })];
+describe("Degraded state rendering", () => {
+  const categories: Array<{ category: string; severity: string; reasonCode: string }> = [
+    { category: "healthy", severity: "info", reasonCode: "none" },
+    { category: "constrained", severity: "warning", reasonCode: "capability_missing" },
+    { category: "degraded", severity: "warning", reasonCode: "transport_unreachable" },
+    { category: "unavailable", severity: "error", reasonCode: "node_missing" },
+    { category: "unknown", severity: "warning", reasonCode: "unknown_error" },
+    { category: "partial_capability", severity: "info", reasonCode: "capability_missing" },
+    { category: "approval_blocked", severity: "warning", reasonCode: "approval_required" },
+    { category: "stale", severity: "warning", reasonCode: "heartbeat_stale" },
+    { category: "unreachable", severity: "error", reasonCode: "transport_unreachable" },
+  ];
+
+  it.each(categories)("renders category=$category with severity=$severity", ({ category, severity, reasonCode }) => {
+    const states = [makeDegradedState({ category, severity, reason: "test", affectedSubsystem: "test", reasonCode: reasonCode as never, explanation: "Test", sourceComponent: "test" })];
     render(<DegradedInspector states={states} />);
-    expect(screen.getByText("healthy")).toBeInTheDocument();
+    expect(screen.getByText(category)).toBeInTheDocument();
   });
 
-  it("renders constrained category explicitly", () => {
-    const states = [makeDegradedState({ category: "constrained", reason: "limited", affectedSubsystem: "test", severity: "warning", reasonCode: "test", explanation: "test", sourceComponent: "test" })];
+  it("renders critical severity correctly", () => {
+    const states = [makeDegradedState({ category: "degraded", severity: "critical", reason: "critical", affectedSubsystem: "test", reasonCode: "unknown_error", explanation: "Critical", sourceComponent: "test" })];
     render(<DegradedInspector states={states} />);
-    expect(screen.getByText("constrained")).toBeInTheDocument();
+    expect(screen.getByText("critical")).toBeInTheDocument();
   });
 
-  it("renders degraded category explicitly", () => {
-    const states = [makeDegradedState({ category: "degraded", reason: "slow", affectedSubsystem: "test", severity: "warning", reasonCode: "test", explanation: "test", sourceComponent: "test" })];
+  it("renders error severity correctly", () => {
+    const states = [makeDegradedState({ category: "unavailable", severity: "error", reason: "error", affectedSubsystem: "test", reasonCode: "node_missing", explanation: "Error", sourceComponent: "test" })];
     render(<DegradedInspector states={states} />);
-    expect(screen.getByText("degraded")).toBeInTheDocument();
-  });
-
-  it("renders unavailable category explicitly", () => {
-    const states = [makeDegradedState({ category: "unavailable", reason: "offline", affectedSubsystem: "test", severity: "error", reasonCode: "test", explanation: "test", sourceComponent: "test" })];
-    render(<DegradedInspector states={states} />);
-    expect(screen.getByText("unavailable")).toBeInTheDocument();
-  });
-
-  it("renders stale category explicitly", () => {
-    const states = [makeDegradedState({ category: "stale", reason: "old", affectedSubsystem: "test", severity: "warning", reasonCode: "test", explanation: "test", sourceComponent: "test" })];
-    render(<DegradedInspector states={states} />);
-    expect(screen.getByText("stale")).toBeInTheDocument();
-  });
-
-  it("renders approval_blocked category explicitly", () => {
-    const states = [makeDegradedState({ category: "approval_blocked", reason: "waiting", affectedSubsystem: "test", severity: "warning", reasonCode: "test", explanation: "test", sourceComponent: "test" })];
-    render(<DegradedInspector states={states} />);
-    expect(screen.getByText("approval_blocked")).toBeInTheDocument();
-  });
-
-  it("renders partial_capability category explicitly", () => {
-    const states = [makeDegradedState({ category: "partial_capability", reason: "partial", affectedSubsystem: "test", severity: "info", reasonCode: "test", explanation: "test", sourceComponent: "test" })];
-    render(<DegradedInspector states={states} />);
-    expect(screen.getByText("partial_capability")).toBeInTheDocument();
-  });
-
-  it("renders unreachable category explicitly", () => {
-    const states = [makeDegradedState({ category: "unreachable", reason: "no route", affectedSubsystem: "test", severity: "error", reasonCode: "test", explanation: "test", sourceComponent: "test" })];
-    render(<DegradedInspector states={states} />);
-    expect(screen.getByText("unreachable")).toBeInTheDocument();
+    expect(screen.getByText("error")).toBeInTheDocument();
   });
 });

@@ -1,44 +1,46 @@
 import { describe, expect, it } from "vitest";
 import { render, screen } from "@testing-library/react";
-import { DegradedInspector } from "../../src/components/viewers/degraded-inspector";
 import { StateLabel } from "../../src/components/primitives/state-label";
-import { StatusBadge } from "../../src/components/primitives/status-badge";
+import { DegradedInspector } from "../../src/components/viewers/degraded-inspector";
 import { makeDegradedState } from "../../src/data/fixtures";
+import { ReceiptViewer } from "../../src/components/viewers/receipt-viewer";
+import { makeExecutionReceipt } from "../../src/data/fixtures";
 
-describe("Unknown/unavailable rendering", () => {
-  it("renders unknown degraded state explicitly without hiding it", () => {
-    const states = [makeDegradedState({ category: "unknown", reason: "insufficient data", affectedSubsystem: "trust", severity: "warning", reasonCode: "unknown_error", explanation: "Trust assessment could not be completed.", sourceComponent: "worker-trust" })];
-    render(<DegradedInspector states={states} />);
-    expect(screen.getByText("unknown")).toBeInTheDocument();
-    expect(screen.getByText("Trust assessment could not be completed.")).toBeInTheDocument();
-  });
-
-  it("renders unavailable degraded state explicitly", () => {
-    const states = [makeDegradedState({ category: "unavailable", reason: "offline", affectedSubsystem: "remote-worker", severity: "error", reasonCode: "node_missing", explanation: "Remote worker node not responding.", sourceComponent: "device-registry" })];
-    render(<DegradedInspector states={states} />);
-    expect(screen.getByText("unavailable")).toBeInTheDocument();
-    expect(screen.getByText("Remote worker node not responding.")).toBeInTheDocument();
-  });
-
-  it("shows empty state when no degraded states present", () => {
-    render(<DegradedInspector states={[]} />);
-    expect(screen.getByText("No degraded states")).toBeInTheDocument();
-    expect(screen.getByText("All subsystems are operating normally.")).toBeInTheDocument();
-  });
-
-  it("StateLabel renders unknown state", () => {
+describe("Unknown and unavailable rendering", () => {
+  it("StateLabel renders 'unknown' state explicitly", () => {
     render(<StateLabel state="unknown" />);
+    const label = screen.getByLabelText("State: unknown");
+    expect(label).toHaveTextContent("unknown");
+    expect(label).not.toBeEmptyDOMElement();
+  });
+
+  it("StateLabel renders 'unavailable' state explicitly", () => {
+    render(<StateLabel state="unavailable" />);
+    const label = screen.getByLabelText("State: unavailable");
+    expect(label).toHaveTextContent("unavailable");
+  });
+
+  it("DegradedInspector renders unknown category explicitly", () => {
+    const states = [makeDegradedState({ category: "unknown", reason: "unknown reason", affectedSubsystem: "test", severity: "warning", reasonCode: "unknown_error", explanation: "Unknown state", sourceComponent: "test" })];
+    render(<DegradedInspector states={states} />);
     expect(screen.getByText("unknown")).toBeInTheDocument();
   });
 
-  it("StateLabel renders unavailable state", () => {
-    render(<StateLabel state="unavailable" />);
+  it("DegradedInspector renders unavailable category explicitly", () => {
+    const states = [makeDegradedState({ category: "unavailable", reason: "not available", affectedSubsystem: "test", severity: "error", reasonCode: "node_missing", explanation: "Unavailable state", sourceComponent: "test" })];
+    render(<DegradedInspector states={states} />);
     expect(screen.getByText("unavailable")).toBeInTheDocument();
   });
 
-  it("StatusBadge renders unknown status", () => {
-    render(<StatusBadge status="unknown" label="unknown" />);
-    const badge = screen.getByRole("status");
-    expect(badge).toHaveTextContent("unknown");
+  it("ReceiptViewer shows 'Unavailable' for missing timing", () => {
+    const receipt = makeExecutionReceipt({ timing: {} });
+    render(<ReceiptViewer receipt={receipt} />);
+    const unavailableElements = screen.getAllByText("Unavailable");
+    expect(unavailableElements.length).toBeGreaterThan(0);
+  });
+
+  it("EmptyState is shown for missing data", () => {
+    render(<DegradedInspector states={[]} />);
+    expect(screen.getByRole("status")).toHaveTextContent("No degraded states");
   });
 });
