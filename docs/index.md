@@ -378,6 +378,28 @@ Troubleshooting <reference/troubleshooting>
 ```
 
 ```{toctree}
+:caption: Governance
+:hidden:
+
+ADR Index <adr/index>
+System Topology <architecture/system-topology>
+Governance Topology <architecture/governance-topology>
+Capability Status <architecture/capability-status-matrix>
+Governance Flows <architecture/governance-flows>
+Replay Lineage <architecture/replay-lineage>
+Event Taxonomy <architecture/event-taxonomy-map>
+```
+
+```{toctree}
+:caption: Verification
+:hidden:
+
+Verification Topology <verification/verification-topology>
+Anti-Theatre Audit <verification/anti-theatre-audit>
+Verification Matrix <verification/verification-matrix>
+```
+
+```{toctree}
 :caption: Resources
 :hidden:
 
