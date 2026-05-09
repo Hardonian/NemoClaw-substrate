@@ -10,7 +10,8 @@
 - `npm run verify:remote-probes`
 - `npm run verify:governed-routing`
 - `npm run verify:core`
-- `npm run verify:all`
+- `npm run verify:release`
+- `npm run verify:all` (strict `verify:core` variant)
 
 ## CI baseline
 

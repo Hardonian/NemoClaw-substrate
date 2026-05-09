@@ -72,5 +72,6 @@ npm run verify:release
 ```
 
 - `verify:core` reports deterministic `PASS/WARN/FAIL` status across changelog hygiene, typecheck, lint, and targeted control-plane/probe/governed-routing suites.
-- `verify:all` runs strict mode and fails for both repository failures and missing required toolchain/dependencies.
+- `verify:release` is the primary release gate for local and CI readiness checks.
+- `verify:all` remains available as a strict-mode variant of `verify:core` that fails for both repository failures and missing required toolchain/dependencies.
 - In restricted local environments, `npm install --ignore-scripts` is a local diagnosis fallback only and must not be used for release packaging or CI baselines.
