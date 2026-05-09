@@ -199,7 +199,15 @@ This phase adds explicit manual local probe execution and diagnostics summaries,
 - Heterogeneous routing is opt-in via `NEMOCLAW_HETEROGENEOUS_ROUTING=1` and does not imply remote execution enablement.
 - Remote execution requires separate `NEMOCLAW_REMOTE_EXECUTION=1` and policy eligibility.
 - Remote candidates are excluded when policy denies or requires unprovided approval.
-- No SSH execution, no Dynamo/GPU balancing claims, and no background daemon/autonomous worker routing.
+- Probe execution is explicit/manual with no background polling; remote execution and automated routing remain planned future work.
 - Telemetry confidence and degraded states reflect observed registry/probe data only.
 
 - [x] Integrate heterogeneous bridge at runtime/provider dispatch seam with strict flag gating and explicit blocked/degraded outcomes (2026-05-09).
+
+
+## 2026-05-09 telemetry truth update
+- Telemetry is explicit probe-only and best effort.
+- Unavailable telemetry is acceptable and non-fatal.
+- No background polling daemons are introduced.
+- Telemetry is observed only through explicit probes; future scheduling use is planned and remains unavailable unless observed.
+- Routing defaults remain unchanged; telemetry is non-authoritative metadata.

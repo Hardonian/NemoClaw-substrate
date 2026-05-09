@@ -20,8 +20,16 @@ Local diagnostics summary includes:
 - Heterogeneous routing is opt-in via `NEMOCLAW_HETEROGENEOUS_ROUTING=1` and does not imply remote execution enablement.
 - Remote execution requires separate `NEMOCLAW_REMOTE_EXECUTION=1` and policy eligibility.
 - Remote candidates are excluded when policy denies or requires unprovided approval.
-- No SSH execution, no Dynamo/GPU balancing claims, and no background daemon/autonomous worker routing.
+- Probe execution is explicit/manual with no background polling; remote execution and automated routing remain planned future work.
 - Telemetry confidence and degraded states reflect observed registry/probe data only.
 
 ## 2026-05-09 dispatch diagnostics
 - Heterogeneous dispatch wrapper diagnostics now report bridge enablement, governed state, remote execution state, selected candidate, and receipt id.
+
+
+## 2026-05-09 telemetry truth update
+- Telemetry is explicit probe-only and best effort.
+- Unavailable telemetry is acceptable and non-fatal.
+- No background polling daemons are introduced.
+- Telemetry is observed only through explicit probes; future scheduling use is planned and remains unavailable unless observed.
+- Routing defaults remain unchanged; telemetry is non-authoritative metadata.
