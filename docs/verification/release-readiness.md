@@ -3,19 +3,27 @@
 
 # Release readiness
 
-## 2026-05-09 telemetry event taxonomy audit
-- Flags/defaults: no routing default changes; telemetry remains evidence-only.
-- Policy gates: no auto-mutation, no auto-routing, no background polling.
-- Receipt/event coverage: explicit telemetry probe/parse/update outcomes emitted with replay references.
-- Diagnostics/observability: telemetry counts, confidence bands, and source summaries are aggregated.
-- Replayability: lineage/reason codes preserved for telemetry events.
-- Security: event payloads avoid auth tokens and secret material.
-- Environment/bootstrap risks: command/tool availability can yield `telemetry_unavailable` and must remain non-fatal.
-- Known non-goals: no orchestration, no Dynamo/GPU balancing, no autonomous policy actions.
+## Checkpoint intent (2026-05-09)
+This integration checkpoint is a governed substrate readiness pass. It hardens release truthfulness and verification discipline without adding runtime features.
 
-- Registry telemetry persistence is verified for applied/skipped/conflict/stale event emission with deterministic ordering and replay-safe payloads.
+## Claim-audit result
+Unsupported-language audit completed across docs and code claims:
+- `production-ready`: not claimed as current state.
+- `distributed execution`: classified as not implemented/planned.
+- `GPU balancing`: classified as not implemented/planned.
+- `Dynamo integration`: classified as planned/not implemented.
+- `autonomous orchestration`: classified as not implemented.
+- `self-healing`: not claimed as implemented behavior.
+- `automatic policy learning`: not claimed; policy promotion remains supervised.
 
-## 2026-05-09 degraded-state chaos gate
-- Deterministic chaos coverage is required before orchestration expansion.
-- Required fixture classes: stale registry, telemetry unavailable/malformed, remote timeout, policy deny/approval_required, no eligible candidate, failed fallback, replay mismatch, diagnostics empty state.
-- Release evidence includes explicit reason-code assertions in receipts/events/diagnostics.
+## Readiness status
+- Implemented: release verification gates, governed routing opt-in guardrails, explicit degraded-state evidence patterns.
+- Scaffolded: remote execution seams, telemetry enrichment seams, policy promotion proposal surfaces.
+- Opt-in: governed routing and heterogeneous routing toggles.
+- Planned: external orchestration adapters and broader autonomous operations.
+- Not implemented: distributed runtime handoff, GPU balancing, Dynamo-native orchestration, self-healing loops, automatic policy learning.
+
+## Risk posture
+- Release messaging risk reduced by explicit status matrix and roadmap normalization.
+- Regression risk controlled by `verify:release` aggregate command and CI enforcement.
+- Residual risk: future PRs could reintroduce unsupported claims without checklist enforcement discipline.

@@ -4,6 +4,14 @@
 
 ## Dependency map
 
+## Release-readiness status taxonomy (2026-05-09)
+- **Implemented:** baseline CLI/plugin flows and deterministic verification contracts already in repository truth.
+- **Scaffolded:** adapter seams and diagnostics for governed heterogeneous execution, without distributed autonomy.
+- **Opt-in:** governed/heterogeneous routing flags; disabled by default.
+- **Planned:** external orchestration adapter integrations, contingent on stable local control contracts.
+- **Not implemented:** distributed execution, GPU balancing, Dynamo-native orchestration, self-healing loops, automatic policy learning.
+
+
 ### Parallel-safe early work
 - docs/foundation
 - architecture audit

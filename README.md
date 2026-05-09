@@ -3,7 +3,7 @@
 
 # NemoClaw Fork: Local Operator-Grade Execution and Governance
 
-This fork of NemoClaw is being shaped into a local operator-grade AI execution and governance system for heterogeneous local infrastructure.
+This fork of NemoClaw is being shaped into a governed heterogeneous execution substrate for local operator-grade AI execution with explicit release-truth boundaries.
 
 ## Why this fork exists
 
@@ -16,8 +16,11 @@ The fork prioritizes deterministic and auditable control over opaque autonomy. I
 
 ## Current state vs roadmap
 
-- **Current state:** existing CLI/plugin/sandbox orchestration and inference onboarding flows are present.
-- **Roadmap state:** deterministic scheduler, dedicated device registry, policy engine promotions, and unified receipt framework are target-state and not yet fully implemented.
+- **Implemented:** existing CLI/plugin/sandbox orchestration and inference onboarding flows; control-plane verification gates.
+- **Scaffolded:** remote execution and telemetry adapter seams with explicit degraded-state reporting.
+- **Opt-in:** governed routing (`NEMOCLAW_GOVERNED_ROUTING=1`) and heterogeneous bridge (`NEMOCLAW_HETEROGENEOUS_ROUTING=1`).
+- **Planned:** external orchestration adapter integrations after stable local contracts.
+- **Not implemented:** distributed execution, GPU balancing, Dynamo integration, autonomous orchestration/self-healing, automatic policy learning.
 
 ## Architecture and planning docs
 
@@ -40,14 +43,18 @@ When contributing:
 2. Avoid implementation claims unless backed by code and tests in the same PR.
 3. Include verification commands and observed outcomes in PR descriptions.
 
-## Not implemented yet (do not over-interpret)
+## Not implemented yet (explicitly not implemented in this checkpoint)
 
 Unless specifically added and verified in code:
 - no dedicated deterministic scheduler,
 - no dedicated device registry,
 - no dedicated policy-promotion engine,
 - no unified execution receipt framework,
-- no Dynamo-style orchestration integration.
+- no Dynamo-style orchestration integration,
+- no distributed execution handoff,
+- no GPU balancing,
+- no autonomous orchestration or self-healing loops,
+- no automatic policy learning.
 
 
 ## Local bootstrap fallback
@@ -61,7 +68,7 @@ Preferred contributor flow:
 ```bash
 npm run verify:changelog-hygiene
 npm run verify:core
-npm run verify:all
+npm run verify:release
 ```
 
 - `verify:core` reports deterministic `PASS/WARN/FAIL` status across changelog hygiene, typecheck, lint, and targeted control-plane/probe/governed-routing suites.

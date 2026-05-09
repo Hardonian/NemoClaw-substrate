@@ -1,7 +1,7 @@
 {
   "name": "nemoclaw",
   "version": "0.1.0",
-  "description": "NemoClaw — run OpenClaw inside OpenShell with NVIDIA inference",
+  "description": "NemoClaw \u2014 run OpenClaw inside OpenShell with NVIDIA inference",
   "license": "Apache-2.0",
   "bin": {
     "nemoclaw": "./bin/nemoclaw.js",
@@ -52,7 +52,9 @@
     "verify:remote-probes": "vitest run src/lib/control-plane/remote-runtime-probes.test.ts src/lib/control-plane/worker-probes.test.ts",
     "verify:governed-routing": "vitest run src/lib/control-plane/governed-provider-routing.test.ts",
     "verify:core": "node scripts/verify-core.js",
-    "verify:all": "npm run verify:core -- --strict"
+    "verify:all": "npm run verify:core -- --strict",
+    "verify:chaos": "vitest run src/lib/control-plane/degraded-state-chaos.test.ts",
+    "verify:release": "npm run verify:changelog-hygiene && npm run verify:core && npm run typecheck && npm run lint && npm run verify:chaos"
   },
   "dependencies": {
     "@oclif/core": "^4.10.5",

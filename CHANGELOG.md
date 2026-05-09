@@ -6,6 +6,7 @@
 All notable changes to this fork are documented in this file.
 
 ## [Unreleased]
+- release: completed governed substrate readiness closure pass with claim-audit normalization, status taxonomy docs, and release verification gate wiring.
 - telemetry hardening: dedicated operational telemetry event taxonomy (`telemetry_probe_*`, `telemetry_parse_*`, `telemetry_unavailable/stale/conflict_detected`, `telemetry_registry_update_*`), explicit mapping in probe flows, and telemetry observability/replay validation coverage with unchanged routing defaults.
 - telemetry: added explicit local GPU telemetry adapters (`nvidia-smi` observed/unavailable/malformed/timeout states), runtime metadata parsing for configured local runtime probes, registry/diagnostics/event integration, and non-fatal unavailable telemetry behavior while preserving routing defaults.
 
