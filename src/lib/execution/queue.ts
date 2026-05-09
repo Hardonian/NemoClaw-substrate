@@ -31,6 +31,14 @@ export class ExecutionQueue {
   }
 
   enqueue(item: ExecutionQueueItem): QueueDecision {
+    const existing = this.store.get(item.id);
+    if (existing) {
+      return QueueDecision.block(
+        QueueReasonCode.VALIDATION_FAILED,
+        `Item ${item.id} is already in the queue with status ${existing.status}`,
+      );
+    }
+
     if (item.status !== QueueStatus.PENDING) {
       return QueueDecision.block(
         QueueReasonCode.VALIDATION_FAILED,
@@ -62,7 +70,9 @@ export class ExecutionQueue {
       return undefined;
     }
 
-    return items[0];
+    const item = items[0];
+    this.store.delete(item.id);
+    return item;
   }
 
   getItems(): ExecutionQueueItem[] {

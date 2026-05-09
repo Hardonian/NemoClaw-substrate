@@ -75,17 +75,17 @@ export class GovernanceManager {
         );
       }
 
-      if (!gate.granted) {
-        return QueueDecision.block(
-          QueueReasonCode.APPROVAL_REQUIRED,
-          `Approval gate ${gate.name} has not been granted`,
-        );
-      }
-
       if (gate.deniedBy) {
         return QueueDecision.block(
           QueueReasonCode.APPROVAL_DENIED,
           `Approval gate ${gate.name} was denied by ${gate.deniedBy}: ${gate.deniedReason ?? 'no reason provided'}`,
+        );
+      }
+
+      if (!gate.granted) {
+        return QueueDecision.block(
+          QueueReasonCode.APPROVAL_REQUIRED,
+          `Approval gate ${gate.name} has not been granted`,
         );
       }
     }

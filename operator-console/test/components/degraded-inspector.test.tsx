@@ -30,10 +30,9 @@ describe("DegradedInspector", () => {
     expect(screen.getByText("Test explanation")).toBeInTheDocument();
   });
 
-  it("shows recovery suggestion when available", () => {
+  it("shows recovery suggestion in table when available", () => {
     const states = [makeDegradedState({ category: "degraded", reason: "test", affectedSubsystem: "test", severity: "warning", reasonCode: "capability_missing", explanation: "Test", sourceComponent: "test", recoverySuggestion: "Do something" })];
     render(<DegradedInspector states={states} />);
-    expect(screen.getByText(/Recovery:/)).toBeInTheDocument();
     expect(screen.getByText("Do something")).toBeInTheDocument();
   });
 

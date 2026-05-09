@@ -12,7 +12,7 @@
 - `npm run verify:core`
 - `npm run verify:release`
 - `npm run verify:all` (strict `verify:core` variant)
-- `npx vitest run src/lib/security/security-policy.test.ts src/lib/control-plane/remote-runtime-probes.test.ts src/lib/control-plane/remote-execution.test.ts src/lib/control-plane/local-runtime-probes.test.ts`
+- `npx vitest run src/lib/security/security-policy.test.ts src/lib/control-plane/remote-runtime-probes.test.ts src/lib/control-plane/remote-execution.test.ts src/lib/control-plane/local-runtime-probes.test.ts src/lib/control-plane/policy-engine.test.ts`
 
 ## CI baseline
 
@@ -53,6 +53,7 @@ node scripts/verify-core.js --strict
 - verify remote execution adapter seam: opt-in gating, policy/approval blocking, degraded path truth, receipt/event emission, diagnostics exposure.
 
 ## 2026-05-09 heterogeneous routing update
+
 - Default local/provider behavior remains unchanged unless heterogeneous routing is explicitly enabled.
 - Heterogeneous routing is opt-in via `NEMOCLAW_HETEROGENEOUS_ROUTING=1` and does not imply remote execution enablement.
 - Remote execution requires separate `NEMOCLAW_REMOTE_EXECUTION=1` and policy eligibility.
@@ -62,8 +63,8 @@ node scripts/verify-core.js --strict
 
 - Runtime dispatch integration wrapper verification added (flag gating, policy block behavior, governed receipts/diagnostics).
 
-
 ## 2026-05-09 telemetry truth update
+
 - Telemetry is explicit probe-only and best effort.
 - Unavailable telemetry is acceptable and non-fatal.
 - No background polling daemons are introduced.
@@ -74,6 +75,7 @@ node scripts/verify-core.js --strict
 - Registry telemetry update policy validated for observed/partial/unavailable/stale/conflict states.
 
 ## 2026-05-09 telemetry taxonomy verification additions
+
 - `npx vitest run src/lib/control-plane/local-runtime-probes.test.ts src/lib/control-plane/worker-probes.test.ts src/lib/control-plane/operational-intelligence.test.ts`
 - verify dedicated telemetry event categories, mapping coverage, replay-safe ordering assumptions, and observability aggregation output.
 
@@ -84,6 +86,7 @@ node scripts/verify-core.js --strict
 - Verifies deterministic failure-injection coverage across policy deny/approval gating, no-candidate/no-hidden-fallback routing behavior, remote timeout degradation, telemetry non-erasure guarantees, replay digest mismatch detection, and diagnostics empty-state reason reporting.
 
 ## Worker trust and attestation constraints (2026-05-09)
+
 - Self-reported claims are evidence only and are **not automatically trusted**.
 - Probe-observed evidence improves visibility but is **not authorization**.
 - Operator approval is explicit and required before remote trust elevation.
@@ -93,11 +96,13 @@ node scripts/verify-core.js --strict
 - No orchestration/Dynamo integration is implemented in this phase.
 
 ## Residual closure additions (2026-05-09)
+
 - Replay guardrails: explicit rejection tests cover policy drift, trust drift, candidate eligibility mismatch, and fallback mismatch when governance reason codes are absent.
 - Remote execution guardrails: transport is not invoked when disabled, denied, approval-gated, trust-denied, or stale/unhealthy under active routing context.
 - Observability guardrails: telemetry aggregates include emitted telemetry kinds only; reserved scaffold kinds are validated as non-emitted/non-aggregated for telemetry rollups.
 
 ## Security hardening additions (2026-05-09)
+
 - URL/network safety: credential stripping, unsupported scheme rejection, local-only enforcement, private/public/Tailscale-LAN classification, and timeout ceiling normalization.
 - Redaction: auth headers, bearer/API keys, URL credentials, env-like keys, receipts, events, diagnostics, and proofpack/export payloads.
 - Command safety: descriptor-only validation, shell=false enforcement, timeout/output ceilings, allowlist/denylist denials, and blocked remote transport before invocation.

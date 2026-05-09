@@ -1,3 +1,7 @@
+// Re-exports from local type declarations that mirror the control-plane types.
+// We use local declarations to avoid importing implementation files that have
+// pre-existing type errors in the main project.
+
 export type {
   DegradedCategory,
   DegradedReasonCode,
@@ -26,9 +30,7 @@ export type {
   ControlDecision,
   ExecutionPhase,
   ExecutionReceipt,
-} from "../../../src/lib/control-plane/types";
-
-export type { TaskClassification } from "../../../src/lib/control-plane/task-classification";
+} from "./control-plane-types";
 
 export type {
   OperationalEventCategory,
@@ -36,10 +38,10 @@ export type {
   OperationalMemoryStore,
   InMemoryOperationalStore,
   OperationalMemoryLog,
-} from "../../../src/lib/control-plane/operational-memory";
+} from "./control-plane-types";
 
-export type { ReplayEnvelope } from "../../../src/lib/control-plane/replay";
-export { buildReplayEnvelope, validateReplayEnvelope } from "../../../src/lib/control-plane/replay";
+export type { ReplayEnvelope } from "./control-plane-types";
+export { buildReplayEnvelope, validateReplayEnvelope } from "./control-plane-runtime";
 
 export {
   summarizePolicyOutcomes,
@@ -48,7 +50,7 @@ export {
   summarizeStaleNodes,
   summarizeTelemetryEventCounts,
   summarizeTelemetryDimensions,
-} from "../../../src/lib/control-plane/observability";
+} from "./control-plane-runtime";
 
 export type {
   PolicyEffect,
@@ -57,41 +59,33 @@ export type {
   PolicyBundle,
   PolicyEvaluationContext,
   PolicyEvaluationResult,
-} from "../../../src/lib/control-plane/governance";
+} from "./control-plane-types";
 
 export type {
   HeterogeneousCandidate,
   HeterogeneousRoutingResult,
-} from "../../../src/lib/control-plane/heterogeneous-routing";
-export { summarizeHeterogeneousDiagnostics } from "../../../src/lib/control-plane/heterogeneous-routing";
+} from "./control-plane-types";
+export { summarizeHeterogeneousDiagnostics } from "./control-plane-runtime";
 
 export type {
   PolicyCandidateReason,
   PolicyCandidate,
   PolicyPromotionProposal,
-} from "../../../src/lib/control-plane/policy-promotion";
+} from "./control-plane-types";
 
 export type {
   DispatchStatus,
   DispatchIntegrationResult,
-} from "../../../src/lib/control-plane/runtime-dispatch-integration";
+} from "./control-plane-types";
 
-export {
-  buildWorkerIdentity,
-  createCapabilityClaimFromProbe,
-  compareClaims,
-  markAttestationStatus,
-  decideWorkerTrust,
-} from "../../../src/lib/control-plane/worker-trust";
+export type { HealthSummary, DeviceRegistry } from "./control-plane-types";
 
-export type { HealthSummary, DeviceRegistry } from "../../../src/lib/control-plane/device-registry";
-
-export type { SchedulerDryRunResult } from "../../../src/lib/control-plane/scheduler-dry-run-bridge";
+export type { SchedulerDryRunResult } from "./control-plane-types";
 
 export type {
   LocalProbeType,
   ProbeOutcome,
   LocalProbeSummary,
-} from "../../../src/lib/control-plane/local-runtime-probes";
+} from "./control-plane-types";
 
-export { summarizeLocalDiagnostics } from "../../../src/lib/control-plane/local-diagnostics";
+export { summarizeLocalDiagnostics } from "./control-plane-runtime";

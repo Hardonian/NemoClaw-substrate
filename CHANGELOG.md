@@ -6,6 +6,8 @@
 All notable changes to this fork are documented in this file.
 
 ## [Unreleased]
+
+- governance: implement deterministic canonical policy engine with scope inheritance, overrides, fail-closed evaluation, and replay-safe evaluation traces.
 - security: add deterministic transport, network, command-safety, redaction, and proofpack/export policy guards without changing default runtime behavior.
 - hardening: close governed substrate residual matrix with direct replay drift rejection assertions, reserved-event observability guardrails, and docs/status coherence updates (no new runtime features).
 - trust: add worker identity, trust-level and attestation-status records to control-plane node descriptors; add deterministic capability attestation/trust decision helpers; enforce remote execution trust gating for revoked/expired/conflicted/insufficient trust workers; and emit explicit worker trust/attestation operational events.
@@ -14,6 +16,7 @@ All notable changes to this fork are documented in this file.
 - telemetry: added explicit local GPU telemetry adapters (`nvidia-smi` observed/unavailable/malformed/timeout states), runtime metadata parsing for configured local runtime probes, registry/diagnostics/event integration, and non-fatal unavailable telemetry behavior while preserving routing defaults.
 
 ### Added
+
 - Added opt-in governed provider-routing integration behind `NEMOCLAW_GOVERNED_ROUTING=1`, with policy enforcement at provider-selection boundary, explicit no-candidate/fallback handling, and governed routing receipts/events/diagnostics.
 - Added governed provider-routing tests for default behavior preservation, feature-flag parsing, policy deny/approval blocking, no-candidate behavior, fallback constraints, receipt/event emission, and diagnostics state reporting.
 - Added worker/device adapter contracts and local provider capability adapter with explicit unknown-hardware degraded-state reporting.
@@ -37,23 +40,27 @@ All notable changes to this fork are documented in this file.
 - Added security policy contracts and tests for URL/network safety, timeout ceilings, structured secret redaction, descriptor-only command safety, transport blocking before fetch/remote calls, and proofpack/export preflight.
 
 ### telemetry
+
 - add remote runtime telemetry enrichment and parser adapters (Ollama/vLLM/llama.cpp/NIM/generic)
 - define explicit registry telemetry persistence policy (observed/partial/unavailable/stale/conflict provenance)
 - expand diagnostics and runtime events for telemetry source/confidence and registry update decisions
 
 ### Changed
+
 - README updated to clarify fork purpose, current-state vs roadmap, architecture doc locations, and PR verification expectations.
 - routing: add opt-in heterogeneous scheduler bridge connecting local provider and guarded remote execution candidates, with explicit policy gating, deterministic candidate diagnostics, and receipt-recorded fallback behavior.
 - execution: add guarded remote execution adapter seam behind `NEMOCLAW_REMOTE_EXECUTION=1` with policy/approval gating, HTTP scaffold transport, receipt/event emission, replay-safe records, and diagnostics visibility.
 - security: route remote probes, remote execution, local probe URLs, operational events, diagnostics redaction, and proofpack/export helpers through fail-closed security policy checks.
 
 ## 2026-05-09
+
 - Fixed CHANGELOG header/content duplication from prior PR and normalized single SPDX/changelog header.
 - Added deterministic governance foundation: policy evaluator, task classification, scheduler primitives, governed fallback records, and initial receipt/scheduling seams.
 - Added foundational control-plane contracts, device registry service, degraded-state taxonomy, and receipt primitives (scaffolded integration only).
 - Added tests for policy/classification/scheduler determinism and fallback explicitness.
 
 ## Worker probe and telemetry adapter note (2026-05-09)
+
 - Probes are explicit operator-invoked actions (manual/invoked-only), not autonomous loops.
 - Remote execution remains disabled in this phase; governed routing remains opt-in.
 - Telemetry fields can be unavailable/stale and are surfaced truthfully without fabrication.

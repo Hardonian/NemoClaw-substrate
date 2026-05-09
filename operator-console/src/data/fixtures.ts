@@ -285,16 +285,16 @@ export const sampleReceipts: ExecutionReceipt[] = [
 ];
 
 export const sampleEvents: OperationalEvent[] = [
-  makeOperationalEvent({ eventId: "op-001", sequence: 0, category: "receipt", provenance: { requestId: "req-001", receiptId: "receipt-001" }, payload: { receiptId: "receipt-001" } }),
-  makeOperationalEvent({ eventId: "op-002", sequence: 1, category: "policy_outcome", provenance: { requestId: "req-001", receiptId: "receipt-001" }, payload: { policyDecision: { allowed: true, requiredApproval: false } } }),
-  makeOperationalEvent({ eventId: "op-003", sequence: 2, category: "scheduler_outcome", provenance: { requestId: "req-001", receiptId: "receipt-001" }, payload: { selected: "node-a" } }),
-  makeOperationalEvent({ eventId: "op-004", sequence: 3, category: "degraded_state", provenance: { requestId: "req-002", receiptId: "receipt-002" }, payload: { degraded: { reasonCode: "transport_unreachable" } } }),
-  makeOperationalEvent({ eventId: "op-005", sequence: 4, category: "fallback", provenance: { requestId: "req-002", receiptId: "receipt-002" }, payload: { fallback: { reason: "remote_timeout" } } }),
-  makeOperationalEvent({ eventId: "op-006", sequence: 5, category: "operator_override", provenance: { requestId: "req-003", receiptId: "receipt-003", actor: "admin@example.com" }, payload: { override: { actor: "admin@example.com", reason: "Approved" } } }),
-  makeOperationalEvent({ eventId: "op-007", sequence: 6, category: "telemetry_probe_started", provenance: { requestId: "req-001" }, payload: { sourceRuntime: "openai" } }),
-  makeOperationalEvent({ eventId: "op-008", sequence: 7, category: "telemetry_probe_succeeded", provenance: { requestId: "req-001" }, payload: { confidence: "medium" } }),
-  makeOperationalEvent({ eventId: "op-009", sequence: 8, category: "telemetry_unavailable", provenance: { requestId: "req-002" }, payload: { reasonCode: "nvidia_smi_unavailable" } }),
-  makeOperationalEvent({ eventId: "op-010", sequence: 9, category: "worker_trust_elevated", provenance: { requestId: "req-001" }, payload: { workerId: "worker-001", trustLevel: "trusted_local" } }),
+  makeOperationalEvent({ eventId: "op-001", sequence: 0, category: "receipt", provenance: { requestId: "req-001", receiptId: "receipt-001" }, replayRef: { lineage: ["chat"], replayVersion: "1" }, payload: { receiptId: "receipt-001" } }),
+  makeOperationalEvent({ eventId: "op-002", sequence: 1, category: "policy_outcome", provenance: { requestId: "req-001", receiptId: "receipt-001" }, replayRef: { lineage: ["chat"], replayVersion: "1" }, payload: { policyDecision: { allowed: true, requiredApproval: false } } }),
+  makeOperationalEvent({ eventId: "op-003", sequence: 2, category: "scheduler_outcome", provenance: { requestId: "req-001", receiptId: "receipt-001" }, replayRef: { lineage: ["chat"], replayVersion: "1" }, payload: { selected: "node-a" } }),
+  makeOperationalEvent({ eventId: "op-004", sequence: 3, category: "degraded_state", provenance: { requestId: "req-002", receiptId: "receipt-002" }, replayRef: { lineage: ["chat"], replayVersion: "1" }, payload: { degraded: { reasonCode: "transport_unreachable" } } }),
+  makeOperationalEvent({ eventId: "op-005", sequence: 4, category: "fallback", provenance: { requestId: "req-002", receiptId: "receipt-002" }, replayRef: { lineage: ["chat"], replayVersion: "1" }, payload: { fallback: { reason: "remote_timeout" } } }),
+  makeOperationalEvent({ eventId: "op-006", sequence: 5, category: "operator_override", provenance: { requestId: "req-003", receiptId: "receipt-003", actor: "admin@example.com" }, replayRef: { lineage: ["chat"], replayVersion: "1" }, payload: { override: { actor: "admin@example.com", reason: "Approved" } } }),
+  makeOperationalEvent({ eventId: "op-007", sequence: 6, category: "telemetry_probe_started", provenance: { requestId: "req-001" }, replayRef: { lineage: ["chat"], replayVersion: "1" }, payload: { sourceRuntime: "openai" } }),
+  makeOperationalEvent({ eventId: "op-008", sequence: 7, category: "telemetry_probe_succeeded", provenance: { requestId: "req-001" }, replayRef: { lineage: ["chat"], replayVersion: "1" }, payload: { confidence: "medium" } }),
+  makeOperationalEvent({ eventId: "op-009", sequence: 8, category: "telemetry_unavailable", provenance: { requestId: "req-002" }, replayRef: { lineage: ["chat"], replayVersion: "1" }, payload: { reasonCode: "nvidia_smi_unavailable" } }),
+  makeOperationalEvent({ eventId: "op-010", sequence: 9, category: "worker_trust_elevated", provenance: { requestId: "req-001" }, replayRef: { lineage: ["chat"], replayVersion: "1" }, payload: { workerId: "worker-001", trustLevel: "trusted_local" } }),
 ];
 
 export const sampleWorkerIdentities: WorkerIdentity[] = [
@@ -355,7 +355,7 @@ export const validReplayEnvelope: ReplayEnvelope = {
   exportedAt: T,
   eventCount: sampleEvents.length,
   events: sampleEvents,
-  digest: "sample-digest",
+  digest: Buffer.from(JSON.stringify(sampleEvents)).toString("base64url"),
 };
 
 export const emptyReplayEnvelope: ReplayEnvelope = {

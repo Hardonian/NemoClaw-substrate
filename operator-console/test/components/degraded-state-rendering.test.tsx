@@ -23,15 +23,19 @@ describe("Degraded state rendering", () => {
     expect(screen.getByText(category)).toBeInTheDocument();
   });
 
-  it("renders critical severity correctly", () => {
+  it("renders critical severity badge", () => {
     const states = [makeDegradedState({ category: "degraded", severity: "critical", reason: "critical", affectedSubsystem: "test", reasonCode: "unknown_error", explanation: "Critical", sourceComponent: "test" })];
-    render(<DegradedInspector states={states} />);
-    expect(screen.getByText("critical")).toBeInTheDocument();
+    const { container } = render(<DegradedInspector states={states} />);
+    const badge = container.querySelector('[data-status="critical"]');
+    expect(badge).toBeInTheDocument();
+    expect(badge).toHaveTextContent("critical");
   });
 
-  it("renders error severity correctly", () => {
+  it("renders error severity badge", () => {
     const states = [makeDegradedState({ category: "unavailable", severity: "error", reason: "error", affectedSubsystem: "test", reasonCode: "node_missing", explanation: "Error", sourceComponent: "test" })];
-    render(<DegradedInspector states={states} />);
-    expect(screen.getByText("error")).toBeInTheDocument();
+    const { container } = render(<DegradedInspector states={states} />);
+    const badge = container.querySelector('[data-status="error"]');
+    expect(badge).toBeInTheDocument();
+    expect(badge).toHaveTextContent("error");
   });
 });

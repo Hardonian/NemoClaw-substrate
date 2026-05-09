@@ -96,6 +96,14 @@ export class IdempotencyManager {
       };
     }
 
+    if (record.status === IdempotencyStatus.FAILED) {
+      return {
+        success: false,
+        reasonCode: QueueReasonCode.DUPLICATE_EXECUTION,
+        message: `Idempotency key ${idempotencyKey} was already marked as failed`,
+      };
+    }
+
     record.status = IdempotencyStatus.COMPLETED;
     record.completedAt = new Date().toISOString();
     record.resultHash = resultHash;
