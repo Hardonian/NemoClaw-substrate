@@ -134,12 +134,17 @@ export async function routeHeterogeneous(input: {
 }
 
 export function summarizeHeterogeneousDiagnostics(input: { routing: HeterogeneousRoutingConfig; governedEnabled: boolean; remote: RemoteExecutionConfig; result?: HeterogeneousRoutingResult }): string[] {
+  const noCandidateReason = input.result?.selectedCandidate ? "none" : input.result?.receipt.degradedEvents.map((event) => event.reasonCode).join(",") || "no_selected_candidate";
+  const fallbackState = input.result ? (input.result.receipt.fallbackAttempts.length > 0 ? input.result.receipt.fallbackAttempts.map((attempt) => attempt.reason).join(",") : "none") : "none";
+
   return [
     `Heterogeneous routing: ${input.routing.enabled ? "enabled" : "disabled"} (${input.routing.source})`,
     `Governed routing: ${input.governedEnabled ? "enabled" : "disabled"}`,
     `Remote execution: ${input.remote.enabled ? "enabled" : "disabled"} (${input.remote.source})`,
     `Selected candidate: ${input.result?.selectedCandidate?.candidateId ?? "none"}`,
     `Excluded candidates: ${input.result?.excludedCandidates.map((c) => c.candidateId).join(",") || "none"}`,
+    `No-candidate reason: ${noCandidateReason}`,
+    `Fallback: ${fallbackState}`,
     `Receipt: ${input.result?.receipt.receiptId ?? "none"}`,
   ];
 }
