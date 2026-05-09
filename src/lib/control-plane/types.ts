@@ -190,5 +190,17 @@ export interface ExecutionReceipt {
   toolInvocations: Array<{ name: string; at: string; durationMs?: number; status: "ok" | "failed" }>;
   timing: { totalMs?: number; queueMs?: number; executionMs?: number };
   provenance: { source: string; lineage: string[]; replayVersion: string; exportedAt?: string };
+  executionLineage?: ExecutionReceiptLineage;
   operatorOverrides: Array<{ at: string; actor: string; reason: string }>;
+}
+
+export interface ExecutionReceiptLineage {
+  executionPlanId: string;
+  executionApprovalId?: string;
+  executionIntentHash: string;
+  executionPolicySnapshotHash: string;
+  executionTrustSnapshotHash: string;
+  authorizationSource?: string;
+  authorizationLineageId?: string;
+  replayReferenceId: string;
 }
