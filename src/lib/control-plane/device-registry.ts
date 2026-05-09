@@ -35,6 +35,10 @@ export class DeviceRegistry {
   listNodes(): NodeDescriptor[] {
     return [...this.nodes.values()].sort((a, b) => a.nodeId.localeCompare(b.nodeId));
   }
+  list(): NodeDescriptor[] { return this.listNodes(); }
+
+  // Backward-compatible alias used by existing control-plane tests.
+  register(node: NodeDescriptor): void { this.registerNode(node); }
 
   summarizeHealth(nowIso: string, staleAfterMs: number): HealthSummary {
     const now = Date.parse(nowIso);
@@ -51,4 +55,8 @@ export class DeviceRegistry {
     }
     return summary;
   }
+}
+
+export function createDeviceRegistry(): DeviceRegistry {
+  return new DeviceRegistry();
 }
