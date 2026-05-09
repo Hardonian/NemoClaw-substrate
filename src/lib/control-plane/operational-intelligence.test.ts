@@ -18,7 +18,7 @@ describe("operational intelligence substrate", () => {
 
   it("validates replay stability and integrity", () => {
     const log = new OperationalMemoryLog();
-    log.append({ occurredAt: "2026-05-09T00:00:00.000Z", category: "policy_outcome", source: "test", provenance: {}, payload: { policyDecision: { allowed: true, requiredApproval: false } } });
+    log.append({ occurredAt: "2026-05-09T00:00:00.000Z", category: "policy_outcome", source: "test", provenance: {}, replayRef: { lineage: ["test"], replayVersion: "1" }, payload: { policyDecision: { allowed: true, requiredApproval: false, reasons: [{ code: "policy_default_allow" }] } } });
     const envelope = buildReplayEnvelope(log.list(), "2026-05-09T00:00:02.000Z");
     expect(validateReplayEnvelope(envelope).ok).toBe(true);
   });
@@ -61,4 +61,14 @@ describe("operational intelligence substrate", () => {
     expect(summarizeTelemetryEventCounts(log.list())).toEqual({ telemetry_conflict_detected: 1, telemetry_parse_partial: 1, telemetry_probe_started: 1, telemetry_registry_update_applied: 1, telemetry_registry_update_skipped: 1, telemetry_stale: 1 });
     expect(summarizeTelemetryDimensions(log.list()).confidence).toEqual({ high: 1, low: 4, medium: 1 });
   });
+
+
+  it("treats replay_metadata and diagnostics_snapshot as reserved (not telemetry aggregates)", () => {
+    const log = new OperationalMemoryLog();
+    log.append({ occurredAt: "2026-05-09T00:00:00.000Z", category: "replay_metadata", source: "test", provenance: {}, payload: { note: "reserved" } });
+    log.append({ occurredAt: "2026-05-09T00:00:01.000Z", category: "diagnostics_snapshot", source: "test", provenance: {}, payload: { note: "reserved" } });
+    expect(summarizeTelemetryEventCounts(log.list())).toEqual({});
+    expect(summarizeTelemetryDimensions(log.list())).toEqual({ confidence: {}, source: {} });
+  });
+
 });

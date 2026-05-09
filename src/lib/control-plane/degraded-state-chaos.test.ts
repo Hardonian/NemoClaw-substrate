@@ -102,4 +102,21 @@ describe("degraded state chaos coverage", () => {
     const lines = summarizeDryRunDiagnostics([]);
     expect(lines).toEqual(["Registered nodes: 0", "Capability snapshots: none", "Scheduler dry-run: not invoked"]);
   });
+
+
+  it("rejects replay on policy/trust/candidate/fallback drift reason-code gaps", () => {
+    const make = (category: "degraded_state" | "fallback" | "policy_outcome", payload: Record<string, unknown>) =>
+      buildReplayEnvelope([{ eventId: "e0", occurredAt: "2026-05-09T00:00:00.000Z", sequence: 0, category, source: "chaos", provenance: {}, replayRef: { lineage: ["chaos"], replayVersion: "1" }, payload }], "2026-05-09T00:00:01.000Z");
+
+    const policyDrift = make("policy_outcome", { policyDecision: { allowed: false, requiredApproval: false, reasons: [{ code: "" }] } });
+    const trustDrift = make("degraded_state", { degraded: { reasonCode: "", reason: "trust_drift" } });
+    const candidateMismatch = make("degraded_state", { degraded: { reasonCode: "", reason: "candidate_eligibility_mismatch" } });
+    const fallbackMismatch = make("fallback", { fallback: { reason: "", at: "2026-05-09T00:00:00.000Z", target: "local/default" } });
+
+    expect(validateReplayEnvelope(policyDrift).reasons).toContain("missing_replay_reason_code");
+    expect(validateReplayEnvelope(trustDrift).reasons).toContain("missing_replay_reason_code");
+    expect(validateReplayEnvelope(candidateMismatch).reasons).toContain("missing_replay_reason_code");
+    expect(validateReplayEnvelope(fallbackMismatch).reasons).toContain("missing_replay_reason_code");
+  });
+
 });

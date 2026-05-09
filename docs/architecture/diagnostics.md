@@ -46,3 +46,6 @@ Diagnostics explicitly report source (local/remote), parser confidence (observed
 - Cryptographic attestation is not implemented yet in this phase.
 - Remote execution is disabled by default and requires explicit opt-in flags.
 - No orchestration/Dynamo integration is implemented in this phase.
+
+## Residual closure assertions (2026-05-09)
+Diagnostics remain explicit for trust, telemetry, replay, and fallback states. Blocked branches fail closed with visible reason-coded receipts; no hidden fallback or implicit transport retry is allowed.

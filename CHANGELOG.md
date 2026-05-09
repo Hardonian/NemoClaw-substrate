@@ -6,6 +6,7 @@
 All notable changes to this fork are documented in this file.
 
 ## [Unreleased]
+- hardening: close governed substrate residual matrix with direct replay drift rejection assertions, reserved-event observability guardrails, and docs/status coherence updates (no new runtime features).
 - trust: add worker identity, trust-level and attestation-status records to control-plane node descriptors; add deterministic capability attestation/trust decision helpers; enforce remote execution trust gating for revoked/expired/conflicted/insufficient trust workers; and emit explicit worker trust/attestation operational events.
 - release: completed governed substrate readiness closure pass with claim-audit normalization, status taxonomy docs, and release verification gate wiring.
 - telemetry hardening: dedicated operational telemetry event taxonomy (`telemetry_probe_*`, `telemetry_parse_*`, `telemetry_unavailable/stale/conflict_detected`, `telemetry_registry_update_*`), explicit mapping in probe flows, and telemetry observability/replay validation coverage with unchanged routing defaults.

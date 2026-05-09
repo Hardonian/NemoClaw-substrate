@@ -23,3 +23,7 @@ This suite hardens deterministic failure-injection coverage for governed routing
 ```bash
 npx vitest run src/lib/control-plane/degraded-state-chaos.test.ts
 ```
+
+## Residual closure delta (2026-05-09)
+- Added direct replay rejection assertions for missing governance reason-code branches across policy/fallback/degraded drift scenarios.
+- Revalidated no hidden fallback and no transport invocation for blocked remote execution branches.
