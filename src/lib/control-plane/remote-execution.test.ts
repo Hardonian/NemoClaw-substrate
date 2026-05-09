@@ -4,12 +4,58 @@
 import { describe, expect, it, vi } from "vitest";
 import { createDeviceRegistry } from "./device-registry";
 import type { PolicyBundle } from "./governance";
+import { evaluatePolicy } from "./governance";
 import { OperationalMemoryLog } from "./operational-memory";
 import { parseRemoteExecutionConfig, runRemoteExecution, summarizeRemoteExecutionDiagnostics } from "./remote-execution";
+import {
+  approveExecutionPlan,
+  createExecutionPlan,
+  createExecutionPolicySnapshot,
+  createExecutionTrustSnapshot,
+} from "./execution-plans";
+import type { NodeDescriptor } from "./types";
 
 const allowPolicy: PolicyBundle = { version: "1", bundleId: "b1", defaultEffect: "allow", rules: [] };
 const denyPolicy: PolicyBundle = { version: "1", bundleId: "b2", defaultEffect: "deny", rules: [] };
 const approvalPolicy: PolicyBundle = { version: "1", bundleId: "b3", defaultEffect: "deny", rules: [{ id: "a", order: 1, description: "a", effect: "approval_required", reasonCode: "policy_rule_approval_required", matches: () => true }] };
+const now = "2026-05-09T00:00:00.000Z";
+
+function trustedWorker(): NodeDescriptor {
+  return {
+    version: "1",
+    nodeId: "worker-1",
+    role: "remote",
+    transport: "http",
+    endpoint: "https://worker",
+    trustClass: "trusted",
+    registeredAt: now,
+    lastHeartbeatAt: now,
+    health: "healthy",
+    metadata: {},
+    workerTrustLevel: "trusted_remote",
+    workerAttestationStatus: "operator_approved",
+    workerTrustReasonCodes: ["operator_approved"],
+    workerLastAttestedAt: now,
+    capabilities: { version: "1", capturedAt: now, source: "test", runtimeBackend: "mock", executionMode: "remote", gpus: [], models: [], policyTags: [], reliabilityTags: [], runtimeTags: [], transportRequirements: [] },
+  };
+}
+
+function approvedPlan() {
+  const node = trustedWorker();
+  const registry = createDeviceRegistry();
+  registry.registerNode(node);
+  const request = { version: "1", requestId: "r-plan", receivedAt: now, source: "test", actor: "operator", action: "worker:execute", constraints: [], metadata: { target: "worker-1" } };
+  const policy = evaluatePolicy(approvalPolicy, { request, actionClass: "runtime" });
+  const intent = { requestId: "r-plan", actor: "operator", action: "worker:execute", command: "run:model", targetNodeId: "worker-1", executionMode: "remote" as const, metadata: {} };
+  const plan = createExecutionPlan({
+    intent,
+    policySnapshot: createExecutionPolicySnapshot({ capturedAt: now, governedRoutingEnabled: true, heterogeneousRoutingEnabled: true, remoteExecutionEnabled: true, policy, fallbackPermitted: false, selectedCandidateClass: "remote_worker", workerTrustLevel: node.workerTrustLevel, workerAttestationStatus: node.workerAttestationStatus, executionMode: "remote" }),
+    trustSnapshot: createExecutionTrustSnapshot({ capturedAt: now, node }),
+    createdAt: now,
+    actor: "operator",
+  });
+  return { registry, ...approveExecutionPlan(plan, { actor: "operator", approvedAt: now, expiresAt: "2026-05-09T01:00:00.000Z" }) };
+}
 
 describe("remote execution", () => {
   it("parses feature flag disabled by default", () => {
@@ -21,6 +67,22 @@ describe("remote execution", () => {
     const transport = { execute: vi.fn() };
     const out = await runRemoteExecution({ request: { requestId: "r1", nowIso: "2026-05-09T00:00:00.000Z", action: "worker:execute", command: "echo hi", targetEndpoint: "https://worker" }, config: { enabled: false, source: "default" }, transport, policyBundle: allowPolicy, registry: createDeviceRegistry() });
     expect(out.status).toBe("disabled");
+    expect(transport.execute).not.toHaveBeenCalled();
+  });
+
+  it("preserves default remote behavior when no execution plan is supplied", async () => {
+    const transport = { execute: vi.fn().mockResolvedValue({ status: 200, body: JSON.stringify({ status: "ok", output: "done" }) }) };
+    const out = await runRemoteExecution({ request: { requestId: "r-default", nowIso: now, action: "worker:execute", command: "echo hi", targetEndpoint: "https://worker", approved: true }, config: { enabled: true, source: "env" }, transport, policyBundle: allowPolicy, registry: createDeviceRegistry() });
+    expect(out.status).toBe("succeeded");
+    expect(out.receipt.executionLineage).toBeUndefined();
+    expect(transport.execute).toHaveBeenCalledTimes(1);
+  });
+
+  it("blocks before transport when a required execution plan is missing", async () => {
+    const transport = { execute: vi.fn() };
+    const out = await runRemoteExecution({ request: { requestId: "r-required", nowIso: now, action: "worker:execute", command: "echo hi", targetEndpoint: "https://worker", approved: true, executionPlanRequired: true }, config: { enabled: true, source: "env" }, transport, policyBundle: allowPolicy, registry: createDeviceRegistry() });
+    expect(out.status).toBe("authorization_denied");
+    expect(out.degradedReason).toBe("missing_execution_plan_lineage");
     expect(transport.execute).not.toHaveBeenCalled();
   });
 
@@ -98,10 +160,42 @@ describe("remote execution", () => {
     expect(log.list().length).toBeGreaterThan(0);
   });
 
+  it("allows remote transport only with valid approved execution-plan lineage", async () => {
+    const { registry, plan, approval } = approvedPlan();
+    const transport = { execute: vi.fn().mockResolvedValue({ status: 200, body: JSON.stringify({ status: "ok", output: "lineage" }) }) };
+    const out = await runRemoteExecution({ request: { requestId: "r-plan", nowIso: now, action: "worker:execute", command: "run:model", nodeId: "worker-1", approved: true, executionPlanRequired: true }, config: { enabled: true, source: "env" }, transport, policyBundle: approvalPolicy, registry, executionPlan: plan, executionApproval: approval });
+    expect(out.status).toBe("succeeded");
+    expect(out.receipt.executionLineage?.executionPlanId).toBe(plan.planId);
+    expect(out.receipt.executionLineage?.executionApprovalId).toBe(approval.approvalId);
+    expect(transport.execute).toHaveBeenCalledTimes(1);
+  });
+
+  it("blocks transport for revoked execution approval lineage", async () => {
+    const { registry, plan, approval } = approvedPlan();
+    const revoked = { ...approval, state: "revoked" as const, decision: "revoked" as const };
+    const transport = { execute: vi.fn() };
+    const out = await runRemoteExecution({ request: { requestId: "r-plan", nowIso: now, action: "worker:execute", command: "run:model", nodeId: "worker-1", approved: true, executionPlanRequired: true }, config: { enabled: true, source: "env" }, transport, policyBundle: approvalPolicy, registry, executionPlan: plan, executionApproval: revoked });
+    expect(out.status).toBe("authorization_denied");
+    expect(out.degradedReason).toContain("approval_revoked");
+    expect(transport.execute).not.toHaveBeenCalled();
+  });
+
   it("supports timeout/network degraded and diagnostics summary", async () => {
     const transport = { execute: vi.fn().mockRejectedValue(new Error("timeout")) };
     const out = await runRemoteExecution({ request: { requestId: "r7", nowIso: "2026-05-09T00:00:00.000Z", action: "worker:execute", command: "echo hi", targetEndpoint: "https://worker", approved: true }, config: { enabled: true, source: "env" }, transport, policyBundle: allowPolicy, registry: createDeviceRegistry() });
     expect(out.degradedReason).toBe("timeout");
     expect(summarizeRemoteExecutionDiagnostics({ enabled: true, source: "env" }, { status: out.status, target: "worker", receiptId: out.receipt.receiptId, reason: out.degradedReason })[0]).toContain("enabled");
+  });
+
+  it("diagnostics expose execution-plan authorization lineage", async () => {
+    const { registry, plan, approval } = approvedPlan();
+    const out = await runRemoteExecution({ request: { requestId: "r-plan", nowIso: now, action: "worker:execute", command: "run:model", nodeId: "worker-1", approved: true, executionPlanRequired: true }, config: { enabled: true, source: "env" }, transport: { execute: vi.fn().mockResolvedValue({ status: 200, body: JSON.stringify({ status: "ok" }) }) }, policyBundle: approvalPolicy, registry, executionPlan: plan, executionApproval: approval });
+    const diagnostics = summarizeRemoteExecutionDiagnostics({ enabled: true, source: "env" }, { status: out.status, receiptId: out.receipt.receiptId, lineage: out.receipt.executionLineage }).join("\n");
+    expect(diagnostics).toContain("Execution plan:");
+    expect(diagnostics).toContain("Approval state: recorded");
+    expect(diagnostics).toContain("Authorization state: recorded");
+    expect(diagnostics).toContain("Policy snapshot hash:");
+    expect(diagnostics).toContain("Trust snapshot hash:");
+    expect(diagnostics).toContain("Intent hash:");
   });
 });

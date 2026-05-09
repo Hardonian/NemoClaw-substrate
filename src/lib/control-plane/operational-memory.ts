@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { deterministicSerialize } from "./serde";
+import type { ExecutionApproval, ExecutionAuthorizationResult, ExecutionPlan } from "./execution-plans";
 import type { DegradedState, ExecutionReceipt, PolicyDecision, SchedulingDecision } from "./types";
 
 export type OperationalEventCategory =
@@ -108,5 +109,46 @@ export function buildEventsFromReceipt(receipt: ExecutionReceipt, source = "runt
   receipt.degradedEvents.forEach((d: DegradedState) => out.push(log.append({ occurredAt: d.timestamp, category: "degraded_state", source, provenance: { requestId: receipt.requestId, receiptId: receipt.receiptId }, replayRef: receipt.provenance, payload: { degraded: d } })));
   receipt.fallbackAttempts.forEach((f) => out.push(log.append({ occurredAt: f.at, category: "fallback", source, provenance: { requestId: receipt.requestId, receiptId: receipt.receiptId }, replayRef: receipt.provenance, payload: { fallback: f } })));
   receipt.operatorOverrides.forEach((o) => out.push(log.append({ occurredAt: o.at, category: "operator_override", source, provenance: { requestId: receipt.requestId, receiptId: receipt.receiptId, actor: o.actor }, replayRef: receipt.provenance, payload: { override: o } })));
+  return out;
+}
+
+export function buildExecutionPlanEvents(input: {
+  plan: ExecutionPlan;
+  source?: string;
+  existingLog?: OperationalMemoryLog;
+  approval?: ExecutionApproval;
+  authorization?: ExecutionAuthorizationResult;
+  replayValidation?: { ok: boolean; reasons: string[]; validatedAt: string };
+}): OperationalEvent[] {
+  const log = input.existingLog ?? new OperationalMemoryLog();
+  const source = input.source ?? "execution-plans";
+  const replayRef = input.plan.replayReference;
+  const provenance = { requestId: input.plan.intent.requestId, actor: input.approval?.actor };
+  const out: OperationalEvent[] = [];
+  out.push(log.append({ occurredAt: input.plan.createdAt, category: "execution_plan_created", source, provenance, replayRef, payload: { planId: input.plan.planId, status: input.plan.status, intentHash: input.plan.intentHash, reasonCode: "plan_created" } }));
+  out.push(log.append({ occurredAt: input.plan.policySnapshot.capturedAt, category: "execution_policy_snapshot_recorded", source, provenance, replayRef, payload: { planId: input.plan.planId, policySnapshotHash: input.plan.policySnapshotHash, reasonCode: input.plan.policySnapshot.policyReasonCode } }));
+  out.push(log.append({ occurredAt: input.plan.trustSnapshot.capturedAt, category: "execution_trust_snapshot_recorded", source, provenance, replayRef, payload: { planId: input.plan.planId, trustSnapshotHash: input.plan.trustSnapshotHash, reasonCode: input.plan.trustSnapshot.workerTrustReasonCodes[0] ?? "trust_snapshot_recorded" } }));
+  for (const transition of input.plan.transitions) {
+    out.push(log.append({ occurredAt: transition.at, category: "execution_plan_phase_transition", source, provenance, replayRef, payload: { planId: input.plan.planId, phase: transition.phase, status: transition.status, reasonCode: transition.reasonCode, note: transition.note } }));
+  }
+  if (input.approval) {
+    const category =
+      input.approval.state === "approved"
+        ? "execution_plan_approved"
+        : input.approval.state === "rejected"
+          ? "execution_plan_rejected"
+          : input.approval.state === "revoked"
+            ? "execution_plan_revoked"
+            : input.approval.state === "expired"
+              ? "execution_plan_expired"
+              : "execution_approval_requested";
+    out.push(log.append({ occurredAt: input.approval.decidedAt, category, source, provenance, replayRef, payload: { planId: input.plan.planId, approvalId: input.approval.approvalId, approvalState: input.approval.state, reasonCode: input.approval.reasonCode } }));
+  }
+  if (input.authorization) {
+    out.push(log.append({ occurredAt: input.authorization.evaluatedAt, category: input.authorization.granted ? "execution_authorization_granted" : "execution_authorization_denied", source, provenance, replayRef, payload: { planId: input.plan.planId, authorizationLineageId: input.authorization.authorizationLineageId, reasonCode: input.authorization.reasonCodes[0] ?? "authorization_granted", reasonCodes: input.authorization.reasonCodes } }));
+  }
+  if (input.replayValidation) {
+    out.push(log.append({ occurredAt: input.replayValidation.validatedAt, category: input.replayValidation.ok ? "execution_replay_validation_succeeded" : "execution_replay_validation_failed", source, provenance, replayRef, payload: { planId: input.plan.planId, reasonCode: input.replayValidation.reasons[0] ?? "authorization_granted", reasons: input.replayValidation.reasons } }));
+  }
   return out;
 }

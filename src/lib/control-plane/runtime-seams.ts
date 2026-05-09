@@ -65,6 +65,7 @@ export function buildRuntimeReceipt(input: {
   policy?: PolicyEvaluationResult;
   degradedStates?: DegradedState[];
   fallbackReason?: string;
+  executionLineage?: ExecutionReceipt["executionLineage"];
 }): ExecutionReceipt {
   const policyDecision: PolicyDecision | undefined = input.policy
     ? {
@@ -98,6 +99,7 @@ export function buildRuntimeReceipt(input: {
       : [],
     timing: { totalMs: Math.max(0, Date.parse(input.completedAt) - Date.parse(input.startedAt)) },
     provenance: { source: "runtime-seam", lineage: [input.action.actionClass], replayVersion: "1" },
+    executionLineage: input.executionLineage,
     operatorOverrides: [],
   };
 }
@@ -110,5 +112,8 @@ export function summarizeRuntimeDiagnostics(receipt?: ExecutionReceipt, operatio
     `Degraded state: ${receipt.degradedEvents.length > 0 ? receipt.degradedEvents.map((d) => d.reasonCode).join(",") : "none"}`,
     `Scheduler primitives: ${receipt.schedulingDecision ? "present" : "scaffolded"}`,
     `Operational events: ${operationalEvents.length || buildEventsFromReceipt(receipt).length}`,
+    `Execution plan: ${receipt.executionLineage?.executionPlanId ?? "none"}`,
+    `Approval state: ${receipt.executionLineage?.executionApprovalId ? "recorded" : "none"}`,
+    `Authorization state: ${receipt.executionLineage?.authorizationLineageId ? "recorded" : "none"}`,
   ];
 }

@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import type { DeviceRegistry } from "./device-registry";
+import type { ExecutionApproval, ExecutionPlan } from "./execution-plans";
+import { executionLineageFromPlan } from "./execution-plans";
 import { evaluatePolicy, type PolicyBundle } from "./governance";
 import type { OperationalEvent, OperationalMemoryLog } from "./operational-memory";
 import { buildEventsFromReceipt } from "./operational-memory";
@@ -48,7 +50,7 @@ export interface HeterogeneousRoutingResult {
 export async function routeHeterogeneous(input: {
   requestId: string; nowIso: string; provider: string; model: string; registry: DeviceRegistry; policyBundle: PolicyBundle;
   governedEnabled: boolean; allowFallback: boolean; routingConfig: HeterogeneousRoutingConfig; remoteConfig: RemoteExecutionConfig;
-  remoteTransport?: RemoteExecutionTransport; approved?: boolean; operationalMemory?: OperationalMemoryLog;
+  remoteTransport?: RemoteExecutionTransport; approved?: boolean; operationalMemory?: OperationalMemoryLog; executionPlan?: ExecutionPlan; executionApproval?: ExecutionApproval; executionPlanRequired?: boolean;
 }): Promise<HeterogeneousRoutingResult> {
   const fallbackProvider = { provider: input.provider, model: input.model };
   const local = {
@@ -98,7 +100,7 @@ export async function routeHeterogeneous(input: {
   let remoteStatus: string | undefined;
   if (selected?.kind === "remote_worker") {
     if (!input.remoteTransport) throw new Error("remote transport required");
-    const remote = await runRemoteExecution({ request: { requestId: input.requestId, nowIso: input.nowIso, action: "worker:execute", command: `run:${input.model}`, nodeId: selected.identity, approved: input.approved }, config: input.remoteConfig, transport: input.remoteTransport, policyBundle: input.policyBundle, registry: input.registry, operationalMemory: input.operationalMemory });
+    const remote = await runRemoteExecution({ request: { requestId: input.requestId, nowIso: input.nowIso, action: "worker:execute", command: `run:${input.model}`, nodeId: selected.identity, approved: input.approved, executionPlanRequired: input.executionPlanRequired }, config: input.remoteConfig, transport: input.remoteTransport, policyBundle: input.policyBundle, registry: input.registry, operationalMemory: input.operationalMemory, executionPlan: input.executionPlan, executionApproval: input.executionApproval });
     remoteStatus = remote.status;
     if (remote.status !== "succeeded") {
       fallbackAttempts.push({ at: input.nowIso, reason: `remote_${remote.status}`, target: `${fallbackProvider.provider}/${fallbackProvider.model}` });
@@ -127,6 +129,7 @@ export async function routeHeterogeneous(input: {
     toolInvocations: [],
     timing: { totalMs: 0 },
     provenance: { source: "heterogeneous-routing", lineage: ["provider", "remote"], replayVersion: "1" },
+    executionLineage: input.executionPlan ? executionLineageFromPlan(input.executionPlan, input.executionApproval, input.executionPlan.authorization?.result) : undefined,
     operatorOverrides: [],
   };
   const events = input.operationalMemory ? buildEventsFromReceipt(receipt, "heterogeneous-routing", input.operationalMemory) : [];
@@ -148,6 +151,13 @@ export function summarizeHeterogeneousDiagnostics(input: { routing: Heterogeneou
     `Worker trust level: ${input.result?.selectedCandidate?.kind === "remote_worker" ? input.result.selectedCandidate.status : "none"}`,
     `Worker attestation status: ${input.result?.selectedCandidate?.kind === "remote_worker" ? (input.result.selectedCandidate.reasonCodes.join("|") || "none") : "none"}`,
     `Trust denial reason: ${input.result?.excludedCandidates.find((c) => c.kind === "remote_worker")?.reasonCodes.join("|") || "none"}`,
+    `Execution plan: ${input.result?.receipt.executionLineage?.executionPlanId ?? "none"}`,
+    `Approval state: ${input.result?.receipt.executionLineage?.executionApprovalId ? "recorded" : "none"}`,
+    `Authorization state: ${input.result?.receipt.executionLineage?.authorizationLineageId ? "recorded" : "none"}`,
+    `Intent hash: ${input.result?.receipt.executionLineage?.executionIntentHash ?? "none"}`,
+    `Policy snapshot hash: ${input.result?.receipt.executionLineage?.executionPolicySnapshotHash ?? "none"}`,
+    `Trust snapshot hash: ${input.result?.receipt.executionLineage?.executionTrustSnapshotHash ?? "none"}`,
+    `Replay reference: ${input.result?.receipt.executionLineage?.replayReferenceId ?? "none"}`,
     `Receipt: ${input.result?.receipt.receiptId ?? "none"}`,
   ];
 }

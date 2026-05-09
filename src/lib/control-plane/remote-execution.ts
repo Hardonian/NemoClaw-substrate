@@ -4,10 +4,19 @@
 import { evaluatePolicy, type PolicyBundle } from "./governance";
 import type { DeviceRegistry } from "./device-registry";
 import { type OperationalEvent, type OperationalMemoryLog, buildEventsFromReceipt } from "./operational-memory";
+import {
+  applyExecutionAuthorization,
+  createExecutionPolicySnapshot,
+  createExecutionTrustSnapshot,
+  executionLineageFromPlan,
+  validateExecutionAuthorization,
+  type ExecutionApproval,
+  type ExecutionPlan,
+} from "./execution-plans";
 import type { ExecutionReceipt } from "./types";
 
-export type RemoteExecutionStatus = "disabled" | "policy_denied" | "approval_required" | "unavailable" | "degraded" | "failed" | "succeeded" | "not_supported";
-export interface RemoteExecutionRequest { requestId: string; nowIso: string; action: string; command: string; nodeId?: string; targetEndpoint?: string; auth?: { headerName?: string; token?: string }; approved?: boolean; timeoutMs?: number; }
+export type RemoteExecutionStatus = "disabled" | "policy_denied" | "approval_required" | "authorization_denied" | "unavailable" | "degraded" | "failed" | "succeeded" | "not_supported";
+export interface RemoteExecutionRequest { requestId: string; nowIso: string; action: string; command: string; nodeId?: string; targetEndpoint?: string; auth?: { headerName?: string; token?: string }; approved?: boolean; timeoutMs?: number; executionPlanRequired?: boolean; }
 export interface RemoteExecutionResult { status: RemoteExecutionStatus; output?: string; degradedReason?: string; errorCode?: string; receipt: ExecutionReceipt; events: OperationalEvent[]; replayRef: ExecutionReceipt["provenance"]; }
 export interface RemoteExecutionTransport { execute(input: { endpoint: string; command: string; timeoutMs: number; auth?: { headerName?: string; token?: string } }): Promise<{ status: number; body: string }>; }
 export interface RemoteExecutionError { code: string; message: string; retryable: boolean; }
@@ -22,14 +31,15 @@ export function parseRemoteExecutionConfig(env: NodeJS.ProcessEnv): RemoteExecut
 function validateUrl(url: string): boolean { try { const u = new URL(url); return u.protocol === "http:" || u.protocol === "https:"; } catch { return false; } }
 function redact(auth?: { headerName?: string }): Record<string, string> { return auth?.headerName ? { [auth.headerName]: "[REDACTED]" } : {}; }
 
-export async function runRemoteExecution(input: { request: RemoteExecutionRequest; config: RemoteExecutionConfig; transport: RemoteExecutionTransport; policyBundle: PolicyBundle; registry: DeviceRegistry; operationalMemory?: OperationalMemoryLog }): Promise<RemoteExecutionResult> {
+export async function runRemoteExecution(input: { request: RemoteExecutionRequest; config: RemoteExecutionConfig; transport: RemoteExecutionTransport; policyBundle: PolicyBundle; registry: DeviceRegistry; operationalMemory?: OperationalMemoryLog; executionPlan?: ExecutionPlan; executionApproval?: ExecutionApproval }): Promise<RemoteExecutionResult> {
   const { request } = input;
   const target = request.nodeId ?? request.targetEndpoint ?? "unresolved";
-  const policyDecision = !input.config.enabled ? "disabled" : (evaluatePolicy(input.policyBundle, { request: { version: "1", requestId: request.requestId, receivedAt: request.nowIso, source: "remote-execution", actor: "runtime", action: request.action, requestedModel: undefined, constraints: [], metadata: { target } }, actionClass: "runtime" }).requiredApproval ? "approval_required" : evaluatePolicy(input.policyBundle, { request: { version: "1", requestId: request.requestId, receivedAt: request.nowIso, source: "remote-execution", actor: "runtime", action: request.action, requestedModel: undefined, constraints: [], metadata: { target } }, actionClass: "runtime" }).allowed ? "allow" : "deny");
+  const policyEval = evaluatePolicy(input.policyBundle, { request: { version: "1", requestId: request.requestId, receivedAt: request.nowIso, source: "remote-execution", actor: "runtime", action: request.action, requestedModel: undefined, constraints: [], metadata: { target } }, actionClass: "runtime" });
+  const policyDecision = !input.config.enabled ? "disabled" : (policyEval.requiredApproval ? "approval_required" : policyEval.allowed ? "allow" : "deny");
   const receiptBase = { version: "1" as const, receiptId: `remote-exec-${request.requestId}`, requestId: request.requestId, createdAt: request.nowIso, phases: [{ phase: "received", at: request.nowIso, notes: "execution_requested" }], toolInvocations: [], timing: { totalMs: 0 }, fallbackAttempts: [], operatorOverrides: [], provenance: { source: "remote-execution", lineage: ["worker", "remote"], replayVersion: "1" as const } };
   const context: RemoteExecutionReceiptContext = { transport: "http", target, policyDecision, redactedAuth: redact(request.auth) };
-  const finalize = (status: RemoteExecutionStatus, notes: string, degradedReason?: string, errorCode?: string): RemoteExecutionResult => {
-    const receipt: ExecutionReceipt = { ...receiptBase, phases: [...receiptBase.phases, { phase: "completed", at: request.nowIso, notes }], degradedEvents: degradedReason ? [{ category: "degraded", reason: degradedReason, affectedSubsystem: "remote-execution", severity: "warning", reasonCode: errorCode === "policy_blocked" ? "policy_blocked" : "transport_unreachable", explanation: degradedReason, sourceComponent: "remote-execution", timestamp: request.nowIso }] : [], policyDecision: policyDecision === "allow" ? { allowed: true, requiredApproval: false, reasons: [{ code: "policy_default_allow", explanation: "remote execution allowed", source: "default" }] } : { allowed: false, requiredApproval: policyDecision === "approval_required", reasons: [{ code: policyDecision === "disabled" ? "policy_default_deny" : "policy_rule_deny", explanation: notes, source: "remote-execution" }] }, metadata: context as never } as unknown as ExecutionReceipt;
+  const finalize = (status: RemoteExecutionStatus, notes: string, degradedReason?: string, errorCode?: string, plan?: ExecutionPlan): RemoteExecutionResult => {
+    const receipt: ExecutionReceipt = { ...receiptBase, phases: [...receiptBase.phases, { phase: "completed", at: request.nowIso, notes }], degradedEvents: degradedReason ? [{ category: "degraded", reason: degradedReason, affectedSubsystem: "remote-execution", severity: "warning", reasonCode: errorCode === "policy_blocked" || errorCode === "approval_required" ? "policy_blocked" : "transport_unreachable", explanation: degradedReason, sourceComponent: "remote-execution", timestamp: request.nowIso }] : [], policyDecision: policyDecision === "allow" ? { allowed: true, requiredApproval: false, reasons: [{ code: policyEval.reasonCode, explanation: "remote execution allowed", source: policyEval.sourceRuleId }] } : { allowed: false, requiredApproval: policyDecision === "approval_required", reasons: [{ code: policyDecision === "disabled" ? "policy_default_deny" : policyEval.reasonCode, explanation: notes, source: policyEval.sourceRuleId }] }, executionLineage: plan ? executionLineageFromPlan(plan, input.executionApproval, plan.authorization?.result) : undefined, metadata: context as never } as unknown as ExecutionReceipt;
     const events = input.operationalMemory ? buildEventsFromReceipt(receipt, "remote-execution", input.operationalMemory) : [];
     return { status, degradedReason, errorCode, receipt, events, replayRef: receipt.provenance };
   };
@@ -39,6 +49,40 @@ export async function runRemoteExecution(input: { request: RemoteExecutionReques
   if (policyDecision === "approval_required" && !request.approved) return finalize("approval_required", "approval_required", "approval_required", "approval_required");
 
   const node = request.nodeId ? input.registry.getNode(request.nodeId) : undefined;
+  if (request.executionPlanRequired && !input.executionPlan) return finalize("authorization_denied", "missing_execution_plan_lineage", "missing_execution_plan_lineage", "approval_required");
+  if (input.executionPlan) {
+    const currentPolicySnapshot = createExecutionPolicySnapshot({
+      capturedAt: input.executionPlan.policySnapshot.capturedAt,
+      governedRoutingEnabled: input.executionPlan.policySnapshot.governedRoutingEnabled,
+      heterogeneousRoutingEnabled: input.executionPlan.policySnapshot.heterogeneousRoutingEnabled,
+      remoteExecutionEnabled: input.config.enabled,
+      policy: policyEval,
+      fallbackPermitted: input.executionPlan.policySnapshot.fallbackPermitted,
+      trustRequirement: input.executionPlan.policySnapshot.trustRequirement,
+      attestationRequirement: input.executionPlan.policySnapshot.attestationRequirement,
+      selectedCandidateClass: input.executionPlan.policySnapshot.selectedCandidateClass,
+      workerTrustLevel: node?.workerTrustLevel,
+      workerAttestationStatus: node?.workerAttestationStatus,
+      executionMode: input.executionPlan.intent.executionMode,
+    });
+    const currentTrustSnapshot = createExecutionTrustSnapshot({
+      capturedAt: input.executionPlan.trustSnapshot.capturedAt,
+      node,
+      trustRequirement: input.executionPlan.trustSnapshot.trustRequirement,
+      attestationRequirement: input.executionPlan.trustSnapshot.attestationRequirement,
+    });
+    const authorization = validateExecutionAuthorization({
+      nowIso: request.nowIso,
+      plan: input.executionPlan,
+      approval: input.executionApproval,
+      currentIntent: { ...input.executionPlan.intent, requestId: request.requestId, action: request.action, command: request.command, targetNodeId: request.nodeId ?? input.executionPlan.intent.targetNodeId, targetEndpoint: request.targetEndpoint ?? input.executionPlan.intent.targetEndpoint },
+      currentPolicySnapshot,
+      currentTrustSnapshot,
+    });
+    const authorizedPlan = applyExecutionAuthorization(input.executionPlan, authorization);
+    if (!authorization.granted) return finalize("authorization_denied", authorization.reasonCodes.join(","), authorization.reasonCodes.join(","), "approval_required", authorizedPlan);
+    input.executionPlan = authorizedPlan;
+  }
   if (request.nodeId && !node) return finalize("unavailable", "node_unavailable", "node_not_registered", "transport_unreachable");
   if (node && node.health !== "healthy") return finalize("degraded", "node_degraded", "node_stale_or_unhealthy", "transport_unreachable");
   if (node && (node.workerTrustLevel === "revoked" || node.workerAttestationStatus === "revoked")) return finalize("degraded", "worker_revoked", "worker_revoked", "policy_blocked");
@@ -55,7 +99,7 @@ export async function runRemoteExecution(input: { request: RemoteExecutionReques
     let body: { status?: string; output?: string };
     try { body = JSON.parse(response.body) as { status?: string; output?: string }; } catch { return finalize("degraded", "malformed_response", "malformed_response", "unknown_error"); }
     if (body.status !== "ok") return finalize("failed", "remote_failed", "remote_failed", "unknown_error");
-    const ok = finalize("succeeded", "execution_succeeded");
+    const ok = finalize("succeeded", "execution_succeeded", undefined, undefined, input.executionPlan);
     return { ...ok, output: body.output };
   } catch (e) {
     const msg = e instanceof Error ? e.message.toLowerCase() : String(e).toLowerCase();
@@ -63,12 +107,19 @@ export async function runRemoteExecution(input: { request: RemoteExecutionReques
   }
 }
 
-export function summarizeRemoteExecutionDiagnostics(config: RemoteExecutionConfig, last?: { status: RemoteExecutionStatus; target?: string; receiptId?: string; reason?: string }): string[] {
+export function summarizeRemoteExecutionDiagnostics(config: RemoteExecutionConfig, last?: { status: RemoteExecutionStatus; target?: string; receiptId?: string; reason?: string; lineage?: ExecutionReceipt["executionLineage"] }): string[] {
   return [
     `Remote execution: ${config.enabled ? "enabled" : "disabled"} (${config.source})`,
     `Last status: ${last?.status ?? "none"}`,
     `Target: ${last?.target ?? "none"}`,
     `Policy/degraded: ${last?.reason ?? "none"}`,
+    `Execution plan: ${last?.lineage?.executionPlanId ?? "none"}`,
+    `Approval state: ${last?.lineage?.executionApprovalId ? "recorded" : "none"}`,
+    `Authorization state: ${last?.lineage?.authorizationLineageId ? "recorded" : "none"}`,
+    `Policy snapshot hash: ${last?.lineage?.executionPolicySnapshotHash ?? "none"}`,
+    `Trust snapshot hash: ${last?.lineage?.executionTrustSnapshotHash ?? "none"}`,
+    `Intent hash: ${last?.lineage?.executionIntentHash ?? "none"}`,
+    `Replay reference: ${last?.lineage?.replayReferenceId ?? "none"}`,
     `Receipt: ${last?.receiptId ?? "none"}`,
   ];
 }

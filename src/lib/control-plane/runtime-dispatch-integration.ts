@@ -7,6 +7,7 @@ import type { DeviceRegistry } from "./device-registry";
 import { routeHeterogeneous, type HeterogeneousRoutingConfig, summarizeHeterogeneousDiagnostics } from "./heterogeneous-routing";
 import type { RemoteExecutionConfig, RemoteExecutionTransport } from "./remote-execution";
 import type { OperationalEvent, OperationalMemoryLog } from "./operational-memory";
+import type { ExecutionApproval, ExecutionPlan } from "./execution-plans";
 
 export interface DispatchIntegrationConfig {
   hetero: HeterogeneousRoutingConfig;
@@ -38,6 +39,9 @@ export async function dispatchWithHeterogeneousRouting<T>(input: {
   localDispatch: (provider: string, model: string) => Promise<T>;
   remoteTransport?: RemoteExecutionTransport;
   operationalMemory?: OperationalMemoryLog;
+  executionPlan?: ExecutionPlan;
+  executionApproval?: ExecutionApproval;
+  executionPlanRequired?: boolean;
 }): Promise<DispatchIntegrationResult<T>> {
   if (!input.config.hetero.enabled) {
     return { status: "ok", result: await input.localDispatch(input.provider, input.model), events: [], diagnostics: summarizeHeterogeneousDiagnostics({ routing: input.config.hetero, governedEnabled: input.config.governedEnabled, remote: input.config.remote }) };
@@ -77,6 +81,9 @@ export async function dispatchWithHeterogeneousRouting<T>(input: {
     remoteTransport: input.remoteTransport,
     approved: input.approved,
     operationalMemory: input.operationalMemory,
+    executionPlan: input.executionPlan,
+    executionApproval: input.executionApproval,
+    executionPlanRequired: input.executionPlanRequired,
   });
 
   const diagnostics = summarizeHeterogeneousDiagnostics({ routing: input.config.hetero, governedEnabled: input.config.governedEnabled, remote: input.config.remote, result: routed });

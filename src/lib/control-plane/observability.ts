@@ -60,3 +60,12 @@ export function summarizeTelemetryDimensions(events: OperationalEvent[]): { conf
   }
   return { confidence, source };
 }
+
+export function summarizeExecutionPlanEventCounts(events: OperationalEvent[]): Record<string, number> {
+  const out: Record<string, number> = {};
+  for (const event of events) {
+    if (!event.category.startsWith("execution_")) continue;
+    out[event.category] = (out[event.category] ?? 0) + 1;
+  }
+  return Object.fromEntries(Object.entries(out).sort(([a], [b]) => a.localeCompare(b)));
+}
