@@ -14,3 +14,8 @@
 - Known non-goals: no orchestration, no Dynamo/GPU balancing, no autonomous policy actions.
 
 - Registry telemetry persistence is verified for applied/skipped/conflict/stale event emission with deterministic ordering and replay-safe payloads.
+
+## 2026-05-09 degraded-state chaos gate
+- Deterministic chaos coverage is required before orchestration expansion.
+- Required fixture classes: stale registry, telemetry unavailable/malformed, remote timeout, policy deny/approval_required, no eligible candidate, failed fallback, replay mismatch, diagnostics empty state.
+- Release evidence includes explicit reason-code assertions in receipts/events/diagnostics.
