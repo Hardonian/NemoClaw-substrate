@@ -4,6 +4,17 @@
 import type { ControlRequestEnvelope } from "./types";
 
 export type PolicyEffect = "allow" | "deny" | "approval_required";
+export type PolicyActionClass =
+  | "tool"
+  | "shell"
+  | "file_mutation"
+  | "remote_node"
+  | "provider"
+  | "fallback"
+  | "network_sensitive"
+  | "high_risk"
+  | "runtime"
+  | "generic";
 export type PolicyReasonCode =
   | "policy_default_allow"
   | "policy_default_deny"
@@ -31,7 +42,7 @@ export interface PolicyEvaluationContext {
   request: ControlRequestEnvelope;
   nodeId?: string;
   modelId?: string;
-  actionClass: "tool" | "shell" | "file_mutation" | "remote_node" | "provider" | "fallback" | "network_sensitive" | "high_risk" | "generic";
+  actionClass: PolicyActionClass;
 }
 
 export interface PolicyEvaluationResult {
@@ -40,6 +51,7 @@ export interface PolicyEvaluationResult {
   requiredApproval: boolean;
   reasonCode: PolicyReasonCode;
   sourceRuleId: string;
+  matchedRuleDescription: string;
   matchedRuleIds: string[];
 }
 
@@ -54,6 +66,7 @@ export function evaluatePolicy(bundle: PolicyBundle, context: PolicyEvaluationCo
       requiredApproval: winning.effect === "approval_required",
       reasonCode: winning.reasonCode,
       sourceRuleId: winning.id,
+      matchedRuleDescription: winning.description,
       matchedRuleIds: matched.map((rule) => rule.id),
     };
   }
@@ -64,6 +77,7 @@ export function evaluatePolicy(bundle: PolicyBundle, context: PolicyEvaluationCo
     requiredApproval: false,
     reasonCode: bundle.defaultEffect === "allow" ? "policy_default_allow" : "policy_default_deny",
     sourceRuleId: `${bundle.id}:default`,
+    matchedRuleDescription: "default policy effect",
     matchedRuleIds: [],
   };
 }

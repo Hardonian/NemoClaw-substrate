@@ -11,7 +11,7 @@ export type WorkerProbeStatus = "succeeded" | "degraded" | "failed" | "not_suppo
 export type WorkerProbeTransport = "local" | "http" | "ssh";
 export type WorkerProbeRuntime = "ollama" | "vllm" | "llama.cpp" | "nim" | "unknown";
 
-export interface ProbeTelemetryField<T> { state: "observed" | "unavailable" | "stale" | "inferred"; value?: T; reason?: string; observedAt?: string; }
+export interface ProbeTelemetryField<T> { state: "observed" | "degraded" | "unavailable" | "stale" | "inferred"; value?: T; reason?: string; observedAt?: string; }
 export interface ProbeTelemetrySnapshot {
   capturedAt: string;
   runtimeHealth: ProbeTelemetryField<"healthy" | "degraded" | "unavailable">;

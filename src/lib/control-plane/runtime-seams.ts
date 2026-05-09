@@ -3,13 +3,13 @@
 
 import type { DegradedState, ExecutionPhase, ExecutionReceipt, PolicyDecision } from "./types";
 import { buildEventsFromReceipt, type OperationalEvent } from "./operational-memory";
-import type { PolicyBundle, PolicyEvaluationResult } from "./governance";
+import type { PolicyActionClass, PolicyBundle, PolicyEvaluationResult } from "./governance";
 import { evaluatePolicy } from "./governance";
 
 export interface RuntimeActionDescriptor {
   requestId: string;
   action: string;
-  actionClass: string;
+  actionClass: PolicyActionClass;
   executionPhase: ExecutionPhase;
   provider?: string;
   model?: string;

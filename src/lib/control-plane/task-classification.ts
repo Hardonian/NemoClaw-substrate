@@ -2,9 +2,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import type { ControlRequestEnvelope } from "./types";
+import type { PolicyActionClass } from "./governance";
 
 export interface TaskClassification {
   taskKind: "chat" | "tooling" | "shell" | "file_mutation" | "network" | "batch";
+  actionClass: PolicyActionClass;
   riskLevel: "low" | "medium" | "high";
   latencySensitivity: "interactive" | "standard" | "deferred";
   contextRequirement: "small" | "medium" | "large";
@@ -21,10 +23,12 @@ export function classifyRequest(request: ControlRequestEnvelope): TaskClassifica
   const constraints = new Set(request.constraints);
   const has = (v: string) => constraints.has(v);
   const taskKind = action.includes("tool") ? "tooling" : action.includes("shell") ? "shell" : action.includes("file") ? "file_mutation" : action.includes("batch") ? "batch" : action.includes("network") ? "network" : "chat";
+  const actionClass: PolicyActionClass = taskKind === "tooling" ? "tool" : taskKind === "network" ? "network_sensitive" : taskKind === "chat" || taskKind === "batch" ? "generic" : taskKind;
   const highRisk = taskKind === "shell" || taskKind === "file_mutation" || has("high-risk");
 
   return {
     taskKind,
+    actionClass,
     riskLevel: highRisk ? "high" : has("medium-risk") ? "medium" : "low",
     latencySensitivity: has("latency-interactive") ? "interactive" : has("latency-deferred") ? "deferred" : "standard",
     contextRequirement: has("context-large") ? "large" : has("context-medium") ? "medium" : "small",
