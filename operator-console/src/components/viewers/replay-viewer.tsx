@@ -1,6 +1,6 @@
 import React from "react";
-import type { ReplayEnvelope } from "../data/types";
-import { validateReplayEnvelope } from "../data/types";
+import type { ReplayEnvelope } from "../../data/types";
+import { validateReplayEnvelope } from "../../data/types";
 import { StatusBadge } from "../primitives/status-badge";
 import { Timestamp } from "../primitives/timestamp";
 import { KVTable } from "../primitives/key-value-table";

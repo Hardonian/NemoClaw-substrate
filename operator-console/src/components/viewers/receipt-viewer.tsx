@@ -1,5 +1,5 @@
 import React from "react";
-import type { ExecutionReceipt, DegradedState } from "../data/types";
+import type { ExecutionReceipt, DegradedState } from "../../data/types";
 import { StateLabel } from "../primitives/state-label";
 import { StatusBadge } from "../primitives/status-badge";
 import { Timestamp } from "../primitives/timestamp";

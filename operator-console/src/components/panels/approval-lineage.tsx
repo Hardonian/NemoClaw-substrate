@@ -1,5 +1,5 @@
 import React from "react";
-import type { ExecutionReceipt } from "../data/types";
+import type { ExecutionReceipt } from "../../data/types";
 import { Timestamp } from "../primitives/timestamp";
 import { DataTable, type ColumnDef } from "../primitives/data-table";
 import { EmptyState } from "../primitives/empty-state";

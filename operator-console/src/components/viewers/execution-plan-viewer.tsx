@@ -1,5 +1,5 @@
 import React from "react";
-import type { ExecutionReceipt } from "../data/types";
+import type { ExecutionReceipt } from "../../data/types";
 import { ReceiptViewer } from "./receipt-viewer";
 import styles from "./execution-plan-viewer.module.css";
 
