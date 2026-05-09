@@ -102,3 +102,6 @@ Implemented deterministic policy, classification, and scheduler planning primiti
 - Added verification coverage for runtime action descriptors, policy allow/deny/approval-required handling, receipt policy rationale, and diagnostics empty-state summaries.
 
 - Added verification targets: operational event ordering, deterministic IDs, replay integrity, policy-candidate grouping, no auto-promotion behavior, and diagnostics empty-state summaries.
+
+## 2026-05-09 adapter/dry-run update
+Worker/provider adapter contracts and scheduler-to-provider dry-run bridge are implemented for diagnostics and receipt/event emission only. Live provider routing is unchanged. Remote execution, Dynamo adapters, and GPU telemetry remain planned future work.

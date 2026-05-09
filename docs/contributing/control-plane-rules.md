@@ -23,3 +23,6 @@ Implemented deterministic policy, classification, and scheduler planning primiti
 - Mark runtime seam coverage as partial unless fully proven.
 
 - New rule: policy-promotion proposals must be review-only artifacts; automatic policy mutation is forbidden.
+
+## 2026-05-09 adapter/dry-run update
+Worker/provider adapter contracts and scheduler-to-provider dry-run bridge are implemented for diagnostics and receipt/event emission only. Live provider routing is unchanged. Remote execution, Dynamo adapters, and GPU telemetry remain planned future work.

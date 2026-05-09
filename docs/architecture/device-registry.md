@@ -8,3 +8,6 @@ Implemented `DeviceRegistry` with deterministic ordering and explicit stale/miss
 This is infrastructure-only: no autodiscovery and no routing side effects.
 
 Future seams: queue-aware orchestration, GPU telemetry adapters, distributed-worker adapters.
+
+## 2026-05-09 adapter/dry-run update
+Worker/provider adapter contracts and scheduler-to-provider dry-run bridge are implemented for diagnostics and receipt/event emission only. Live provider routing is unchanged. Remote execution, Dynamo adapters, and GPU telemetry remain planned future work.

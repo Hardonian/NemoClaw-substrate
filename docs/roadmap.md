@@ -173,3 +173,6 @@ Implemented deterministic policy, classification, and scheduler planning primiti
 - Runtime policy/receipt integration in safe seams delivered; broad runtime governance and scheduler handoff remain planned future work.
 
 - Operational intelligence substrate phase started: supervised operational memory + replay/observability scaffolding implemented; worker/device orchestration adapters remain planned.
+
+## 2026-05-09 adapter/dry-run update
+Worker/provider adapter contracts and scheduler-to-provider dry-run bridge are implemented for diagnostics and receipt/event emission only. Live provider routing is unchanged. Remote execution, Dynamo adapters, and GPU telemetry remain planned future work.
