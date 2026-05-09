@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import type { DegradedState, ExecutionPhase, ExecutionReceipt, PolicyDecision } from "./types";
+import { buildEventsFromReceipt, type OperationalEvent } from "./operational-memory";
 import type { PolicyBundle, PolicyEvaluationResult } from "./governance";
 import { evaluatePolicy } from "./governance";
 
@@ -101,12 +102,13 @@ export function buildRuntimeReceipt(input: {
   };
 }
 
-export function summarizeRuntimeDiagnostics(receipt?: ExecutionReceipt): string[] {
-  if (!receipt) return ["Runtime receipt: none", "Policy: not evaluated", "Degraded state: none", "Scheduler primitives: scaffolded"]; 
+export function summarizeRuntimeDiagnostics(receipt?: ExecutionReceipt, operationalEvents: OperationalEvent[] = []): string[] {
+  if (!receipt) return ["Runtime receipt: none", "Policy: not evaluated", "Degraded state: none", "Scheduler primitives: scaffolded", "Operational events: 0"];
   return [
     `Runtime receipt: ${receipt.receiptId}`,
     `Policy: ${receipt.policyDecision ? (receipt.policyDecision.allowed ? (receipt.policyDecision.requiredApproval ? "approval_required" : "allow") : "deny") : "not evaluated"}`,
     `Degraded state: ${receipt.degradedEvents.length > 0 ? receipt.degradedEvents.map((d) => d.reasonCode).join(",") : "none"}`,
     `Scheduler primitives: ${receipt.schedulingDecision ? "present" : "scaffolded"}`,
+    `Operational events: ${operationalEvents.length || buildEventsFromReceipt(receipt).length}`,
   ];
 }

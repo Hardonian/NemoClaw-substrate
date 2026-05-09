@@ -21,3 +21,5 @@ Implemented deterministic policy, classification, and scheduler planning primiti
 - Block only when policy explicitly returns deny or approval_required.
 - Never silently continue after policy deny/approval_required.
 - Mark runtime seam coverage as partial unless fully proven.
+
+- New rule: policy-promotion proposals must be review-only artifacts; automatic policy mutation is forbidden.

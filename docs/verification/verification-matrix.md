@@ -100,3 +100,5 @@
 Implemented deterministic policy, classification, and scheduler planning primitives. Runtime routing remains intentionally unchanged; full enforcement and receipt wiring are follow-up work.
 
 - Added verification coverage for runtime action descriptors, policy allow/deny/approval-required handling, receipt policy rationale, and diagnostics empty-state summaries.
+
+- Added verification targets: operational event ordering, deterministic IDs, replay integrity, policy-candidate grouping, no auto-promotion behavior, and diagnostics empty-state summaries.
