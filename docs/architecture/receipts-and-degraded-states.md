@@ -12,3 +12,6 @@ Receipts are append-friendly and replay-oriented but not yet fully wired to all 
 ## Runtime receipt seam status (2026-05-09)
 
 Execution receipt construction now includes policy rationale, tool metadata, fallback metadata, degraded states, and timing summary in a thin runtime seam adapter. Receipts are not emitted from every runtime path yet.
+
+## 2026-05-09 governed routing update
+Opt-in governed provider routing is available behind `NEMOCLAW_GOVERNED_ROUTING=1` (default off). Default routing is preserved when disabled. Remote worker execution, Dynamo orchestration, and GPU telemetry adapters are not implemented in this phase.

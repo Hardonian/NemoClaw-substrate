@@ -9,6 +9,8 @@ All notable changes to this fork are documented in this file.
 
 ### Added
 
+- Added opt-in governed provider-routing integration behind `NEMOCLAW_GOVERNED_ROUTING=1`, with policy enforcement at provider-selection boundary, explicit no-candidate/fallback handling, and governed routing receipts/events/diagnostics.
+- Added governed provider-routing tests for default behavior preservation, feature-flag parsing, policy deny/approval blocking, no-candidate behavior, fallback constraints, receipt/event emission, and diagnostics state reporting.
 
 - Added worker/device adapter contracts and local provider capability adapter with explicit unknown-hardware degraded-state reporting.
 - Added scheduler-to-provider dry-run bridge, diagnostics summary helper, and dry-run operational receipt/event emission without changing live routing.
