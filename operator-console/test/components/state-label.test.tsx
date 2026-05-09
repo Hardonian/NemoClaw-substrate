@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { render, screen } from "@testing-library/react";
-import { StateLabel } from "../src/components/primitives/state-label";
+import { StateLabel } from "../../src/components/primitives/state-label";
 
 describe("StateLabel", () => {
   const allStates = ["healthy", "constrained", "degraded", "unavailable", "unknown", "partial_capability", "approval_blocked", "stale", "unreachable"];

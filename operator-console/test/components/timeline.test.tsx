@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { render, screen } from "@testing-library/react";
-import { Timeline } from "../src/components/primitives/timeline";
+import { Timeline } from "../../src/components/primitives/timeline";
 
 describe("Timeline", () => {
   it("renders empty state when no items", () => {

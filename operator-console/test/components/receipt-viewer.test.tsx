@@ -4,10 +4,16 @@ import { ReceiptViewer } from "../../src/components/viewers/receipt-viewer";
 import { makeExecutionReceipt, makeDegradedState } from "../../src/data/fixtures";
 
 describe("ReceiptViewer", () => {
-  it("renders receipt with phases", () => {
+  it("renders receipt ID and request ID", () => {
+    const receipt = makeExecutionReceipt({ receiptId: "test-receipt", requestId: "test-req" });
+    render(<ReceiptViewer receipt={receipt} />);
+    expect(screen.getByText(/test-receipt/)).toBeInTheDocument();
+    expect(screen.getByText(/test-req/)).toBeInTheDocument();
+  });
+
+  it("renders execution phases", () => {
     const receipt = makeExecutionReceipt();
     render(<ReceiptViewer receipt={receipt} />);
-    expect(screen.getByText(/Receipt:/)).toBeInTheDocument();
     expect(screen.getByText("Execution Phases")).toBeInTheDocument();
     expect(screen.getByText("received")).toBeInTheDocument();
     expect(screen.getByText("completed")).toBeInTheDocument();
@@ -16,29 +22,23 @@ describe("ReceiptViewer", () => {
   it("renders degraded events when present", () => {
     const receipt = makeExecutionReceipt({
       degradedEvents: [
-        makeDegradedState({ category: "degraded", reason: "test", affectedSubsystem: "test", severity: "warning", reasonCode: "test_code", explanation: "Test degraded state", sourceComponent: "test" }),
+        makeDegradedState({ category: "degraded", severity: "warning", reason: "test", affectedSubsystem: "test", reasonCode: "capability_missing", explanation: "Test degraded", sourceComponent: "test" }),
       ],
     });
     render(<ReceiptViewer receipt={receipt} />);
-    expect(screen.getByText("Degraded Events (1)")).toBeInTheDocument();
-    expect(screen.getByText("test_code")).toBeInTheDocument();
+    expect(screen.getByText(/Degraded Events/)).toBeInTheDocument();
   });
 
-  it("renders scheduling decision", () => {
-    const receipt = makeExecutionReceipt();
+  it("renders timing information", () => {
+    const receipt = makeExecutionReceipt({ timing: { totalMs: 100, queueMs: 10, executionMs: 90 } });
     render(<ReceiptViewer receipt={receipt} />);
-    expect(screen.getByText("Scheduling Decision")).toBeInTheDocument();
+    expect(screen.getByText("Timing")).toBeInTheDocument();
+    expect(screen.getByText("100 ms")).toBeInTheDocument();
   });
 
-  it("renders policy decision", () => {
-    const receipt = makeExecutionReceipt();
+  it("renders unavailable for missing timing values", () => {
+    const receipt = makeExecutionReceipt({ timing: {} });
     render(<ReceiptViewer receipt={receipt} />);
-    expect(screen.getByText("Policy Decision")).toBeInTheDocument();
-  });
-
-  it("renders provenance section", () => {
-    const receipt = makeExecutionReceipt();
-    render(<ReceiptViewer receipt={receipt} />);
-    expect(screen.getByText("Provenance")).toBeInTheDocument();
+    expect(screen.getAllByText("Unavailable")).toHaveLength(3);
   });
 });

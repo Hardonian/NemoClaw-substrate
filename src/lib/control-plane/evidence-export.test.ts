@@ -157,7 +157,7 @@ describe("evidence-export", () => {
       const bundle = buildEvidenceBundleFromEvents(events, T0);
       expect(bundle.artifacts.length).toBe(3);
       const ids = bundle.artifacts.map((a) => a.artifactId);
-      expect(ids).toEqual([...ids].sort());
+      expect(ids).toEqual([...ids].sort((a, b) => a.localeCompare(b)));
     });
 
     it("filters governance events when disabled", () => {

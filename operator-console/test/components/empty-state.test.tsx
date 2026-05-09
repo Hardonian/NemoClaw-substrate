@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { render, screen } from "@testing-library/react";
-import { EmptyState } from "../src/components/primitives/empty-state";
+import { EmptyState } from "../../src/components/primitives/empty-state";
 
 describe("EmptyState", () => {
   it("renders with role=status", () => {
