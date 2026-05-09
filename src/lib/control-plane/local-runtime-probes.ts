@@ -81,7 +81,14 @@ export async function runLocalRuntimeProbes(input: LocalProbeRequest, operationa
     { eventId: `telemetry-probe-${input.requestId}`, occurredAt: input.nowIso, sequence: -2, category: "telemetry_probe_started", source: "local-runtime-probes", provenance: { requestId: input.requestId, receiptId: receipt.receiptId }, replayRef: receipt.provenance, payload: { sourceRuntime: input.provider ?? "unknown", confidence: telemetryAvailable ? "observed" : "unavailable" } },
     { eventId: `telemetry-parse-${input.requestId}`, occurredAt: input.nowIso, sequence: -1, category: telemetryAvailable ? (telemetry.gpus.state === "unavailable" ? "telemetry_parse_partial" : "telemetry_parse_succeeded") : "telemetry_parse_failed", source: "local-runtime-probes", provenance: { requestId: input.requestId, receiptId: receipt.receiptId }, replayRef: receipt.provenance, payload: { confidence: telemetryAvailable ? "medium" : "low", degradedReasonCodes: degradedStates.map((d) => d.reasonCode) } },
   );
-  if (telemetry.gpus.reason === "command_unavailable") events.push({ eventId: `telemetry-unavailable-${input.requestId}`, occurredAt: input.nowIso, sequence: Number.MAX_SAFE_INTEGER - 1, category: "telemetry_unavailable", source: "local-runtime-probes", provenance: { requestId: input.requestId, receiptId: receipt.receiptId }, replayRef: receipt.provenance, payload: { reasonCode: "nvidia_smi_unavailable", confidence: "low", sourceRuntime: input.provider ?? "unknown" } });
+  if (telemetry.gpus.state === "unavailable") {
+    const reasonCode = telemetry.gpus.reason === "command_unavailable"
+      ? "nvidia_smi_unavailable"
+      : telemetry.gpus.reason === "timeout"
+        ? "transport_unreachable"
+        : "capability_missing";
+    events.push({ eventId: `telemetry-unavailable-${input.requestId}`, occurredAt: input.nowIso, sequence: Number.MAX_SAFE_INTEGER - 1, category: "telemetry_unavailable", source: "local-runtime-probes", provenance: { requestId: input.requestId, receiptId: receipt.receiptId }, replayRef: receipt.provenance, payload: { reasonCode, confidence: "low", sourceRuntime: input.provider ?? "unknown" } });
+  }
   events.push({ eventId: `telemetry-probe-result-${input.requestId}`, occurredAt: input.nowIso, sequence: Number.MAX_SAFE_INTEGER, category: telemetryAvailable ? "telemetry_probe_succeeded" : "telemetry_probe_failed", source: "local-runtime-probes", provenance: { requestId: input.requestId, receiptId: receipt.receiptId }, replayRef: receipt.provenance, payload: { confidence: telemetryAvailable ? "medium" : "low", sourceRuntime: input.provider ?? "unknown" } });
   return { outcomes: outcomes.sort((a, b) => a.probe.localeCompare(b.probe)), degradedStates, telemetryAvailable, telemetry, receipt, events };
 }
