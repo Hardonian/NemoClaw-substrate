@@ -1,51 +1,55 @@
 import React from "react";
-import type { LocalProbeSummary } from "../../data/types";
-import { StateLabel } from "../../components/primitives/state-label";
-import { StatusBadge } from "../../components/primitives/status-badge";
-import { Timestamp } from "../../components/primitives/timestamp";
-import { DataTable, type ColumnDef } from "../../components/primitives/data-table";
-import { KVTable } from "../../components/primitives/key-value-table";
-import { Card } from "../../components/primitives/card";
-import styles from "./telemetry.module.css";
+import type { LocalProbeSummary } from "../data/types";
+import { StateLabel } from "../primitives/state-label";
+import { DataTable, type ColumnDef } from "../primitives/data-table";
+import { Timestamp } from "../primitives/timestamp";
+import { Card } from "../primitives/card";
+import { KVTable } from "../primitives/key-value-table";
+import styles from "./route-common.module.css";
 
 export interface TelemetryRouteProps {
   probeSummary: LocalProbeSummary;
+  telemetryCounts: Record<string, number>;
 }
 
-export function TelemetryRoute({ probeSummary }: TelemetryRouteProps) {
-  const { outcomes, telemetryAvailable, telemetry } = probeSummary;
-
+export function TelemetryRoute({ probeSummary, telemetryCounts }: TelemetryRouteProps) {
   return (
-    <div>
-      <h2 className="page-title">Telemetry</h2>
-      <p className="page-subtitle">Telemetry state panel showing probe outcomes and local runtime telemetry.</p>
+    <div className={styles.routeContainer}>
+      <h2 className={styles.pageTitle}>Telemetry</h2>
+      <p className={styles.pageSubtitle}>Local probe outcomes and telemetry event state.</p>
 
-      <div className={styles.grid}>
-        <Card title="Telemetry Availability" status={telemetryAvailable ? "success" : "warning"}>
+      <Card title="Telemetry Availability" status={probeSummary.telemetryAvailable ? "success" : "error"}>
+        <KVTable entries={[
+          { key: "Available", value: probeSummary.telemetryAvailable ? "Yes" : "No" },
+          { key: "Captured At", value: <Timestamp value={probeSummary.telemetry.capturedAt} /> },
+          { key: "Runtime Health", value: <StateLabel state={probeSummary.telemetry.runtimeHealth.state} /> },
+          { key: "Backend Version", value: <StateLabel state={probeSummary.telemetry.backendVersion.state} /> },
+          { key: "Model Inventory", value: <StateLabel state={probeSummary.telemetry.modelInventory.state} /> },
+          { key: "GPU State", value: <StateLabel state={probeSummary.telemetry.gpus.state} /> },
+        ]} />
+      </Card>
+
+      <Card title="Probe Outcomes" subtitle={`${probeSummary.outcomes.length} probe(s)`} status="info">
+        <DataTable
+          columns={probeColumns}
+          rows={probeSummary.outcomes.map((o) => ({
+            probe: o.probe,
+            state: <StateLabel state={o.state} />,
+            detail: o.detail,
+          }))}
+          caption="Local probe outcomes"
+        />
+      </Card>
+
+      <Card title="Telemetry Event Counts" subtitle={`${Object.keys(telemetryCounts).length} categories`} status="info">
+        {Object.keys(telemetryCounts).length === 0 ? (
+          <p className={styles.empty}>No telemetry events recorded.</p>
+        ) : (
           <KVTable
-            entries={[
-              { key: "Available", value: telemetryAvailable ? "Yes" : "No" },
-              { key: "Captured At", value: <Timestamp value={telemetry.capturedAt} /> },
-              { key: "Runtime Health", value: <StateLabel state={telemetry.runtimeHealth.state} /> },
-              { key: "Backend Version", value: telemetry.backendVersion.state === "observed" ? telemetry.backendVersion.value : telemetry.backendVersion.state },
-              { key: "Model Inventory", value: telemetry.modelInventory.state === "observed" ? `${telemetry.modelInventory.value?.length ?? 0} model(s)` : telemetry.modelInventory.state },
-              { key: "GPU State", value: <StateLabel state={telemetry.gpus.state} /> },
-            ]}
+            entries={Object.entries(telemetryCounts).map(([k, v]) => ({ key: k, value: v }))}
           />
-        </Card>
-
-        <Card title="Probe Outcomes" subtitle={`${outcomes.length} probe(s)`}>
-          {outcomes.length === 0 ? (
-            <p className={styles.empty}>No probe outcomes.</p>
-          ) : (
-            <DataTable
-              columns={probeColumns}
-              rows={outcomes.map((o) => ({ probe: o.probe, state: <StateLabel state={o.state} />, detail: o.detail }))}
-              caption="Probe outcomes"
-            />
-          )}
-        </Card>
-      </div>
+        )}
+      </Card>
     </div>
   );
 }

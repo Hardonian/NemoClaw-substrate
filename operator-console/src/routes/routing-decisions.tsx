@@ -1,64 +1,77 @@
 import React from "react";
-import type { HeterogeneousRoutingResult } from "../../data/types";
-import { StateLabel } from "../../components/primitives/state-label";
-import { StatusBadge } from "../../components/primitives/status-badge";
-import { DataTable, type ColumnDef } from "../../components/primitives/data-table";
-import { KVTable } from "../../components/primitives/key-value-table";
-import { DiagnosticsSummaryPanel } from "../../components/panels/diagnostics-summary";
-import styles from "./routing-decisions.module.css";
+import type { HeterogeneousRoutingResult } from "../data/types";
+import { StateLabel } from "../primitives/state-label";
+import { DataTable, type ColumnDef } from "../primitives/data-table";
+import { Card } from "../primitives/card";
+import styles from "./route-common.module.css";
 
 export interface RoutingDecisionsRouteProps {
   result: HeterogeneousRoutingResult;
-  diagnostics: string[];
 }
 
-export function RoutingDecisionsRoute({ result, diagnostics }: RoutingDecisionsRouteProps) {
+export function RoutingDecisionsRoute({ result }: RoutingDecisionsRouteProps) {
   return (
-    <div>
-      <h2 className="page-title">Routing Decisions</h2>
-      <p className="page-subtitle">Heterogeneous routing decision viewer showing candidate evaluation, selection, and exclusion.</p>
+    <div className={styles.routeContainer}>
+      <h2 className={styles.pageTitle}>Routing Decisions</h2>
+      <p className={styles.pageSubtitle}>Heterogeneous routing candidate evaluation and selection.</p>
 
-      <div className={styles.section}>
-        <h3 className={styles.sectionTitle}>Selected Candidate</h3>
+      <Card title="Selected Candidate" status="success">
         {result.selectedCandidate ? (
-          <KVTable entries={[
-            { key: "Candidate", value: result.selectedCandidate.candidateId },
-            { key: "Kind", value: result.selectedCandidate.kind },
-            { key: "Score", value: result.selectedCandidate.score },
-            { key: "Policy Eligibility", value: result.selectedCandidate.policyEligibility },
-            { key: "Status", value: <StateLabel state={result.selectedCandidate.status} /> },
-            { key: "Telemetry Confidence", value: result.selectedCandidate.telemetryConfidence },
-          ]} />
+          <DataTable
+            columns={candidateColumns}
+            rows={[candidateRow(result.selectedCandidate)]}
+            caption="Selected routing candidate"
+          />
         ) : (
           <p className={styles.empty}>No candidate selected.</p>
         )}
-      </div>
+      </Card>
 
-      <div className={styles.section}>
-        <h3 className={styles.sectionTitle}>Excluded Candidates ({result.excludedCandidates.length})</h3>
-        {result.excludedCandidates.length === 0 ? (
-          <p className={styles.empty}>No candidates excluded.</p>
-        ) : (
+      <Card title="All Candidates" subtitle={`${result.allCandidates.length} candidate(s)`} status="info">
+        <DataTable
+          columns={candidateColumns}
+          rows={result.allCandidates.map(candidateRow)}
+          caption="All routing candidates"
+        />
+      </Card>
+
+      {result.excludedCandidates.length > 0 && (
+        <Card title="Excluded Candidates" subtitle={`${result.excludedCandidates.length} excluded`} status="error">
           <DataTable
-            columns={excludedColumns}
-            rows={result.excludedCandidates.map((c) => ({ candidateId: c.candidateId, kind: c.kind, policyEligibility: c.policyEligibility, score: c.score, telemetryConfidence: c.telemetryConfidence }))}
-            caption="Excluded candidates"
+            columns={candidateColumns}
+            rows={result.excludedCandidates.map(candidateRow)}
+            caption="Excluded routing candidates"
           />
-        )}
-      </div>
+        </Card>
+      )}
 
-      <div className={styles.section}>
-        <h3 className={styles.sectionTitle}>Diagnostics</h3>
-        <DiagnosticsSummaryPanel lines={diagnostics} title="Routing Diagnostics" />
-      </div>
+      {result.remoteStatus && (
+        <Card title="Remote Execution Status">
+          <p className={styles.detail}>Status: <StateLabel state={result.remoteStatus === "succeeded" ? "healthy" : "unavailable"} /></p>
+        </Card>
+      )}
     </div>
   );
 }
 
-const excludedColumns: ColumnDef[] = [
+const candidateColumns: ColumnDef[] = [
   { key: "candidateId", header: "Candidate" },
   { key: "kind", header: "Kind" },
+  { key: "status", header: "Status", render: (v) => <StateLabel state={String(v)} /> },
   { key: "policyEligibility", header: "Policy" },
   { key: "score", header: "Score" },
   { key: "telemetryConfidence", header: "Telemetry" },
+  { key: "executionMode", header: "Mode" },
 ];
+
+function candidateRow(candidate: { candidateId: string; kind: string; status: string; policyEligibility: string; score: number; telemetryConfidence: string; executionMode: string }): Record<string, unknown> {
+  return {
+    candidateId: candidate.candidateId,
+    kind: candidate.kind,
+    status: candidate.status,
+    policyEligibility: candidate.policyEligibility,
+    score: candidate.score,
+    telemetryConfidence: candidate.telemetryConfidence,
+    executionMode: candidate.executionMode,
+  };
+}

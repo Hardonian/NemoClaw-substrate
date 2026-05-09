@@ -1,24 +1,58 @@
 import React from "react";
-import type { OperationalEvent } from "../../data/types";
-import { StatusBadge } from "../../components/primitives/status-badge";
-import { Timestamp } from "../../components/primitives/timestamp";
-import { DataTable, type ColumnDef } from "../../components/primitives/data-table";
-import { EmptyState } from "../../components/primitives/empty-state";
+import type { OperationalEvent } from "../data/types";
+import { DataTable, type ColumnDef } from "../primitives/data-table";
+import { Timestamp } from "../primitives/timestamp";
+import { StateLabel } from "../primitives/state-label";
+import { Card } from "../primitives/card";
+import { useState } from "react";
+import styles from "./route-common.module.css";
 
 export interface EventsRouteProps {
   events: OperationalEvent[];
 }
 
 export function EventsRoute({ events }: EventsRouteProps) {
+  const [filterCategory, setFilterCategory] = useState<string>("all");
+  const categories = [...new Set(events.map((e) => e.category))].sort();
+  const filtered = filterCategory === "all" ? events : events.filter((e) => e.category === filterCategory);
+
   return (
-    <div>
-      <h2 className="page-title">Events</h2>
-      <p className="page-subtitle">Operational event viewer showing the complete event log.</p>
-      {events.length === 0 ? (
-        <EmptyState title="No events" description="No operational events have been recorded." />
-      ) : (
-        <DataTable columns={eventColumns} rows={events.map((e) => ({ sequence: e.sequence, eventId: e.eventId, category: <StatusBadge status={categoryToStatus(e.category)} label={e.category} />, occurredAt: <Timestamp value={e.occurredAt} />, source: e.source, requestId: e.provenance.requestId ?? "N/A" }))} caption="Operational events" />
-      )}
+    <div className={styles.routeContainer}>
+      <h2 className={styles.pageTitle}>Operational Events</h2>
+      <p className={styles.pageSubtitle}>All operational events in sequence order.</p>
+
+      <div className={styles.filterBar}>
+        <label htmlFor="category-filter" className={styles.filterLabel}>Filter by category:</label>
+        <select
+          id="category-filter"
+          className={styles.filterSelect}
+          value={filterCategory}
+          onChange={(e) => setFilterCategory(e.target.value)}
+        >
+          <option value="all">All ({events.length})</option>
+          {categories.map((cat) => (
+            <option key={cat} value={cat}>
+              {cat} ({events.filter((e) => e.category === cat).length})
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <Card title={`Events (${filtered.length})`} status="info">
+        <DataTable
+          columns={eventColumns}
+          rows={filtered.map((e) => ({
+            sequence: e.sequence,
+            eventId: e.eventId,
+            category: <StateLabel state={categoryToStatus(e.category)} />,
+            occurredAt: <Timestamp value={e.occurredAt} />,
+            source: e.source,
+            requestId: e.provenance.requestId ?? "Unknown",
+            receiptId: e.provenance.receiptId ?? "Unknown",
+          }))}
+          caption="Operational events"
+        />
+      </Card>
     </div>
   );
 }
@@ -30,12 +64,9 @@ const eventColumns: ColumnDef[] = [
   { key: "occurredAt", header: "Time" },
   { key: "source", header: "Source" },
   { key: "requestId", header: "Request ID" },
+  { key: "receiptId", header: "Receipt ID" },
 ];
 
-function categoryToStatus(category: string): "info" | "warning" | "error" | "critical" | "success" | "unknown" {
-  if (category.startsWith("telemetry")) return "info";
-  if (category === "degraded_state") return "warning";
-  if (category === "fallback") return "warning";
-  if (category === "operator_override") return "error";
-  return "info";
+function categoryToStatus(_category: string): string {
+  return "healthy";
 }
