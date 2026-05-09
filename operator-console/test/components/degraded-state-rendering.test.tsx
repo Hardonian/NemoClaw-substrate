@@ -2,9 +2,10 @@ import { describe, expect, it } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { DegradedInspector } from "../../src/components/viewers/degraded-inspector";
 import { makeDegradedState } from "../../src/data/fixtures";
+import type { DegradedCategory } from "../../src/data/types";
 
 describe("Degraded state rendering", () => {
-  const categories: Array<{ category: string; severity: string; reasonCode: string }> = [
+  const categories: Array<{ category: DegradedCategory; severity: "info" | "warning" | "error" | "critical"; reasonCode: string }> = [
     { category: "healthy", severity: "info", reasonCode: "none" },
     { category: "constrained", severity: "warning", reasonCode: "capability_missing" },
     { category: "degraded", severity: "warning", reasonCode: "transport_unreachable" },
