@@ -18,3 +18,6 @@ All notable changes to this fork are documented in this file.
 ### Changed
 
 - README updated to clarify fork purpose, current-state vs roadmap, architecture doc locations, and PR verification expectations.
+
+## 2026-05-09
+- Added foundational control-plane contracts, device registry service, degraded-state taxonomy, and receipt primitives (scaffolded integration only).
