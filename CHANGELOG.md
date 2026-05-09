@@ -5,11 +5,13 @@
 
 # Changelog
 
-All notable changes to this fork will be documented in this file.
+All notable changes to this fork are documented in this file.
 
 ## [Unreleased]
 
 ### Added
 
-- Fork mission and architecture baseline documentation.
-- Initial roadmap and contributor workflow docs for operator-grade execution/governance evolution.
+- Documentation foundation for fork purpose, goals, non-goals, roadmap themes, and contribution expectations.
+- Fork rationale document for local operator-grade execution and governance posture.
+- Roadmap document separating current state from intended direction.
+- Contributor docs for branch naming, commit conventions, PR structure, and required verification notes.

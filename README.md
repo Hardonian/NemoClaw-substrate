@@ -5,69 +5,84 @@
 
 # NemoClaw Fork: Local Operator-Grade AI Execution and Governance
 
-This repository is a fork of NVIDIA NemoClaw. This fork keeps NemoClaw's sandbox and policy foundations, and reorients the project toward **local operator-grade execution control** for heterogeneous devices and model runtimes.
+This repository is a fork of NVIDIA NemoClaw. It preserves NemoClaw's existing sandbox orchestration base and focuses this fork on operator-grade local execution control, policy governance, and truthful operations reporting.
 
 ## Fork Purpose
 
-This fork exists to build a system that is:
+This fork exists to make local AI operations safer and more governable when running across heterogeneous devices and model runtimes.
 
-- **Explainable:** every control decision has inspectable inputs and outputs.
-- **Auditable:** every execution path can emit durable receipts and provenance.
-- **Deterministic where it matters:** explicit policy and scheduler behavior over implicit heuristics.
-- **Truthful under degradation:** no hidden fallback behavior that misrepresents health.
+Core intent:
 
-## Core Goals
+- **Local operator-grade execution and governance:** controls should be explicit, inspectable, and durable.
+- **Heterogeneous device awareness:** device and runtime differences must be first-class inputs to execution decisions.
+- **Deterministic control:** equivalent inputs and policy should produce equivalent routing/control decisions.
+- **Truthful degraded-state reporting:** degraded behavior must be surfaced explicitly, never hidden behind "healthy" language.
+- **Policy outside prompts:** policy must be enforced by code/config paths, not only natural-language prompts.
+- **Supervised policy intelligence:** repeated operator decisions should become reviewable policy improvements, not silent behavioral drift.
 
-1. Multi-device local AI execution.
-2. Deterministic control plane.
-3. Device/GPU-aware routing and future handoff.
-4. Truthful degraded states.
-5. Execution receipts and provenance.
-6. Operational memory from repeated operator decisions.
-7. Supervised policy promotion (no autonomous policy drift).
+## Current State (Grounded in Repo Today)
+
+Current implemented baseline (inherited from upstream NemoClaw architecture in this repo):
+
+- CLI launcher and command stack (`bin/`, `src/lib/`).
+- NemoClaw plugin code and blueprint runtime logic (`nemoclaw/src/`).
+- Blueprint and network-policy definitions (`nemoclaw-blueprint/`).
+- Setup, automation, and validation scripts (`scripts/`).
+- User/reference docs and contributor-facing docs (`docs/`).
+
+This is an alpha codebase whose interfaces may change.
+
+## Intended Roadmap (Not Yet Fully Implemented)
+
+This fork is evolving toward:
+
+- stronger deterministic control-plane semantics,
+- heterogeneous device-aware scheduling and routing,
+- structured execution receipts/provenance,
+- explicit degraded-state contracts,
+- supervised policy-promotion workflows based on repeated operator decisions.
+
+See `docs/roadmap.md` for sequencing and workstreams.
+
+## Operational Goals
+
+1. Preserve least-astonishment operations for local operators.
+2. Make routing/control behavior explicit and testable.
+3. Expose degraded truth quickly and clearly.
+4. Keep governance enforceable through repository-managed policy artifacts.
+5. Increase auditability and replayability as control capabilities evolve.
 
 ## Non-Goals
 
-- No dashboard theater.
-- No speculative architecture claims not grounded in code.
-- No opaque “AI decides best route” behavior.
-- No hidden fallbacks.
-- No prompt-only governance that bypasses real control paths.
-
-## Current Baseline
-
-Current capabilities are inherited from upstream NemoClaw and include:
-
-- CLI entrypoints in `bin/` and command implementation in `src/`.
-- OpenShell sandbox orchestration, policy mutation commands, and onboarding flows.
-- Provider integrations (NVIDIA endpoints, local providers, routed mode).
-- Host-side state and session persistence in `~/.nemoclaw/`.
-- Existing logs, debug commands, and shields audit log mechanics.
-
-See:
-
-- `docs/fork-rationale.md`
-- `docs/architecture/current-state.md`
-- `docs/architecture/target-state.md`
-- `docs/roadmap.md`
+- Claiming capabilities not present in the current codebase.
+- Hiding degraded behavior behind optimistic UX or logs.
+- Prompt-only governance with no enforceable policy path.
+- Silent auto-tuning that changes control behavior without operator review.
 
 ## Roadmap Themes
 
-- Foundation docs and contributor workflow guardrails.
+- Documentation and contributor workflow foundation.
 - Deterministic control-plane scaffolding.
-- Device registry and scheduler.
-- Policy engine with supervised promotion flow.
-- Receipts + degraded-state semantics.
-- Operational memory and observability.
-- Security hardening and verification depth.
+- Device capability awareness and scheduling contracts.
+- Policy evaluation/versioning and supervised promotion.
+- Receipt/provenance and degraded-state semantics.
+- Hardening, observability, and verification depth.
 
-## Contributing in This Fork
+## Contribution Expectations
 
-Use conventional commits and keep PRs narrowly scoped.
+Contributors are expected to:
 
+- Keep claims grounded in repository truth today.
+- Clearly separate **current state** from **intended roadmap** in docs/PRs.
+- Use branch naming, commit style, and PR structure conventions:
+  - `docs/contributing/branch-strategy.md`
+  - `docs/contributing/pr-template-guide.md`
+- Include verification notes in every PR: commands run, outcomes, and known limitations.
+
+## Additional Fork Docs
+
+- Fork rationale: `docs/fork-rationale.md`
+- Roadmap: `docs/roadmap.md`
 - Branch strategy: `docs/contributing/branch-strategy.md`
-- PR guidance: `docs/contributing/pr-template-guide.md`
-
-## Verification Expectations
-
-All architecture and roadmap claims should map to repository truth in `src/`, `nemoclaw/src/`, `nemoclaw-blueprint/`, `scripts/`, and `docs/`. If behavior is not implemented yet, document it as target-state only.
+- PR template guide: `docs/contributing/pr-template-guide.md`
+- Changelog: `CHANGELOG.md`
