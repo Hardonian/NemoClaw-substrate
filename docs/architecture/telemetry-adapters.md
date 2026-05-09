@@ -1,6 +1,6 @@
 <!-- SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved. -->
 <!-- SPDX-License-Identifier: Apache-2.0 -->
 
-# Placeholder
+# Telemetry adapters
 
-Worker probes and telemetry adapters are explicit operator-invoked seams. No autonomous orchestration, no background daemon, no automatic remote execution, and no Dynamo integration in this phase.
+Telemetry availability is explicit. If GPU telemetry is unavailable, diagnostics and probe events emit an unavailable/degraded truth state instead of inferred telemetry.

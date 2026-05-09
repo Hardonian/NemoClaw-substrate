@@ -181,8 +181,5 @@ Worker/provider adapter contracts and scheduler-to-provider dry-run bridge are i
 Opt-in governed provider routing is available behind `NEMOCLAW_GOVERNED_ROUTING=1` (default off). Default routing is preserved when disabled. Remote worker execution, Dynamo orchestration, and GPU telemetry adapters are not implemented in this phase.
 
 
-## Worker probe and telemetry adapter note (2026-05-09)
-- Probes are explicit operator-invoked actions (manual/invoked-only), not autonomous loops.
-- Remote execution remains disabled in this phase; governed routing remains opt-in.
-- Telemetry fields can be unavailable/stale and are surfaced truthfully without fabrication.
-- Dynamo integration is planned only and not implemented.
+## 2026-05-09 local probe hardening update
+This phase adds explicit manual local probe execution and diagnostics summaries, with deterministic degraded-state/event reporting. Remote execution, autonomous routing, and Dynamo integration remain planned future work.

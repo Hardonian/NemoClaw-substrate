@@ -1,7 +1,7 @@
 {
   "name": "nemoclaw",
   "version": "0.1.0",
-  "description": "NemoClaw — run OpenClaw inside OpenShell with NVIDIA inference",
+  "description": "NemoClaw \u2014 run OpenClaw inside OpenShell with NVIDIA inference",
   "license": "Apache-2.0",
   "bin": {
     "nemoclaw": "./bin/nemoclaw.js",
@@ -45,7 +45,8 @@
     "docs:live": "uv run --group docs sphinx-autobuild docs docs/_build/html --open-browser",
     "docs:clean": "rm -rf docs/_build",
     "prepare": "if command -v tsc >/dev/null 2>&1 || [ -x node_modules/.bin/tsc ]; then npm run build:cli; fi && (npm install --omit=dev --ignore-scripts 2>/dev/null || true) && if [ -d .git ]; then bash scripts/npm-link-or-shim.sh; if command -v prek >/dev/null 2>&1; then prek install; else echo \"Skipping git hook setup (prek not installed)\"; fi; fi",
-    "prepublishOnly": "git describe --tags --match 'v*' | sed 's/^v//' > .version && test -s .version && cd nemoclaw && env -u npm_config_global -u npm_config_prefix -u npm_config_omit npm install --ignore-scripts && ./node_modules/.bin/tsc"
+    "prepublishOnly": "git describe --tags --match 'v*' | sed 's/^v//' > .version && test -s .version && cd nemoclaw && env -u npm_config_global -u npm_config_prefix -u npm_config_omit npm install --ignore-scripts && ./node_modules/.bin/tsc",
+    "verify:changelog-hygiene": "node scripts/verify-changelog-hygiene.js"
   },
   "dependencies": {
     "@oclif/core": "^4.10.5",
