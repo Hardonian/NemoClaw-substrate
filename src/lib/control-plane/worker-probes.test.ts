@@ -103,6 +103,11 @@ describe("registry telemetry policy", () => {
       "telemetry_registry_update_skipped",
       "telemetry_stale",
       "telemetry_conflict_detected",
+      "worker_identity_observed",
+      "capability_claim_recorded",
+      "capability_attestation_observed",
+      "capability_attestation_conflict",
+      "worker_attestation_expired",
       "telemetry_unavailable",
       "telemetry_probe_succeeded",
     ]);

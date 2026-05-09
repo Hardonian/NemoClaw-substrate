@@ -1,6 +1,7 @@
 <!-- SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved. -->
 <!-- SPDX-License-Identifier: Apache-2.0 -->
 
+- trust: add worker identity, trust-level and attestation-status records to control-plane node descriptors; add deterministic capability attestation/trust decision helpers; enforce remote execution trust gating for revoked/expired/conflicted/insufficient trust workers; and emit explicit worker trust/attestation operational events.
 # Changelog
 
 All notable changes to this fork are documented in this file.

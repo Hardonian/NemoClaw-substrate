@@ -41,6 +41,10 @@ export async function runRemoteExecution(input: { request: RemoteExecutionReques
   const node = request.nodeId ? input.registry.getNode(request.nodeId) : undefined;
   if (request.nodeId && !node) return finalize("unavailable", "node_unavailable", "node_not_registered", "transport_unreachable");
   if (node && node.health !== "healthy") return finalize("degraded", "node_degraded", "node_stale_or_unhealthy", "transport_unreachable");
+  if (node && (node.workerTrustLevel === "revoked" || node.workerAttestationStatus === "revoked")) return finalize("degraded", "worker_revoked", "worker_revoked", "policy_blocked");
+  if (node && node.workerAttestationStatus === "expired") return finalize("degraded", "attestation_expired", "attestation_expired", "policy_blocked");
+  if (node && node.workerAttestationStatus === "conflict_detected") return finalize("degraded", "attestation_conflict", "attestation_conflict", "policy_blocked");
+  if (node && node.workerTrustLevel && !["trusted_remote", "trusted_local"].includes(node.workerTrustLevel)) return finalize("degraded", "worker_trust_denied", "policy_denied", "policy_blocked");
   const endpoint = request.targetEndpoint ?? node?.endpoint;
   if (!endpoint || !validateUrl(endpoint)) return finalize("failed", "invalid_endpoint", "invalid_endpoint", "constraint_unsatisfied");
 

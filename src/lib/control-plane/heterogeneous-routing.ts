@@ -76,7 +76,7 @@ export async function routeHeterogeneous(input: {
       degradedStates: node.health === "healthy" ? [] : [node.health],
       telemetryConfidence: node.health === "healthy" ? "high" : "low",
       executionMode: "remote",
-      reasonCodes: denied ? ["excluded"] : ["eligible"],
+      reasonCodes: denied ? ["excluded", ...(node.workerTrustReasonCodes ?? [])] : ["eligible", ...(node.workerTrustReasonCodes ?? [])],
       score: 120,
       status: denied ? "excluded" : "eligible",
     };
@@ -145,6 +145,7 @@ export function summarizeHeterogeneousDiagnostics(input: { routing: Heterogeneou
     `Excluded candidates: ${input.result?.excludedCandidates.map((c) => c.candidateId).join(",") || "none"}`,
     `No-candidate reason: ${noCandidateReason}`,
     `Fallback: ${fallbackState}`,
+    `Worker trust: ${input.result?.selectedCandidate?.kind === "remote_worker" ? (input.result.selectedCandidate.reasonCodes.join("|") || "none") : "none"}` ,
     `Receipt: ${input.result?.receipt.receiptId ?? "none"}`,
   ];
 }
