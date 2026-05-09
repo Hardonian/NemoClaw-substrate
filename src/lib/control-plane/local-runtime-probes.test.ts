@@ -29,6 +29,12 @@ describe("local runtime probes", () => {
   it("marks command timeout degraded/unavailable", async () => {
     const out = await runLocalRuntimeProbes({ requestId: "p3", nowIso: "2026-05-09T00:00:00.000Z", commandRunner: async () => ({ code: 124, stdout: "" }) });
     expect(out.telemetry.gpus.reason).toContain("timeout");
+    expect(out.events.some((e) => e.category === "telemetry_unavailable" && (e.payload as { reasonCode?: string }).reasonCode === "transport_unreachable")).toBe(true);
+  });
+
+  it("emits unavailable telemetry for malformed gpu output", async () => {
+    const out = await runLocalRuntimeProbes({ requestId: "p6", nowIso: "2026-05-09T00:00:00.000Z", commandRunner: async () => ({ code: 0, stdout: "bad" }) });
+    expect(out.events.some((e) => e.category === "telemetry_unavailable" && (e.payload as { reasonCode?: string }).reasonCode === "capability_missing")).toBe(true);
   });
 
   it("parses runtime metadata from mocked Ollama response", async () => {
