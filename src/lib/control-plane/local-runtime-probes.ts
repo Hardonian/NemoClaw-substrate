@@ -4,6 +4,11 @@
 import { buildEventsFromReceipt, type OperationalEvent, type OperationalMemoryLog } from "./operational-memory";
 import type { DegradedState, ExecutionReceipt } from "./types";
 import type { ProbeTelemetrySnapshot } from "./worker-probes";
+import {
+  DEFAULT_SECURITY_POLICY,
+  validateCommandDescriptor,
+  validateLocalOnlyUrl,
+} from "../security/security-policy";
 
 export type LocalProbeType = "provider-metadata" | "command-availability" | "ollama-http" | "vllm-http" | "llamacpp-http" | "nim-http" | "gpu-nvidia-smi" | "gpu-rocm";
 export type CommandRunner = (command: string, args: string[], timeoutMs: number) => Promise<{ code: number; stdout: string; stderr?: string }>;
@@ -13,21 +18,26 @@ export interface ProbeOutcome { probe: LocalProbeType; state: "healthy" | "degra
 export interface LocalProbeSummary { outcomes: ProbeOutcome[]; degradedStates: DegradedState[]; telemetryAvailable: boolean; telemetry: ProbeTelemetrySnapshot; receipt: ExecutionReceipt; events: OperationalEvent[]; }
 
 const defaultCommandRunner: CommandRunner = async (command, args, timeoutMs) => {
+  const commandDecision = validateCommandDescriptor(
+    { name: command, argv: args, shell: false, timeoutMs },
+    { ...DEFAULT_SECURITY_POLICY.commandExecution, allowlist: ["nvidia-smi"] },
+  );
+  if (!commandDecision.decision.allowed || !commandDecision.descriptor) {
+    return { code: 126, stdout: "", stderr: commandDecision.decision.reasonCode };
+  }
   const { spawn } = await import("node:child_process");
   return new Promise((resolve) => {
-    const child = spawn(command, args, { shell: false });
+    const child = spawn(commandDecision.descriptor.name, [...commandDecision.descriptor.argv], { shell: false });
     let stdout = ""; let stderr = ""; let done = false;
-    const timer = setTimeout(() => { if (!done) { done = true; child.kill("SIGTERM"); resolve({ code: 124, stdout, stderr: `${stderr} timeout` }); } }, timeoutMs);
-    child.stdout.on("data", (d) => { stdout += String(d); });
-    child.stderr.on("data", (d) => { stderr += String(d); });
+    const timer = setTimeout(() => { if (!done) { done = true; child.kill("SIGTERM"); resolve({ code: 124, stdout: stdout.slice(0, commandDecision.descriptor.stdoutMaxBytes), stderr: `${stderr} timeout`.slice(0, commandDecision.descriptor.stderrMaxBytes) }); } }, commandDecision.descriptor.timeoutMs);
+    child.stdout.on("data", (d) => { stdout = (stdout + String(d)).slice(0, commandDecision.descriptor.stdoutMaxBytes); });
+    child.stderr.on("data", (d) => { stderr = (stderr + String(d)).slice(0, commandDecision.descriptor.stderrMaxBytes); });
     child.on("error", () => { if (!done) { done = true; clearTimeout(timer); resolve({ code: 127, stdout: "", stderr: "not_found" }); } });
     child.on("exit", (code) => { if (!done) { done = true; clearTimeout(timer); resolve({ code: code ?? 1, stdout, stderr }); } });
   });
 };
 
 const degraded = (nowIso: string, reasonCode: DegradedState["reasonCode"], reason: string, subsystem: string, suggestion: string): DegradedState => ({ category: "degraded", reason, affectedSubsystem: subsystem, severity: "warning", reasonCode, explanation: reason, sourceComponent: "local-runtime-probes", timestamp: nowIso, recoverySuggestion: suggestion });
-const isLocalUrl = (url: string): boolean => { try { const parsed = new URL(url); return ["localhost", "127.0.0.1", "::1"].includes(parsed.hostname); } catch { return false; } };
-
 async function probeHttp(url: string, timeoutMs: number): Promise<{ ok: boolean; detail: string; data?: Record<string, unknown>; malformed?: boolean }> {
   const ctl = new AbortController(); const timer = setTimeout(() => ctl.abort(), timeoutMs);
   try { const res = await fetch(url, { method: "GET", signal: ctl.signal }); const text = await res.text(); if (!res.ok) return { ok: false, detail: `HTTP ${res.status}` }; if (!text.trim()) return { ok: true, detail: "empty body" }; try { const data = JSON.parse(text) as Record<string, unknown>; return { ok: true, detail: "ok", data }; } catch { return { ok: true, detail: "non-json", malformed: true }; } } catch (error) { const msg = error instanceof Error ? error.message : String(error); return { ok: false, detail: msg.includes("aborted") ? "timeout" : msg }; } finally { clearTimeout(timer); }
@@ -63,8 +73,9 @@ export async function runLocalRuntimeProbes(input: LocalProbeRequest, operationa
 
   for (const [provider, url] of Object.entries(input.endpoints ?? {}).sort(([a], [b]) => a.localeCompare(b))) {
     const probeName = `${provider}-http` as LocalProbeType; if (!url) { const d = degraded(input.nowIso, "capability_missing", `${provider} endpoint not configured`, provider, "Provide explicit local URL to run HTTP probe."); outcomes.push({ probe: probeName, state: "unavailable", detail: "url required", degradedState: d }); degradedStates.push(d); continue; }
-    if (!isLocalUrl(url)) { const d = degraded(input.nowIso, "constraint_unsatisfied", `${provider} endpoint must be local`, provider, "Use localhost/127.0.0.1/::1 endpoint for local probes."); outcomes.push({ probe: probeName, state: "degraded", detail: "non-local url rejected", degradedState: d }); degradedStates.push(d); continue; }
-    const http = await probeHttp(url, timeoutMs); if (!http.ok || http.malformed) { const d = degraded(input.nowIso, !http.ok && http.detail === "timeout" ? "transport_unreachable" : "unknown_error", `${provider} probe failed: ${http.detail}`, provider, "Verify local runtime endpoint is running and returns JSON."); outcomes.push({ probe: probeName, state: "degraded", detail: http.detail, degradedState: d }); degradedStates.push(d); continue; }
+    const localUrl = validateLocalOnlyUrl(url, timeoutMs);
+    if (!localUrl.decision.allowed || !localUrl.url) { const d = degraded(input.nowIso, "constraint_unsatisfied", `${provider} endpoint must be local`, provider, "Use localhost/127.0.0.1/::1 endpoint for local probes."); outcomes.push({ probe: probeName, state: "degraded", detail: localUrl.decision.reasonCode, degradedState: d }); degradedStates.push(d); continue; }
+    const http = await probeHttp(localUrl.url.toString(), localUrl.normalizedTimeoutMs); if (!http.ok || http.malformed) { const d = degraded(input.nowIso, !http.ok && http.detail === "timeout" ? "transport_unreachable" : "unknown_error", `${provider} probe failed: ${http.detail}`, provider, "Verify local runtime endpoint is running and returns JSON."); outcomes.push({ probe: probeName, state: "degraded", detail: http.detail, degradedState: d }); degradedStates.push(d); continue; }
     const data = http.data ?? {}; const models = Array.isArray(data.models) ? data.models.filter((m): m is string => typeof m === "string") : Array.isArray((data as { data?: unknown }).data) ? ((data as { data: Array<{ id?: string }> }).data.map((x) => x?.id).filter((id): id is string => typeof id === "string")) : [];
     const version = typeof data.version === "string" ? data.version : typeof (data as { ollama_version?: string }).ollama_version === "string" ? (data as { ollama_version: string }).ollama_version : undefined;
     if (models.length) telemetry.modelInventory = { state: "observed", value: [...models].sort(), observedAt: input.nowIso };

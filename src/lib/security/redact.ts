@@ -93,7 +93,7 @@ const FULL_REDACT_PATTERNS: [RegExp, string][] = [
 ];
 
 export function redactFull(text: string): string {
-  let result = text;
+  let result = text.replace(/https?:\/\/[^\s'"]+/g, (value) => redactUrl(value) ?? value);
   for (const [pattern, replacement] of FULL_REDACT_PATTERNS) {
     pattern.lastIndex = 0;
     result = result.replace(pattern, replacement);

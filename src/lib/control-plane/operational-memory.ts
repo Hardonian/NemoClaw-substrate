@@ -4,6 +4,7 @@
 import { deterministicSerialize } from "./serde";
 import type { ExecutionApproval, ExecutionAuthorizationResult, ExecutionPlan } from "./execution-plans";
 import type { DegradedState, ExecutionReceipt, PolicyDecision, SchedulingDecision } from "./types";
+import { redactSecurityPayload } from "../security/security-policy";
 
 export type OperationalEventCategory =
   | "receipt"
@@ -82,7 +83,7 @@ export class OperationalMemoryLog {
 
   append(input: Omit<OperationalEvent, "eventId" | "sequence">): OperationalEvent {
     const sequence = this.sequence++;
-    const stable = { ...input, sequence };
+    const stable = { ...input, payload: redactSecurityPayload(input.payload), sequence };
     const eventId = `op-${Buffer.from(deterministicSerialize(stable)).toString("base64url").slice(0, 20)}`;
     const event: OperationalEvent = { ...stable, eventId };
     this.store.append(event);

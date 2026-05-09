@@ -3,6 +3,11 @@
 
 import type { DegradedState } from "./types";
 import type { ProbeTelemetrySnapshot, WorkerProbeRequest, WorkerProbeResult } from "./worker-probes";
+import {
+  DEFAULT_SECURITY_POLICY,
+  redactSecurityPayload,
+  validateRemoteUrl,
+} from "../security/security-policy";
 
 export interface RemoteHttpAuthConfig { headerName: string; token?: string; }
 export interface RemoteHttpProbeRequest {
@@ -72,16 +77,9 @@ export function parseGenericRuntimeTelemetry(raw: Record<string, unknown>): Runt
   return { parser: "generic", confidence: version || models ? "partial" : "unavailable", runtimeName: readString(raw.runtime), runtimeVersion: version, models, contextLimitTokens: readNumber(raw.context_limit), backendType: readString(raw.backend_type), health: "healthy", reasonCode: version || models ? undefined : "missing_fields" };
 }
 
-function validateRemoteHttpEndpoint(endpoint: string): { ok: true; url: URL } | { ok: false; reason: string } {
-  let parsed: URL;
-  try { parsed = new URL(endpoint); } catch { return { ok: false, reason: "malformed_url" }; }
-  if (!["http:", "https:"].includes(parsed.protocol)) return { ok: false, reason: "unsupported_scheme" };
-  return { ok: true, url: parsed };
-}
-
 function redactHeaders(auth?: RemoteHttpAuthConfig): Record<string, string> {
   if (!auth?.headerName) return {};
-  return { [auth.headerName]: "[REDACTED]" };
+  return redactSecurityPayload({ [auth.headerName]: auth.token ?? "<present>" }) as Record<string, string>;
 }
 
 function parserForRuntime(runtime: WorkerProbeRequest["runtime"]): (raw: Record<string, unknown>) => RuntimeTelemetryParseResult {
@@ -93,14 +91,14 @@ function parserForRuntime(runtime: WorkerProbeRequest["runtime"]): (raw: Record<
 }
 
 export async function runRemoteHttpHealthProbe(input: RemoteHttpProbeRequest): Promise<WorkerProbeResult> {
-  const validated = validateRemoteHttpEndpoint(input.endpoint);
-  const request: WorkerProbeRequest = { requestId: input.requestId, nodeId: input.nodeId, runtime: input.runtime, transport: "http", endpoint: input.endpoint, nowIso: input.nowIso };
+  const validated = validateRemoteUrl(input.endpoint, input.timeoutMs);
+  const request: WorkerProbeRequest = { requestId: input.requestId, nodeId: input.nodeId, runtime: input.runtime, transport: "http", endpoint: validated.decision.sanitized ?? input.endpoint, nowIso: input.nowIso };
   const base = { request, capability: { runtimeBackend: input.runtime, executionMode: "remote" as const, models: [] }, telemetry: { capturedAt: input.nowIso, runtimeHealth: { state: "unavailable" as const, reason: "not_probed" }, backendVersion: { state: "unavailable" as const, reason: "not_probed" }, modelInventory: { state: "unavailable" as const, reason: "not_probed" }, gpus: { state: "unavailable" as const, reason: "remote_probe_http" }, runtimeMetrics: {} } };
-  if (!validated.ok) {
-    return { ...base, status: "failed", degradedStates: [degraded(input.nowIso, "constraint_unsatisfied", validated.reason)], error: { code: "probe_not_supported", message: validated.reason, retryable: false } };
+  if (!validated.decision.allowed || !validated.url) {
+    return { ...base, status: "failed", degradedStates: [degraded(input.nowIso, "constraint_unsatisfied", validated.decision.reasonCode)], error: { code: "probe_not_supported", message: validated.decision.reasonCode, retryable: false } };
   }
 
-  const timeoutMs = Math.max(250, Math.min(10_000, input.timeoutMs ?? 2_000));
+  const timeoutMs = validated.normalizedTimeoutMs;
   const ctl = new AbortController();
   const timer = setTimeout(() => ctl.abort(), timeoutMs);
   try {
@@ -151,5 +149,11 @@ export function runRemoteSshProbePlaceholder(input: RemoteSshProbeRequest): Work
 }
 
 export function redactRemoteProbeMetadata(input: RemoteHttpProbeRequest): Record<string, string> {
-  return { endpoint: input.endpoint, ...redactHeaders(input.auth) };
+  const endpoint = validateRemoteUrl(input.endpoint).decision.sanitized ?? input.endpoint;
+  return {
+    endpoint,
+    timeoutMs: String(validateRemoteUrl(input.endpoint, input.timeoutMs).normalizedTimeoutMs),
+    policy: DEFAULT_SECURITY_POLICY.network.mode,
+    ...redactHeaders(input.auth),
+  };
 }

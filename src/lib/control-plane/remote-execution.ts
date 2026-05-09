@@ -14,9 +14,18 @@ import {
   type ExecutionPlan,
 } from "./execution-plans";
 import type { ExecutionReceipt } from "./types";
+import {
+  DEFAULT_SECURITY_POLICY,
+  type CommandDescriptor,
+  type CommandExecutionPolicy,
+  redactSecurityPayload,
+  validateCommandDescriptor,
+  validateCommandString,
+  validateRemoteUrl,
+} from "../security/security-policy";
 
 export type RemoteExecutionStatus = "disabled" | "policy_denied" | "approval_required" | "authorization_denied" | "unavailable" | "degraded" | "failed" | "succeeded" | "not_supported";
-export interface RemoteExecutionRequest { requestId: string; nowIso: string; action: string; command: string; nodeId?: string; targetEndpoint?: string; auth?: { headerName?: string; token?: string }; approved?: boolean; timeoutMs?: number; executionPlanRequired?: boolean; }
+export interface RemoteExecutionRequest { requestId: string; nowIso: string; action: string; command: string; commandDescriptor?: CommandDescriptor; nodeId?: string; targetEndpoint?: string; auth?: { headerName?: string; token?: string }; approved?: boolean; timeoutMs?: number; executionPlanRequired?: boolean; commandPolicy?: CommandExecutionPolicy; }
 export interface RemoteExecutionResult { status: RemoteExecutionStatus; output?: string; degradedReason?: string; errorCode?: string; receipt: ExecutionReceipt; events: OperationalEvent[]; replayRef: ExecutionReceipt["provenance"]; }
 export interface RemoteExecutionTransport { execute(input: { endpoint: string; command: string; timeoutMs: number; auth?: { headerName?: string; token?: string } }): Promise<{ status: number; body: string }>; }
 export interface RemoteExecutionError { code: string; message: string; retryable: boolean; }
@@ -28,8 +37,10 @@ export function parseRemoteExecutionConfig(env: NodeJS.ProcessEnv): RemoteExecut
   return { enabled, source: enabled ? "env" : "default" };
 }
 
-function validateUrl(url: string): boolean { try { const u = new URL(url); return u.protocol === "http:" || u.protocol === "https:"; } catch { return false; } }
-function redact(auth?: { headerName?: string }): Record<string, string> { return auth?.headerName ? { [auth.headerName]: "[REDACTED]" } : {}; }
+function redact(auth?: { headerName?: string; token?: string }): Record<string, string> {
+  if (!auth?.headerName) return {};
+  return redactSecurityPayload({ [auth.headerName]: auth.token ?? "<present>" }) as Record<string, string>;
+}
 
 export async function runRemoteExecution(input: { request: RemoteExecutionRequest; config: RemoteExecutionConfig; transport: RemoteExecutionTransport; policyBundle: PolicyBundle; registry: DeviceRegistry; operationalMemory?: OperationalMemoryLog; executionPlan?: ExecutionPlan; executionApproval?: ExecutionApproval }): Promise<RemoteExecutionResult> {
   const { request } = input;
@@ -39,7 +50,7 @@ export async function runRemoteExecution(input: { request: RemoteExecutionReques
   const receiptBase = { version: "1" as const, receiptId: `remote-exec-${request.requestId}`, requestId: request.requestId, createdAt: request.nowIso, phases: [{ phase: "received", at: request.nowIso, notes: "execution_requested" }], toolInvocations: [], timing: { totalMs: 0 }, fallbackAttempts: [], operatorOverrides: [], provenance: { source: "remote-execution", lineage: ["worker", "remote"], replayVersion: "1" as const } };
   const context: RemoteExecutionReceiptContext = { transport: "http", target, policyDecision, redactedAuth: redact(request.auth) };
   const finalize = (status: RemoteExecutionStatus, notes: string, degradedReason?: string, errorCode?: string, plan?: ExecutionPlan): RemoteExecutionResult => {
-    const receipt: ExecutionReceipt = { ...receiptBase, phases: [...receiptBase.phases, { phase: "completed", at: request.nowIso, notes }], degradedEvents: degradedReason ? [{ category: "degraded", reason: degradedReason, affectedSubsystem: "remote-execution", severity: "warning", reasonCode: errorCode === "policy_blocked" || errorCode === "approval_required" ? "policy_blocked" : "transport_unreachable", explanation: degradedReason, sourceComponent: "remote-execution", timestamp: request.nowIso }] : [], policyDecision: policyDecision === "allow" ? { allowed: true, requiredApproval: false, reasons: [{ code: policyEval.reasonCode, explanation: "remote execution allowed", source: policyEval.sourceRuleId }] } : { allowed: false, requiredApproval: policyDecision === "approval_required", reasons: [{ code: policyDecision === "disabled" ? "policy_default_deny" : policyEval.reasonCode, explanation: notes, source: policyEval.sourceRuleId }] }, executionLineage: plan ? executionLineageFromPlan(plan, input.executionApproval, plan.authorization?.result) : undefined, metadata: context as never } as unknown as ExecutionReceipt;
+    const receipt: ExecutionReceipt = redactSecurityPayload({ ...receiptBase, phases: [...receiptBase.phases, { phase: "completed", at: request.nowIso, notes }], degradedEvents: degradedReason ? [{ category: "degraded", reason: degradedReason, affectedSubsystem: "remote-execution", severity: "warning", reasonCode: errorCode === "policy_blocked" || errorCode === "approval_required" ? "policy_blocked" : "transport_unreachable", explanation: degradedReason, sourceComponent: "remote-execution", timestamp: request.nowIso }] : [], policyDecision: policyDecision === "allow" ? { allowed: true, requiredApproval: false, reasons: [{ code: policyEval.reasonCode, explanation: "remote execution allowed", source: policyEval.sourceRuleId }] } : { allowed: false, requiredApproval: policyDecision === "approval_required", reasons: [{ code: policyDecision === "disabled" ? "policy_default_deny" : policyEval.reasonCode, explanation: notes, source: policyEval.sourceRuleId }] }, executionLineage: plan ? executionLineageFromPlan(plan, input.executionApproval, plan.authorization?.result) : undefined, metadata: context as never }) as unknown as ExecutionReceipt;
     const events = input.operationalMemory ? buildEventsFromReceipt(receipt, "remote-execution", input.operationalMemory) : [];
     return { status, degradedReason, errorCode, receipt, events, replayRef: receipt.provenance };
   };
@@ -90,10 +101,19 @@ export async function runRemoteExecution(input: { request: RemoteExecutionReques
   if (node && node.workerAttestationStatus === "conflict_detected") return finalize("degraded", "attestation_conflict", "attestation_conflict", "policy_blocked");
   if (node && node.workerTrustLevel && !["trusted_remote", "trusted_local"].includes(node.workerTrustLevel)) return finalize("degraded", "worker_trust_denied", "policy_denied", "policy_blocked");
   const endpoint = request.targetEndpoint ?? node?.endpoint;
-  if (!endpoint || !validateUrl(endpoint)) return finalize("failed", "invalid_endpoint", "invalid_endpoint", "constraint_unsatisfied");
+  if (!endpoint) return finalize("failed", "invalid_endpoint", "invalid_endpoint", "constraint_unsatisfied");
+  const urlDecision = validateRemoteUrl(endpoint, request.timeoutMs);
+  if (!urlDecision.decision.allowed || !urlDecision.url) return finalize("failed", urlDecision.decision.reasonCode, urlDecision.decision.reasonCode, "constraint_unsatisfied");
+  const commandDecision = request.commandDescriptor
+    ? validateCommandDescriptor(request.commandDescriptor, request.commandPolicy ?? DEFAULT_SECURITY_POLICY.commandExecution)
+    : validateCommandString(request.command, request.commandPolicy ?? DEFAULT_SECURITY_POLICY.commandExecution, request.timeoutMs);
+  if (!commandDecision.decision.allowed || !commandDecision.descriptor) {
+    return finalize("failed", commandDecision.decision.reasonCode, commandDecision.decision.reasonCode, "policy_blocked");
+  }
+  const safeCommand = [commandDecision.descriptor.name, ...commandDecision.descriptor.argv].join(" ");
 
   try {
-    const response = await input.transport.execute({ endpoint, command: request.command, timeoutMs: Math.max(250, Math.min(10_000, request.timeoutMs ?? 2_000)), auth: request.auth });
+    const response = await input.transport.execute({ endpoint: urlDecision.url.toString(), command: safeCommand, timeoutMs: commandDecision.descriptor.timeoutMs, auth: request.auth });
     if (response.status === 401 || response.status === 403) return finalize("degraded", "auth_rejected", "auth_rejected", "policy_blocked");
     if (response.status < 200 || response.status >= 300) return finalize("degraded", `http_${response.status}`, `http_${response.status}`, "transport_unreachable");
     let body: { status?: string; output?: string };
