@@ -183,3 +183,8 @@ Opt-in governed provider routing is available behind `NEMOCLAW_GOVERNED_ROUTING=
 
 ## 2026-05-09 local probe hardening update
 This phase adds explicit manual local probe execution and diagnostics summaries, with deterministic degraded-state/event reporting. Remote execution, autonomous routing, and Dynamo integration remain planned future work.
+
+## 2026-05-09 guarded remote probe seam update
+- Added authenticated remote HTTP health-check probe seam with strict endpoint validation and timeout bounds.
+- Added SSH remote probe placeholder status (`not_implemented`) without shell execution.
+- Added remote probe receipt/event/registry integration seams; governed routing and remote execution remain unchanged/off.

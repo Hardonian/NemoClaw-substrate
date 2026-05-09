@@ -115,3 +115,7 @@ Opt-in governed provider routing is available behind `NEMOCLAW_GOVERNED_ROUTING=
 - Added local runtime probe failure-injection tests (unavailable, timeout, malformed response, non-local URL rejection).
 - Added local diagnostics summary verification for degraded-state and telemetry-unavailable reporting.
 - Remote execution remains disabled; all probe verification is local-safe and mock-driven.
+
+## 2026-05-09 guarded remote probe seam verification update
+- Added mock-driven remote probe tests for unsupported scheme, auth rejection, timeout degradation, and SSH placeholder not-implemented behavior.
+- Added strict changelog hygiene enforcement for exact duplicate non-empty lines with explicit structural allowlist.
