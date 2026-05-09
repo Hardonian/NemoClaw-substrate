@@ -90,3 +90,7 @@
 - Required tests: CI-equivalent aggregate pass.
 - Failure examples: docs claim features without tests/contracts.
 - Exit criteria: release candidate passes all required checks and includes truthful release notes.
+
+## Control-plane foundation verification
+- Deterministic serialization/order tests for control-plane contracts and registry added.
+- Remaining validation: runtime-path receipt coverage once integration PR lands.

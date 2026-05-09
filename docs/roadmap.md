@@ -161,3 +161,7 @@ Rationale:
 - Suggested branch name: `feat/dynamo-adapter-seam`
 - Suggested commit style: `feat(adapter): ...`
 - Suggested PR title: `feat: scaffold Dynamo-style orchestration adapter seam`
+
+## Control-plane foundation (implemented)
+- Deterministic contracts, device registry substrate, receipt/degraded taxonomy scaffolding complete.
+- Remaining: policy engine, scheduler, runtime receipt wiring, observability and replay tooling.
