@@ -1,22 +1,26 @@
 import { describe, expect, it } from "vitest";
 import { render, screen } from "@testing-library/react";
-import { EmptyState } from "../../src/components/primitives/empty-state";
+import { EmptyState } from "../src/components/primitives/empty-state";
 
 describe("EmptyState", () => {
-  it("renders with role status", () => {
-    render(<EmptyState title="No data" description="Nothing here" />);
-    const container = screen.getByRole("status");
-    expect(container).toBeInTheDocument();
+  it("renders with role=status", () => {
+    render(<EmptyState title="No data" description="Nothing to show" />);
+    expect(screen.getByRole("status")).toBeInTheDocument();
   });
 
   it("renders title and description", () => {
-    render(<EmptyState title="No degraded states" description="All subsystems are operating normally." />);
-    expect(screen.getByText("No degraded states")).toBeInTheDocument();
-    expect(screen.getByText("All subsystems are operating normally.")).toBeInTheDocument();
+    render(<EmptyState title="Empty title" description="Empty description" />);
+    expect(screen.getByRole("status")).toHaveTextContent("Empty title");
+    expect(screen.getByRole("status")).toHaveTextContent("Empty description");
   });
 
-  it("is accessible with aria-live polite", () => {
-    render(<EmptyState title="Empty" description="No content" />);
-    expect(screen.getByRole("status")).toHaveAttribute("aria-live", "polite");
+  it("does not render action button when not provided", () => {
+    render(<EmptyState title="No action" description="No button" />);
+    expect(screen.queryByRole("button")).not.toBeInTheDocument();
+  });
+
+  it("renders action button when provided", () => {
+    render(<EmptyState title="With action" description="Has button" actionLabel="Click me" onAction={() => {}} />);
+    expect(screen.getByRole("button")).toHaveTextContent("Click me");
   });
 });

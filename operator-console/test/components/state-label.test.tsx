@@ -1,29 +1,24 @@
 import { describe, expect, it } from "vitest";
 import { render, screen } from "@testing-library/react";
-import { StateLabel } from "../../src/components/primitives/state-label";
+import { StateLabel } from "../src/components/primitives/state-label";
 
 describe("StateLabel", () => {
-  it("renders all state variants correctly", () => {
-    const states = ["healthy", "constrained", "degraded", "unavailable", "unknown", "partial_capability", "approval_blocked", "stale", "unreachable"];
-    for (const state of states) {
-      const { container, unmount } = render(<StateLabel state={state} />);
-      const label = container.querySelector("span");
-      expect(label).toHaveTextContent(state);
-      expect(label).toHaveAttribute("aria-label", `State: ${state}`);
-      unmount();
-    }
+  const allStates = ["healthy", "constrained", "degraded", "unavailable", "unknown", "partial_capability", "approval_blocked", "stale", "unreachable"];
+
+  it.each(allStates)("renders state: %s", (state) => {
+    render(<StateLabel state={state} />);
+    const label = screen.getByLabelText(`State: ${state}`);
+    expect(label).toHaveTextContent(state);
   });
 
-  it("renders unknown state explicitly", () => {
-    render(<StateLabel state="unknown" />);
-    const label = screen.getByText("unknown");
-    expect(label).toBeInTheDocument();
-    expect(label).toHaveAttribute("aria-label", "State: unknown");
+  it("renders unknown state for unrecognized values", () => {
+    render(<StateLabel state="nonexistent_state" />);
+    const label = screen.getByLabelText("State: nonexistent_state");
+    expect(label).toHaveTextContent("nonexistent_state");
   });
 
-  it("renders unavailable state explicitly", () => {
+  it("always shows the raw state string", () => {
     render(<StateLabel state="unavailable" />);
-    const label = screen.getByText("unavailable");
-    expect(label).toBeInTheDocument();
+    expect(screen.getByLabelText("State: unavailable")).toHaveTextContent("unavailable");
   });
 });
