@@ -1,12 +1,12 @@
 <!-- SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved. -->
 <!-- SPDX-License-Identifier: Apache-2.0 -->
 
-- trust: add worker identity, trust-level and attestation-status records to control-plane node descriptors; add deterministic capability attestation/trust decision helpers; enforce remote execution trust gating for revoked/expired/conflicted/insufficient trust workers; and emit explicit worker trust/attestation operational events.
 # Changelog
 
 All notable changes to this fork are documented in this file.
 
 ## [Unreleased]
+- trust: add worker identity, trust-level and attestation-status records to control-plane node descriptors; add deterministic capability attestation/trust decision helpers; enforce remote execution trust gating for revoked/expired/conflicted/insufficient trust workers; and emit explicit worker trust/attestation operational events.
 - release: completed governed substrate readiness closure pass with claim-audit normalization, status taxonomy docs, and release verification gate wiring.
 - telemetry hardening: dedicated operational telemetry event taxonomy (`telemetry_probe_*`, `telemetry_parse_*`, `telemetry_unavailable/stale/conflict_detected`, `telemetry_registry_update_*`), explicit mapping in probe flows, and telemetry observability/replay validation coverage with unchanged routing defaults.
 - telemetry: added explicit local GPU telemetry adapters (`nvidia-smi` observed/unavailable/malformed/timeout states), runtime metadata parsing for configured local runtime probes, registry/diagnostics/event integration, and non-fatal unavailable telemetry behavior while preserving routing defaults.

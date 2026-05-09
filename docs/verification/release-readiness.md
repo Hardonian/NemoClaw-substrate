@@ -27,3 +27,12 @@ Unsupported-language audit completed across docs and code claims:
 - Release messaging risk reduced by explicit status matrix and roadmap normalization.
 - Regression risk controlled by `verify:release` aggregate command and CI enforcement.
 - Residual risk: future PRs could reintroduce unsupported claims without checklist enforcement discipline.
+
+## Worker trust and attestation constraints (2026-05-09)
+- Self-reported claims are evidence only and are **not automatically trusted**.
+- Probe-observed evidence improves visibility but is **not authorization**.
+- Operator approval is explicit and required before remote trust elevation.
+- Revoked, expired, or conflict-detected workers are blocked/degraded for remote execution paths.
+- Cryptographic attestation is not implemented yet in this phase.
+- Remote execution is disabled by default and requires explicit opt-in flags.
+- No orchestration/Dynamo integration is implemented in this phase.

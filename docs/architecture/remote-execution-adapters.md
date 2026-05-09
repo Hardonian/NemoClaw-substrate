@@ -24,3 +24,12 @@ Not implemented in this phase:
 - Remote candidates are excluded when policy denies or requires unprovided approval.
 - No SSH execution, no Dynamo/GPU balancing claims, and no background daemon/autonomous worker routing.
 - Telemetry confidence and degraded states reflect observed registry/probe data only.
+
+## Worker trust and attestation constraints (2026-05-09)
+- Self-reported claims are evidence only and are **not automatically trusted**.
+- Probe-observed evidence improves visibility but is **not authorization**.
+- Operator approval is explicit and required before remote trust elevation.
+- Revoked, expired, or conflict-detected workers are blocked/degraded for remote execution paths.
+- Cryptographic attestation is not implemented yet in this phase.
+- Remote execution is disabled by default and requires explicit opt-in flags.
+- No orchestration/Dynamo integration is implemented in this phase.

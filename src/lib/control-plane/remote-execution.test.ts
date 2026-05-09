@@ -33,6 +33,56 @@ describe("remote execution", () => {
     expect(transport.execute).not.toHaveBeenCalled();
   });
 
+  it("trust denial blocks remote transport before execution", async () => {
+    const registry = createDeviceRegistry();
+    registry.registerNode({
+      version: "1",
+      nodeId: "w-denied",
+      role: "remote",
+      transport: "http",
+      endpoint: "https://worker-denied",
+      trustClass: "trusted",
+      registeredAt: "2026-05-09T00:00:00.000Z",
+      lastHeartbeatAt: "2026-05-09T00:00:00.000Z",
+      health: "healthy",
+      metadata: {},
+      workerTrustLevel: "untrusted",
+      workerAttestationStatus: "probe_observed",
+      capabilities: { version: "1", capturedAt: "2026-05-09T00:00:00.000Z", source: "test", runtimeBackend: "mock", executionMode: "remote", gpus: [], models: [], policyTags: [], reliabilityTags: [], runtimeTags: [], transportRequirements: [] },
+    });
+    const transport = { execute: vi.fn() };
+    const out = await runRemoteExecution({ request: { requestId: "r-denied", nowIso: "2026-05-09T00:00:00.000Z", action: "worker:execute", command: "echo hi", nodeId: "w-denied", approved: true }, config: { enabled: true, source: "env" }, transport, policyBundle: allowPolicy, registry });
+    expect(out.status).toBe("degraded");
+    expect(out.degradedReason).toBe("policy_denied");
+    expect(transport.execute).not.toHaveBeenCalled();
+  });
+
+  it("conflicted worker emits conflict event and is blocked", async () => {
+    const registry = createDeviceRegistry();
+    registry.registerNode({
+      version: "1", nodeId: "w-conflict", role: "remote", transport: "http", endpoint: "https://worker-conflict", trustClass: "trusted", registeredAt: "2026-05-09T00:00:00.000Z", lastHeartbeatAt: "2026-05-09T00:00:00.000Z", health: "healthy", metadata: {},
+      workerTrustLevel: "untrusted", workerAttestationStatus: "conflict_detected",
+      capabilities: { version: "1", capturedAt: "2026-05-09T00:00:00.000Z", source: "test", runtimeBackend: "mock", executionMode: "remote", gpus: [], models: [], policyTags: [], reliabilityTags: [], runtimeTags: [], transportRequirements: [] },
+    });
+    const out = await runRemoteExecution({ request: { requestId: "r-conflict", nowIso: "2026-05-09T00:00:00.000Z", action: "worker:execute", command: "echo hi", nodeId: "w-conflict", approved: true }, config: { enabled: true, source: "env" }, transport: { execute: vi.fn() }, policyBundle: allowPolicy, registry, operationalMemory: new OperationalMemoryLog() });
+    expect(out.status).toBe("degraded");
+    expect(out.degradedReason).toBe("attestation_conflict");
+    expect(out.events.some((event) => event.category === "degraded_state" && String((event.payload as { degraded?: { reason?: string } }).degraded?.reason).includes("attestation_conflict"))).toBe(true);
+  });
+
+  it("expired attestation emits expiry event and is blocked", async () => {
+    const registry = createDeviceRegistry();
+    registry.registerNode({
+      version: "1", nodeId: "w-expired", role: "remote", transport: "http", endpoint: "https://worker-expired", trustClass: "trusted", registeredAt: "2026-05-09T00:00:00.000Z", lastHeartbeatAt: "2026-05-09T00:00:00.000Z", health: "healthy", metadata: {},
+      workerTrustLevel: "untrusted", workerAttestationStatus: "expired",
+      capabilities: { version: "1", capturedAt: "2026-05-09T00:00:00.000Z", source: "test", runtimeBackend: "mock", executionMode: "remote", gpus: [], models: [], policyTags: [], reliabilityTags: [], runtimeTags: [], transportRequirements: [] },
+    });
+    const out = await runRemoteExecution({ request: { requestId: "r-expired", nowIso: "2026-05-09T00:00:00.000Z", action: "worker:execute", command: "echo hi", nodeId: "w-expired", approved: true }, config: { enabled: true, source: "env" }, transport: { execute: vi.fn() }, policyBundle: allowPolicy, registry, operationalMemory: new OperationalMemoryLog() });
+    expect(out.status).toBe("degraded");
+    expect(out.degradedReason).toBe("attestation_expired");
+    expect(out.events.some((event) => event.category === "degraded_state" && String((event.payload as { degraded?: { reason?: string } }).degraded?.reason).includes("attestation_expired"))).toBe(true);
+  });
+
   it("approved context permits transport call and handles degraded outcomes", async () => {
     const log = new OperationalMemoryLog();
     const transport = { execute: vi.fn().mockResolvedValueOnce({ status: 504, body: "" }).mockResolvedValueOnce({ status: 200, body: "bad json" }).mockResolvedValueOnce({ status: 200, body: JSON.stringify({ status: "ok", output: "done" }) }) };

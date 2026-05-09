@@ -145,7 +145,9 @@ export function summarizeHeterogeneousDiagnostics(input: { routing: Heterogeneou
     `Excluded candidates: ${input.result?.excludedCandidates.map((c) => c.candidateId).join(",") || "none"}`,
     `No-candidate reason: ${noCandidateReason}`,
     `Fallback: ${fallbackState}`,
-    `Worker trust: ${input.result?.selectedCandidate?.kind === "remote_worker" ? (input.result.selectedCandidate.reasonCodes.join("|") || "none") : "none"}` ,
+    `Worker trust level: ${input.result?.selectedCandidate?.kind === "remote_worker" ? input.result.selectedCandidate.status : "none"}`,
+    `Worker attestation status: ${input.result?.selectedCandidate?.kind === "remote_worker" ? (input.result.selectedCandidate.reasonCodes.join("|") || "none") : "none"}`,
+    `Trust denial reason: ${input.result?.excludedCandidates.find((c) => c.kind === "remote_worker")?.reasonCodes.join("|") || "none"}`,
     `Receipt: ${input.result?.receipt.receiptId ?? "none"}`,
   ];
 }
