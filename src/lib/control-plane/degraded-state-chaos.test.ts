@@ -87,12 +87,17 @@ describe("degraded state chaos coverage", () => {
     expect(malformed.telemetry.runtimeHealth.state).toBe("unavailable");
   });
 
-  it("detects replay integrity mismatch and diagnostics empty reason codes", () => {
+  it("detects replay integrity mismatch, missing lineage, and missing replay reason codes", () => {
     const log = new OperationalMemoryLog();
     log.append({ occurredAt: "2026-05-09T00:00:00.000Z", category: "degraded_state", source: "chaos", provenance: {}, payload: { degraded: { reasonCode: "replay_integrity_mismatch" } } });
     const envelope = buildReplayEnvelope(log.list(), "2026-05-09T00:00:02.000Z");
     envelope.digest = "tampered";
-    expect(validateReplayEnvelope(envelope)).toEqual({ ok: false, reasons: ["digest_mismatch"] });
+    expect(validateReplayEnvelope(envelope)).toEqual({ ok: false, reasons: ["missing_replay_lineage", "digest_mismatch"] });
+
+    const missingReason = buildReplayEnvelope([
+      { eventId: "e1", occurredAt: "2026-05-09T00:00:00.000Z", sequence: 0, category: "fallback", source: "chaos", provenance: {}, replayRef: { lineage: ["chaos"], replayVersion: "1" }, payload: { fallback: { at: "2026-05-09T00:00:00.000Z", target: "local/default", reason: "" } } },
+    ], "2026-05-09T00:00:03.000Z");
+    expect(validateReplayEnvelope(missingReason)).toEqual({ ok: false, reasons: ["missing_replay_reason_code"] });
 
     const lines = summarizeDryRunDiagnostics([]);
     expect(lines).toEqual(["Registered nodes: 0", "Capability snapshots: none", "Scheduler dry-run: not invoked"]);

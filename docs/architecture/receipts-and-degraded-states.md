@@ -7,11 +7,21 @@ Implemented canonical receipt/degraded schemas with deterministic serialization.
 
 Degraded taxonomy includes: healthy, constrained, degraded, unavailable, partial capability, approval blocked, stale, unreachable, unknown. Every degraded state carries reason code, timestamp, source component, subsystem, and operator explanation.
 
-Receipts are append-friendly and replay-oriented but not yet fully wired to all runtime paths.
+Receipts are append-friendly and replay-oriented and emitted on governed routing and remote execution paths; non-governed local dispatch remains intentionally unchanged.
 
 ## Runtime receipt seam status (2026-05-09)
 
-Execution receipt construction now includes policy rationale, tool metadata, fallback metadata, degraded states, and timing summary in a thin runtime seam adapter. Receipts are not emitted from every runtime path yet.
+Execution receipt construction includes policy rationale, tool metadata, fallback metadata, degraded states, and timing summary in a thin runtime seam adapter.
+
+Replay validation fails closed on envelope integrity mismatches and explicit governance metadata requirements:
+- deterministic sequence continuity
+- digest integrity
+- required replay lineage
+- required reason codes for degraded/policy/fallback events
+
+No silent replay adaptation is implemented.
 
 ## 2026-05-09 governed routing update
-Opt-in governed provider routing is available behind `NEMOCLAW_GOVERNED_ROUTING=1` (default off). Default routing is preserved when disabled. Remote worker execution, Dynamo orchestration, and GPU telemetry adapters are not implemented in this phase.
+Opt-in governed provider routing is available behind `NEMOCLAW_GOVERNED_ROUTING=1` (default off). Default routing is preserved when disabled.
+
+Not implemented in this phase: orchestration, distributed execution rollout, autonomous execution, self-healing behavior, queue workers/daemons, GPU balancing, Dynamo integration, automatic retries, and automatic policy learning.
