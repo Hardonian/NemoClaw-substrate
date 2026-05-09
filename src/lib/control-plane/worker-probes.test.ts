@@ -23,6 +23,7 @@ describe("worker probes", () => {
     reg.registerNode(node);
     const updated = applyProbeToRegistry(reg, node, probe());
     expect(updated.metadata.probeStatus).toBe("degraded");
+    expect(updated.metadata.telemetrySource).toBe("http:vllm");
     expect(updated.capabilities.gpus).toEqual([]);
     expect(updated.capabilities.runtimeTags).toContain("gpu:unavailable");
   });
@@ -46,5 +47,34 @@ describe("worker probes", () => {
   it("keeps governed routing state untouched by probing", () => {
     const updated = applyProbeToRegistry(new DeviceRegistry(), baseNode(), probe("succeeded"));
     expect(updated.metadata.governedRoutingEnabled).toBeUndefined();
+  });
+});
+
+
+describe("registry telemetry policy", () => {
+  it("unavailable telemetry does not erase observed models", () => {
+    const reg = new DeviceRegistry();
+    const node = baseNode();
+    node.capabilities.models = [{ modelId: "m-existing", maxContextTokens: 0, flags: { streaming: false, tools: false, batch: false, multimodal: false, quantization: false }, inferenceConstraints: [], executionRestrictions: [] }];
+    reg.registerNode(node);
+    const p = probe("degraded");
+    p.capability.models = [];
+    p.telemetry.modelInventory = { state: "unavailable", reason: "missing" };
+    p.telemetry.backendVersion = { state: "unavailable", reason: "missing" };
+    p.telemetry.gpus = { state: "unavailable", reason: "missing" };
+    const updated = applyProbeToRegistry(reg, node, p);
+    expect(updated.capabilities.models[0]?.modelId).toBe("m-existing");
+  });
+
+  it("marks stale telemetry and preserves provenance on conflict", () => {
+    const reg = new DeviceRegistry();
+    const node = baseNode();
+    node.metadata.telemetrySource = "local:ollama";
+    reg.registerNode(node);
+    const p = probe("degraded");
+    p.telemetry.runtimeHealth = { state: "stale", reason: "old" };
+    const updated = applyProbeToRegistry(reg, node, p);
+    expect(updated.health).toBe("stale");
+    expect(updated.capabilities.runtimeTags).toContain("telemetry:conflict");
   });
 });

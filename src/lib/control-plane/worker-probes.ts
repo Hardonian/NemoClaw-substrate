@@ -36,24 +36,32 @@ export interface WorkerProbeResult {
 
 export function serializeProbeResult(input: WorkerProbeResult): string { return deterministicSerialize(input); }
 
+export interface RegistryTelemetryPolicyResult { applied: boolean; reasonCode: string; stale: boolean; conflicts: string[]; source: string; }
+
 export function applyProbeToRegistry(registry: DeviceRegistry, node: NodeDescriptor, probe: WorkerProbeResult): NodeDescriptor {
+  const stale = probe.telemetry.runtimeHealth.state === "stale";
+  const existingSource = String(node.metadata["telemetrySource"] ?? "unknown");
+  const nextSource = `${probe.request.transport}:${probe.request.runtime}`;
+  const conflicts = existingSource !== "unknown" && existingSource !== nextSource ? [existingSource] : [];
+  const telemetryUnavailable = probe.telemetry.backendVersion.state === "unavailable" && probe.telemetry.modelInventory.state === "unavailable" && probe.telemetry.gpus.state === "unavailable";
+  const preserveModels = telemetryUnavailable ? node.capabilities.models : probe.capability.models.map((modelId) => ({
+        modelId, maxContextTokens: 0, flags: { streaming: false, tools: false, batch: false, multimodal: false, quantization: false }, inferenceConstraints: [], executionRestrictions: [],
+      }));
   const next: NodeDescriptor = {
     ...node,
     lastHeartbeatAt: probe.request.nowIso,
-    health: probe.status === "failed" ? "unreachable" : probe.degradedStates.some((d) => d.category === "stale") ? "stale" : "healthy",
-    metadata: { ...node.metadata, probeStatus: probe.status, probeRuntime: probe.request.runtime, probeTransport: probe.request.transport, telemetryCapturedAt: probe.telemetry.capturedAt },
+    health: probe.status === "failed" ? "unreachable" : stale ? "stale" : "healthy",
+    metadata: { ...node.metadata, probeStatus: probe.status, probeRuntime: probe.request.runtime, probeTransport: probe.request.transport, telemetryCapturedAt: probe.telemetry.capturedAt, telemetrySource: nextSource, telemetryConfidence: probe.telemetry.runtimeHealth.state, telemetryUpdatePolicy: telemetryUnavailable ? "retained_previous_observed" : "applied_observed" },
     capabilities: {
       ...node.capabilities,
       capturedAt: probe.telemetry.capturedAt,
       runtimeBackend: probe.capability.runtimeBackend,
       executionMode: probe.capability.executionMode,
-      models: probe.capability.models.map((modelId) => ({
-        modelId, maxContextTokens: 0, flags: { streaming: false, tools: false, batch: false, multimodal: false, quantization: false }, inferenceConstraints: [], executionRestrictions: [],
-      })),
+      models: preserveModels,
       gpus: probe.telemetry.gpus.state === "observed" && probe.telemetry.gpus.value
         ? probe.telemetry.gpus.value.map((gpu) => ({ vendor: gpu.vendor, model: gpu.model, vramMb: gpu.vramMb ?? 0, count: 1 }))
         : [],
-      runtimeTags: [...new Set([...(node.capabilities.runtimeTags ?? []), `telemetry:${probe.telemetry.runtimeHealth.state}`, `gpu:${probe.telemetry.gpus.state}`])].sort(),
+      runtimeTags: [...new Set([...(node.capabilities.runtimeTags ?? []), `telemetry:${probe.telemetry.runtimeHealth.state}`, `gpu:${probe.telemetry.gpus.state}`, `telemetry-source:${nextSource}`, ...(stale ? ["telemetry:stale"] : []), ...(conflicts.length ? ["telemetry:conflict"] : [])])].sort(),
     } as CapabilitySnapshot,
   };
   registry.registerNode(next);
