@@ -9,13 +9,20 @@ export interface ExecutionPlanViewerProps {
 
 export function ExecutionPlanViewer({ receipts }: ExecutionPlanViewerProps) {
   if (receipts.length === 0) {
-    return <div className={styles.empty}><p>No execution plans available.</p></div>;
+    return (
+      <div className={styles.empty}>
+        <p>No execution plans available.</p>
+      </div>
+    );
   }
+
   return (
     <div className={styles.container}>
       <div className={styles.summary}>
         <p className={styles.count}>{receipts.length} execution plan(s)</p>
-        <p className={styles.lineage}>Unique request IDs: {new Set(receipts.map((r) => r.requestId)).size}</p>
+        <p className={styles.lineage}>
+          Unique request IDs: {new Set(receipts.map((r) => r.requestId)).size}
+        </p>
       </div>
       <div className={styles.list}>
         {receipts.map((receipt) => (

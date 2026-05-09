@@ -107,10 +107,10 @@ export async function runRemoteHttpHealthProbe(input: RemoteHttpProbeRequest): P
     const response = await fetch(validated.url, { method: "GET", headers, signal: ctl.signal });
     const body = (await response.text()).trim();
     if (response.status === 401 || response.status === 403) {
-      return { ...base, status: "degraded", degradedStates: [degraded(input.nowIso, "policy_blocked", "auth_rejected")], telemetry: { ...base.telemetry, runtimeHealth: { state: "degraded", reason: "auth_rejected" } }, error: { code: "transport_unreachable", message: "auth_rejected", retryable: true } };
+      return { ...base, status: "degraded", degradedStates: [degraded(input.nowIso, "policy_blocked", "auth_rejected")], telemetry: { ...base.telemetry, runtimeHealth: { state: "unavailable", reason: "auth_rejected" } }, error: { code: "transport_unreachable", message: "auth_rejected", retryable: true } };
     }
     if (!response.ok) {
-      return { ...base, status: "degraded", degradedStates: [degraded(input.nowIso, "transport_unreachable", `http_${response.status}`)], telemetry: { ...base.telemetry, runtimeHealth: { state: "degraded", reason: `http_${response.status}` } }, error: { code: "transport_unreachable", message: `HTTP ${response.status}`, retryable: true } };
+      return { ...base, status: "degraded", degradedStates: [degraded(input.nowIso, "transport_unreachable", `http_${response.status}`)], telemetry: { ...base.telemetry, runtimeHealth: { state: "unavailable", reason: `http_${response.status}` } }, error: { code: "transport_unreachable", message: `HTTP ${response.status}`, retryable: true } };
     }
     let parsed: Record<string, unknown> | undefined;
     if (body) {
