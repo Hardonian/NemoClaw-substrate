@@ -165,3 +165,7 @@ Rationale:
 ## Control-plane foundation (implemented)
 - Deterministic contracts, device registry substrate, receipt/degraded taxonomy scaffolding complete.
 - Remaining: policy engine, scheduler, runtime receipt wiring, observability and replay tooling.
+
+
+## Governance foundation (May 2026)
+Implemented deterministic policy, classification, and scheduler planning primitives. Runtime routing remains intentionally unchanged; full enforcement and receipt wiring are follow-up work.

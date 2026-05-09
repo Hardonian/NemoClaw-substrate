@@ -37,3 +37,7 @@ Receipt persistence destination and replay CLI UX.
 
 ## Upstream concept alignment
 Terminology reuses upstream concepts: provider, runner, state, audit, diagnostics, registry, shields.
+
+
+## Governance foundation (May 2026)
+Implemented deterministic policy, classification, and scheduler planning primitives. Runtime routing remains intentionally unchanged; full enforcement and receipt wiring are follow-up work.
