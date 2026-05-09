@@ -7,29 +7,35 @@
 
 ## Why this fork exists
 
-Upstream NemoClaw is an alpha reference stack for sandboxed OpenClaw operation. This fork keeps that base and adds a stricter operator-control posture for local heterogeneous execution.
+Upstream NemoClaw provides an alpha reference stack for running OpenClaw inside OpenShell sandboxes. This fork keeps that foundation and sharpens it for **local operator-grade AI execution and governance**.
 
-The immediate problem: local operators need explicit routing, policy, and evidence semantics that survive failures and audits.
+The operating problem this fork addresses: local operators need deterministic, inspectable, and governable behavior across heterogeneous devices and inference runtimes, including honest reporting when execution is degraded.
 
-## Design posture for this fork
+## Governing principles
 
-- Treat routing and policy as control-plane concerns, not prompt behavior.
-- Favor deterministic outcomes when identical inputs and state are supplied.
-- Expose degraded conditions directly; never present degraded behavior as healthy.
-- Preserve append-only execution evidence when possible.
-- Require supervised policy promotion and rollback paths.
+1. **Heterogeneous device awareness is mandatory**
+   - Capability and health differences across devices/runtimes influence real outcomes and must be explicit inputs to control decisions.
+2. **Deterministic control matters**
+   - Equivalent state + policy + request should produce equivalent control outcomes.
+3. **Truthful degraded-state reporting matters**
+   - Failures, fallbacks, or constrained operation must be reported explicitly and durably.
+4. **Policy must not live only inside prompts**
+   - Governance requires enforceable code/config artifacts and review history.
+5. **Repeated operator decisions should become supervised policy intelligence**
+   - Repeated decisions can inform policy evolution, but only through visible, reviewable promotion paths (not silent drift).
 
-## Scope boundaries
+## Current state vs intended state
 
-In scope for this fork:
+### Current state (repo today)
 
-- local multi-device model execution orchestration
-- deterministic scheduling and policy decisions
-- receipts/provenance and operator memory surfaces
-- observability and hardening for execution control paths
+- NemoClaw CLI, plugin, blueprint, policy presets, and related documentation are present in this fork.
+- The repository already contains command flows, policy files, and contributor/test tooling inherited from upstream structure.
 
-Out of scope for this fork:
+### Intended state (roadmap)
 
-- cosmetic dashboards without control authority
-- undocumented runtime shifts
-- speculative autonomy language unsupported by code
+- Stronger deterministic control-plane contracts.
+- Explicit device capability and scheduler semantics.
+- Structured receipts/provenance and degraded-state contracts.
+- Supervised policy-promotion workflows informed by operator repetition.
+
+Roadmap details are tracked in `docs/roadmap.md`.

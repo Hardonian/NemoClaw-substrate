@@ -5,32 +5,39 @@
 
 # Fork Roadmap
 
-## Workstreams
+This roadmap describes intended direction. It does **not** imply every capability is implemented today.
 
-1. **docs/foundation**
-   - codify fork mission, architecture, and contribution protocols
-2. **control-plane scaffolding**
-   - canonical control interfaces and decision envelopes
-3. **device registry**
-   - host/device/GPU capability inventory and health model
-4. **deterministic scheduler**
-   - stable routing decisions from explicit inputs + policies
-5. **policy engine**
-   - policy evaluation, versioning, supervised promotion
-6. **receipts/degraded states**
-   - execution receipts and explicit degraded-state semantics
-7. **operational memory**
-   - durable operator decision memory and replayable context
-8. **observability**
-   - control-plane telemetry, traces, and operator diagnostics
-9. **hardening**
-   - attack-surface reduction and fail-closed behavior on sensitive paths
+## Roadmap themes
 
-## Sequence
+1. **Documentation and governance foundation**
+   - Maintain clear current-state vs intended-state docs.
+   - Keep contributor process explicit and auditable.
+2. **Deterministic control-plane scaffolding**
+   - Define stable control inputs/outputs and decision envelopes.
+3. **Heterogeneous device awareness**
+   - Establish explicit capability/health contracts for local devices and runtimes.
+4. **Deterministic scheduling and routing**
+   - Use explicit policy + state to drive repeatable routing decisions.
+5. **Policy intelligence with supervision**
+   - Convert repeated operator decisions into reviewable policy recommendations and promotions.
+6. **Truthful degraded-state semantics**
+   - Standardize degraded/fallback/error reporting to avoid false healthy signals.
+7. **Receipts, provenance, and observability**
+   - Increase evidence quality for audit, replay, and incident analysis.
+8. **Security hardening and verification depth**
+   - Strengthen fail-closed behavior on sensitive paths and improve test coverage.
 
-- Start with docs/foundation and control-plane scaffolding.
-- In parallel, establish device registry contracts.
-- Build deterministic scheduler after registry contracts are stable.
-- Add policy engine and receipts/degraded states before broad rollout.
-- Layer operational memory + observability for safe iteration.
-- Continuously run hardening in parallel with implementation.
+## Suggested sequencing
+
+- **Phase 1:** Docs/governance baseline + control-plane scaffolding.
+- **Phase 2:** Device-awareness contracts + deterministic scheduler contracts.
+- **Phase 3:** Supervised policy-promotion flow + degraded-state/receipt contracts.
+- **Phase 4:** Expanded observability, hardening, and regression verification.
+
+## Delivery expectations by theme
+
+For each roadmap contribution:
+
+- Document what is implemented now vs what remains target-state.
+- Provide reproducible verification notes in PRs.
+- Avoid claims of runtime behavior unless backed by code/tests in-branch.

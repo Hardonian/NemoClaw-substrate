@@ -5,27 +5,55 @@
 
 # Branch Strategy
 
-## Naming format
+## Branch naming conventions
 
 Use:
 
 `<type>/<area>-<short-purpose>`
 
+Recommended `type` values:
+
+- `docs`
+- `feat`
+- `fix`
+- `refactor`
+- `test`
+- `chore`
+
 Examples:
 
-- `docs/fork-architecture-baseline`
-- `feat/control-plane-decision-envelope`
-- `feat/device-registry-capability-snapshot`
-- `fix/scheduler-stable-sort`
+- `docs/fork-rationale-foundation`
+- `feat/deterministic-scheduler-contracts`
+- `fix/policy-eval-degraded-reporting`
 
-## Scope rules
+## Branch scope conventions
 
-- One branch = one primary workstream objective.
-- Keep docs-only work isolated from runtime behavior changes when possible.
-- If runtime and docs both change, ensure docs describe exactly what changed and what did not.
+- One branch should target one primary objective.
+- Keep docs-only and runtime-behavior changes separate when practical.
+- If docs and code change together, docs must describe:
+  - what is implemented now,
+  - what remains roadmap intent.
+
+## Commit style conventions
+
+Follow Conventional Commits required by the repo:
+
+`<type>(<scope>): <description>`
+
+Examples:
+
+- `docs(fork): define fork rationale and roadmap docs`
+- `feat(policy): add supervised promotion decision envelope`
+- `fix(scheduler): report deterministic fallback as degraded`
+
+Commit guidance:
+
+- Keep commits logically grouped and reviewable.
+- Prefer imperative, precise commit descriptions.
+- Avoid bundling unrelated concerns in one commit.
 
 ## Merge hygiene
 
-- Prefer small, reviewable PRs with explicit dependency relationships.
-- Link dependent branches/PRs in descriptions.
-- Rebase on `main` before merge to keep deterministic history.
+- Rebase on `main` before merge when possible.
+- Link related/blocked PRs in description.
+- Keep PRs small enough for deterministic review.
