@@ -78,6 +78,6 @@ export function emitProbeEvents(log: OperationalMemoryLog, probe: WorkerProbeRes
   if (probe.telemetry.gpus.state === "unavailable") {
     log.append({ ...base, category: "telemetry_unavailable", payload: { reasonCode: probe.telemetry.gpus.reason === "command_unavailable" ? "nvidia_smi_unavailable" : "capability_missing", subsystem: "gpu", confidence: "low", sourceRuntime: probe.request.runtime } });
   }
-  const phase = probe.status === "succeeded" ? "telemetry_probe_succeeded" : "telemetry_probe_failed";
+  const phase = probe.status === "failed" ? "telemetry_probe_failed" : "telemetry_probe_succeeded";
   log.append({ ...base, category: phase, payload: { status: probe.status, degradedReasons: probe.degradedStates.map((d) => d.reasonCode), confidence: probe.telemetry.runtimeHealth.state, sourceRuntime: probe.request.runtime } });
 }
