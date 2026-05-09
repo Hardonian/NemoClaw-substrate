@@ -16,6 +16,7 @@ This index tracks the foundational architectural decisions for the NemoClaw gove
 | [0007](0007-policy-outside-prompts.md) | Policy Outside Prompts | Proposed | Policy Engine | Policy validation tests |
 
 ## Roadmap Alignment
+
 These ADRs provide the decision foundation for the workstreams defined in the [Roadmap](../roadmap.md).
 
 ## Verification Strategy
