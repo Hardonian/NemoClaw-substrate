@@ -45,7 +45,9 @@
   border-bottom: 1px solid var(--color-border);
 }
 
-.section:last-child { border-bottom: none; }
+.section:last-child {
+  border-bottom: none;
+}
 
 .section h4 {
   font-size: 0.8125rem;
@@ -56,7 +58,11 @@
   margin: 0 0 0.75rem;
 }
 
-.degradedList { display: flex; flex-direction: column; gap: 0.75rem; }
+.degradedList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
 
 .degradedItem {
   padding: 0.75rem;
@@ -65,20 +71,65 @@
   background-color: var(--color-bg-secondary);
 }
 
-.degradedHeader { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; flex-wrap: wrap; }
+.degradedHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+  flex-wrap: wrap;
+}
 
-.reasonCode { font-size: 0.75rem; font-family: var(--font-mono); color: var(--color-text-secondary); }
+.reasonCode {
+  font-size: 0.75rem;
+  font-family: var(--font-mono);
+  color: var(--color-text-secondary);
+}
 
-.degradedExplanation { font-size: 0.875rem; margin: 0 0 0.5rem; color: var(--color-text-primary); }
+.degradedExplanation {
+  font-size: 0.875rem;
+  margin: 0 0 0.5rem;
+  color: var(--color-text-primary);
+}
 
-.degradedMeta { display: flex; gap: 1rem; font-size: 0.75rem; color: var(--color-text-secondary); flex-wrap: wrap; }
+.degradedMeta {
+  display: flex;
+  gap: 1rem;
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+  flex-wrap: wrap;
+}
 
-.recovery { font-size: 0.8125rem; color: var(--color-text-secondary); margin: 0.5rem 0 0; font-style: italic; }
+.recovery {
+  font-size: 0.8125rem;
+  color: var(--color-text-secondary);
+  margin: 0.5rem 0 0;
+  font-style: italic;
+}
 
-.overrideList { display: flex; flex-direction: column; gap: 0.5rem; }
+.overrideList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
 
-.overrideItem { padding: 0.5rem 0.75rem; border: 1px solid var(--color-border); border-radius: 0.25rem; display: flex; align-items: center; gap: 0.75rem; font-size: 0.875rem; }
+.overrideItem {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.875rem;
+}
 
-.overrideActor { font-weight: 600; color: var(--color-text-primary); font-family: var(--font-mono); }
+.overrideActor {
+  font-weight: 600;
+  color: var(--color-text-primary);
+  font-family: var(--font-mono);
+}
 
-.overrideReason { margin: 0; color: var(--color-text-secondary); font-size: 0.8125rem; }
+.overrideReason {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: 0.8125rem;
+}

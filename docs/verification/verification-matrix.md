@@ -12,6 +12,7 @@
 - `npm run verify:core`
 - `npm run verify:release`
 - `npm run verify:all` (strict `verify:core` variant)
+- `npx vitest run src/lib/security/security-policy.test.ts src/lib/control-plane/remote-runtime-probes.test.ts src/lib/control-plane/remote-execution.test.ts src/lib/control-plane/local-runtime-probes.test.ts`
 
 ## CI baseline
 
@@ -95,3 +96,10 @@ node scripts/verify-core.js --strict
 - Replay guardrails: explicit rejection tests cover policy drift, trust drift, candidate eligibility mismatch, and fallback mismatch when governance reason codes are absent.
 - Remote execution guardrails: transport is not invoked when disabled, denied, approval-gated, trust-denied, or stale/unhealthy under active routing context.
 - Observability guardrails: telemetry aggregates include emitted telemetry kinds only; reserved scaffold kinds are validated as non-emitted/non-aggregated for telemetry rollups.
+
+## Security hardening additions (2026-05-09)
+- URL/network safety: credential stripping, unsupported scheme rejection, local-only enforcement, private/public/Tailscale-LAN classification, and timeout ceiling normalization.
+- Redaction: auth headers, bearer/API keys, URL credentials, env-like keys, receipts, events, diagnostics, and proofpack/export payloads.
+- Command safety: descriptor-only validation, shell=false enforcement, timeout/output ceilings, allowlist/denylist denials, and blocked remote transport before invocation.
+- Proofpack/export: reusable preflight helpers add safe manifest metadata for clean payloads and block secret-bearing exports.
+- Scope preserved: no orchestration, queues, daemons, retries, GPU balancing, Dynamo integration, autonomous behavior, or default remote execution.

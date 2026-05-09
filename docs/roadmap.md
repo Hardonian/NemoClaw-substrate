@@ -243,3 +243,10 @@ This phase adds explicit manual local probe execution and diagnostics summaries,
 
 ## Residual matrix closure update (2026-05-09)
 Closure pass completed for direct branch assertions and docs/status coherence. No new runtime behavior was introduced; work was limited to replay/observability/trust-policy-fallback verification hardening and claim hygiene.
+
+## Security transport/redaction policy update (2026-05-09)
+- Added deterministic security policy contracts for network, transport, command execution, secret redaction, and proofpack/export safety.
+- Remote probes and the guarded remote execution seam now reject blocked transport before fetch or remote transport invocation.
+- Operational event payloads, diagnostics, receipts, telemetry metadata, and proofpack/export-shaped payloads share redaction helpers.
+- Command safety remains descriptor-only and does not introduce arbitrary command execution.
+- Explicitly out of scope: orchestration, queues, daemons, retries, GPU balancing, Dynamo integration, autonomous behavior, and default remote execution.

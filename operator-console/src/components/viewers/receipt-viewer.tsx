@@ -1,5 +1,5 @@
 import React from "react";
-import type { ExecutionReceipt, DegradedState, SchedulingDecision, PolicyDecision } from "../data/types";
+import type { ExecutionReceipt, DegradedState } from "../data/types";
 import { StateLabel } from "../primitives/state-label";
 import { StatusBadge } from "../primitives/status-badge";
 import { Timestamp } from "../primitives/timestamp";
@@ -26,7 +26,9 @@ export function ReceiptViewer({ receipt }: ReceiptViewerProps) {
     <div className={styles.container}>
       <div className={styles.header}>
         <div className={styles.headerRow}>
-          <h3 className={styles.receiptId}>Receipt: {receipt.receiptId}</h3>
+          <h3 className={styles.receiptId} id={`receipt-${receipt.receiptId}`}>
+            Receipt: {receipt.receiptId}
+          </h3>
           {severityStatus && <StatusBadge status={severityStatus} label={severityStatus} />}
         </div>
         <div className={styles.metaRow}>
@@ -93,6 +95,17 @@ export function ReceiptViewer({ receipt }: ReceiptViewerProps) {
         </section>
       )}
 
+      {receipt.toolInvocations.length > 0 && (
+        <section className={styles.section} aria-labelledby="tools-heading">
+          <h4 id="tools-heading">Tool Invocations ({receipt.toolInvocations.length})</h4>
+          <DataTable
+            columns={toolColumns}
+            rows={receipt.toolInvocations.map((t) => ({ name: t.name, at: t.at, durationMs: t.durationMs ?? "N/A", status: t.status }))}
+            caption="Tool invocations"
+          />
+        </section>
+      )}
+
       <section className={styles.section} aria-labelledby="timing-heading">
         <h4 id="timing-heading">Timing</h4>
         <KVTable
@@ -111,6 +124,7 @@ export function ReceiptViewer({ receipt }: ReceiptViewerProps) {
             { key: "Source", value: receipt.provenance.source },
             { key: "Lineage", value: receipt.provenance.lineage.join(" → ") },
             { key: "Replay Version", value: receipt.provenance.replayVersion },
+            ...(receipt.provenance.exportedAt ? [{ key: "Exported At", value: <Timestamp value={receipt.provenance.exportedAt} /> }] : []),
           ]}
         />
       </section>
@@ -139,37 +153,69 @@ const fallbackColumns: ColumnDef[] = [
   { key: "target", header: "Target" },
 ];
 
+const toolColumns: ColumnDef[] = [
+  { key: "name", header: "Tool" },
+  { key: "at", header: "Time", render: (v) => <Timestamp value={String(v)} /> },
+  { key: "durationMs", header: "Duration (ms)" },
+  { key: "status", header: "Status", render: (v) => <StateLabel state={String(v)} /> },
+];
+
 function phaseStatus(phase: string): string {
-  const map: Record<string, string> = { received: "healthy", policy: "healthy", scheduling: "healthy", execution: "constrained", completed: "healthy", failed: "unavailable" };
+  const map: Record<string, string> = {
+    received: "healthy",
+    policy: "healthy",
+    scheduling: "healthy",
+    execution: "constrained",
+    completed: "healthy",
+    failed: "unavailable",
+  };
   return map[phase] ?? "unknown";
 }
 
 function severityToStatus(severity: string): "info" | "warning" | "error" | "critical" | "success" | "unknown" {
-  const map: Record<string, "info" | "warning" | "error" | "critical" | "success" | "unknown"> = { info: "info", warning: "warning", error: "error", critical: "critical" };
+  const map: Record<string, "info" | "warning" | "error" | "critical" | "success" | "unknown"> = {
+    info: "info",
+    warning: "warning",
+    error: "error",
+    critical: "critical",
+  };
   return map[severity] ?? "unknown";
 }
 
 function highestSeverity(events: DegradedState[]): string {
   const order = ["critical", "error", "warning", "info"];
-  for (const level of order) { if (events.some((e) => e.severity === level)) return level; }
+  for (const level of order) {
+    if (events.some((e) => e.severity === level)) return level;
+  }
   return "info";
 }
 
-function formatMs(ms: number | undefined): string { return ms === undefined ? "Unavailable" : `${ms} ms`; }
+function formatMs(ms: number | undefined): string {
+  if (ms === undefined) return "Unavailable";
+  return `${ms} ms`;
+}
 
-function schedulingEntries(d: SchedulingDecision): Array<{ key: string; value: React.ReactNode }> {
+function schedulingEntries(decision: { selected?: { nodeId: string; modelId: string; score: number; reasons: Array<{ code: string; explanation: string; source: string }> }; rejected: Array<{ nodeId: string; modelId: string; score: number; reasons: Array<{ code: string; explanation: string; source: string }> }>; reasons: Array<{ code: string; explanation: string; source: string }> }): Array<{ key: string; value: React.ReactNode }> {
   const entries: Array<{ key: string; value: React.ReactNode }> = [];
-  if (d.selected) {
-    entries.push({ key: "Selected", value: `${d.selected.nodeId} : ${d.selected.modelId} (score: ${d.selected.score})` });
-  } else { entries.push({ key: "Selected", value: "None" }); }
-  entries.push({ key: "Decision Reasons", value: d.reasons.map((r) => r.code).join(", ") });
+  if (decision.selected) {
+    entries.push({ key: "Selected", value: `${decision.selected.nodeId} : ${decision.selected.modelId} (score: ${decision.selected.score})` });
+    if (decision.selected.reasons.length > 0) {
+      entries.push({ key: "Reason", value: decision.selected.reasons.map((r) => r.code).join(", ") });
+    }
+  } else {
+    entries.push({ key: "Selected", value: "None" });
+  }
+  if (decision.rejected.length > 0) {
+    entries.push({ key: "Rejected", value: `${decision.rejected.length} candidate(s)` });
+  }
+  entries.push({ key: "Decision Reasons", value: decision.reasons.map((r) => r.code).join(", ") });
   return entries;
 }
 
-function policyEntries(d: PolicyDecision): Array<{ key: string; value: React.ReactNode }> {
+function policyEntries(decision: { allowed: boolean; requiredApproval: boolean; reasons: Array<{ code: string; explanation: string; source: string }> }): Array<{ key: string; value: React.ReactNode }> {
   return [
-    { key: "Allowed", value: d.allowed ? "Yes" : "No" },
-    { key: "Approval Required", value: d.requiredApproval ? "Yes" : "No" },
-    { key: "Reasons", value: d.reasons.map((r) => r.code).join(", ") },
+    { key: "Allowed", value: decision.allowed ? "Yes" : "No" },
+    { key: "Approval Required", value: decision.requiredApproval ? "Yes" : "No" },
+    { key: "Reasons", value: decision.reasons.map((r) => r.code).join(", ") },
   ];
 }
