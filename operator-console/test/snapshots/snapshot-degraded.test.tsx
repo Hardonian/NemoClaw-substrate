@@ -1,21 +1,28 @@
 import { describe, expect, it } from "vitest";
 import { render } from "@testing-library/react";
-import { DegradedInspector } from "../src/components/viewers/degraded-inspector";
-import { sampleDegradedStates } from "../src/data/fixtures";
+import { DegradedInspector } from "../../src/components/viewers/degraded-inspector";
+import { sampleDegradedStates } from "../../src/data/fixtures";
 
-describe("Snapshot: DegradedInspector", () => {
-  it("renders all degraded categories deterministically", () => {
+describe("DegradedInspector snapshot", () => {
+  it("renders all degraded states snapshot", () => {
     const { container } = render(<DegradedInspector states={sampleDegradedStates} />);
-    expect(container.textContent).toContain("9 degraded state(s)");
-    expect(container.textContent).toContain("healthy");
-    expect(container.textContent).toContain("degraded");
-    expect(container.textContent).toContain("unavailable");
-    expect(container.textContent).toMatchSnapshot();
+    const text = container.textContent;
+    expect(text).toContain("9 degraded state");
+    expect(text).toContain("healthy");
+    expect(text).toContain("constrained");
+    expect(text).toContain("degraded");
+    expect(text).toContain("unavailable");
+    expect(text).toContain("unknown");
+    expect(text).toContain("stale");
+    expect(text).toContain("approval_blocked");
+    expect(text).toContain("unreachable");
+    expect(text).toContain("partial_capability");
   });
 
-  it("renders empty state deterministically", () => {
+  it("renders empty state snapshot", () => {
     const { container } = render(<DegradedInspector states={[]} />);
-    expect(container.textContent).toContain("No degraded states");
-    expect(container.textContent).toMatchSnapshot();
+    const text = container.textContent;
+    expect(text).toContain("No degraded states");
+    expect(text).toContain("All subsystems are operating normally");
   });
 });

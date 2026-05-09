@@ -26,8 +26,9 @@ export type {
   ControlDecision,
   ExecutionPhase,
   ExecutionReceipt,
-  TaskClassification,
 } from "../../../src/lib/control-plane/types";
+
+export type { TaskClassification } from "../../../src/lib/control-plane/task-classification";
 
 export type {
   OperationalEventCategory,
@@ -51,7 +52,6 @@ export {
 
 export type {
   PolicyEffect,
-  PolicyActionClass,
   PolicyReasonCode,
   PolicyRule,
   PolicyBundle,

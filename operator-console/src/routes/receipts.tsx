@@ -1,6 +1,7 @@
 import React from "react";
-import type { ExecutionReceipt } from "../../data/types";
-import { ReceiptViewer } from "../../components/viewers/receipt-viewer";
+import type { ExecutionReceipt } from "../data/types";
+import { ReceiptViewer } from "../viewers/receipt-viewer";
+import styles from "./route-common.module.css";
 
 export interface ReceiptsRouteProps {
   receipts: ExecutionReceipt[];
@@ -8,14 +9,18 @@ export interface ReceiptsRouteProps {
 
 export function ReceiptsRoute({ receipts }: ReceiptsRouteProps) {
   return (
-    <div>
-      <h2 className="page-title">Receipts</h2>
-      <p className="page-subtitle">Individual receipt viewer showing detailed execution records.</p>
-      {receipts.map((receipt) => (
-        <div key={receipt.receiptId} style={{ marginBottom: "1.5rem" }}>
-          <ReceiptViewer receipt={receipt} />
+    <div className={styles.routeContainer}>
+      <h2 className={styles.pageTitle}>Receipts</h2>
+      <p className={styles.pageSubtitle}>Detailed view of all execution receipts.</p>
+      {receipts.length === 0 ? (
+        <p className={styles.empty}>No receipts available.</p>
+      ) : (
+        <div className={styles.list}>
+          {receipts.map((receipt) => (
+            <ReceiptViewer key={receipt.receiptId} receipt={receipt} />
+          ))}
         </div>
-      ))}
+      )}
     </div>
   );
 }
