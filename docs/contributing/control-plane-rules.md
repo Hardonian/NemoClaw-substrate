@@ -10,3 +10,7 @@
 - Receipt records are required for control decisions when integrated.
 - State transitions must be explicit and explainable.
 - Reuse upstream NemoClaw terminology (shields, provider, runner, state, registry, audit).
+
+
+## Governance foundation (May 2026)
+Implemented deterministic policy, classification, and scheduler planning primitives. Runtime routing remains intentionally unchanged; full enforcement and receipt wiring are follow-up work.

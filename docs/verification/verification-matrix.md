@@ -94,3 +94,7 @@
 ## Control-plane foundation verification
 - Deterministic serialization/order tests for control-plane contracts and registry added.
 - Remaining validation: runtime-path receipt coverage once integration PR lands.
+
+
+## Governance foundation (May 2026)
+Implemented deterministic policy, classification, and scheduler planning primitives. Runtime routing remains intentionally unchanged; full enforcement and receipt wiring are follow-up work.
