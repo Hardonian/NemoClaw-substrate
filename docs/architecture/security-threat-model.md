@@ -31,7 +31,7 @@ This document catalogs the security threats relevant to the NemoClaw governed ex
 
 - Secrets encoded as base64 or hex are not detected by regex patterns.
 - Secrets split across multiple output lines may evade per-line pattern matching.
-- Shell `sed` fallback in `debug.sh` covers only `EXPECTED_SHELL_PREFIXES` (nvapi-, nvcf-, ghp_, sk-) when Node.js is unavailable.
+- Shell `sed` recovery path in `debug.sh` covers only `EXPECTED_SHELL_PREFIXES` (nvapi-, nvcf-, ghp_, sk-) when Node.js is unavailable.
 
 **Verification:** `npx vitest run src/lib/security/redact.test.ts`, `npx vitest run src/lib/runner-argv.test.ts`
 
@@ -194,7 +194,7 @@ This document catalogs the security threats relevant to the NemoClaw governed ex
 - `src/lib/control-plane/replay.ts:validateReplayEnvelope()` — Validates event count, sequence continuity, governance lineage presence, reason codes, and digest integrity.
 - Digest is computed from deterministic serialization of sorted events. Any modification to event content invalidates the digest.
 - Missing replay lineage (`replayRef.lineage`) is rejected explicitly.
-- Missing governance reason codes on `degraded_state`, `fallback`, and `policy_outcome` events are rejected.
+- Missing governance reason codes on `degraded_state` and `policy_outcome` events are rejected.
 - `src/lib/control-plane/replay.ts:validateExecutionReplayGovernance()` — Validates execution plan lineage, approval lineage, authorization lineage, policy snapshot hashes, trust snapshot hashes, and intent hashes.
 
 **Verification:** `npx vitest run src/lib/control-plane/replay.test.ts`, `npm run verify:chaos`

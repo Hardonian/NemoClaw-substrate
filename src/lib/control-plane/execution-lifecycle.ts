@@ -589,7 +589,10 @@ export function createQueueItemFromPlan(input: {
       replayDigest: input.plan.replayReference.replayDigest,
       replayVersion: input.plan.replayReference.replayVersion,
     },
-    receiptReferences: appendReference([], receipt),
+    receiptReferences: appendReference(
+      input.plan.receiptReferences.map((ref) => ({ receiptId: ref.receiptId, receiptDigest: ref.receiptDigest, receiptType: ref.receiptType })),
+      receipt,
+    ),
     createdAt: input.createdAt,
     updatedAt: input.createdAt,
     expiresAt: input.expiresAt,

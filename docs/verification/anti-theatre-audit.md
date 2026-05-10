@@ -7,7 +7,7 @@
 
 1. Avoid phrasing that implies autonomous orchestration or hidden remediation.
 2. Avoid language implying distributed execution as current default.
-3. Avoid "self-healing" wording unless explicitly bounded and operator-visible.
+3. Avoid "autonomous recovery" wording unless explicitly bounded and operator-visible.
 4. Keep degraded-state semantics explicit (not silently masked as success).
 
 ## Wording corrections

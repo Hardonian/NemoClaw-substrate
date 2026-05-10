@@ -4,7 +4,7 @@
 # Known Non-Goals
 
 - No autonomous orchestration loops.
-- No hidden retries or daemon-worker self-healing.
+- No hidden retries or daemon-worker autonomous recovery.
 - No policy learning from prompts.
 - No unsupported distributed execution claims.
 - No runtime claim without verification evidence.

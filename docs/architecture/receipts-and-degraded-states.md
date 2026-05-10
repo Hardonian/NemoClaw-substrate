@@ -26,4 +26,4 @@ No silent replay adaptation is implemented.
 
 Opt-in governed provider routing is available behind `NEMOCLAW_GOVERNED_ROUTING=1` (default off). Default routing is preserved when disabled.
 
-Not implemented in this phase: orchestration, distributed execution rollout, autonomous execution, self-healing behavior, queue workers/daemons, GPU balancing, Dynamo integration, automatic retries, and automatic policy learning.
+Not implemented in this phase: orchestration, distributed execution rollout, autonomous execution, autonomous recovery behavior, queue workers/daemons, GPU balancing, Dynamo integration, automatic retries, and automatic policy learning.

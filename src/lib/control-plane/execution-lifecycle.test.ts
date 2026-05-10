@@ -289,7 +289,7 @@ describe("execution lifecycle substrate", () => {
     };
     const snapshot = buildExecutionDiagnostics({ capturedAt: later, plan: queuedPlan, queueItem: conflicted });
     const states = new Set(snapshot.facts.map((fact) => fact.state));
-    expect(states).toEqual(new Set(["observed", "blocked", "stale", "conflicted", "degraded"]));
+    expect(states).toEqual(new Set(["observed", "blocked", "stale", "conflicted", "degraded", "unavailable"]));
 
     const unavailable = buildExecutionDiagnostics({ capturedAt: later });
     expect(new Set(unavailable.facts.map((fact) => fact.state))).toContain("unavailable");

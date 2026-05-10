@@ -7,6 +7,7 @@ This glossary defines the canonical terminology for the NemoClaw governed execut
 
 ## Core Concepts
 
+<!-- markdownlint-disable anti-theatre-terms -->
 - **Proofpack**: A cryptographic, tamper-evident bundle of evidence exported for audit or verification. (Do not use: *evidence bundle*, *export bundle*).
 - **Evidence**: Individual facts, telemetry, or probe results used to build confidence. Evidence is *never* automatically trusted or treated as authorization.
 - **Queue**: The ordered backlog of planned executions awaiting worker allocation.
@@ -16,6 +17,7 @@ This glossary defines the canonical terminology for the NemoClaw governed execut
 - **Replay Inspector**: The diagnostic tool used to analyze replay receipts.
 - **Authorization**: A binary policy decision to allow or deny an action.
 - **Trust**: A confidence gradient derived from evidence. Trust does not bypass authorization.
+<!-- markdownlint-enable anti-theatre-terms -->
 - **Reason Code**: An explicit, deterministic identifier for a policy outcome or degraded state (e.g., `policy_outcome`, `missing_replay_reason_code`).
 
 ## Execution Lifecycle States
