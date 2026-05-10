@@ -288,8 +288,6 @@ describe("Issue #2201: rebuild syncs agent from registry, not stale session", ()
         lastOnboarded: { name: "hermes", agent: "hermes" },
       });
       runRebuild(f);
-      // With fix: session.agent = null (synced from openclaw registry entry)
-      // Without fix: session.agent stays "hermes" (from hermes onboard)
       expect(readSessionAgent(f)).toBeNull();
     },
   );
@@ -303,8 +301,6 @@ describe("Issue #2201: rebuild syncs agent from registry, not stale session", ()
         lastOnboarded: { name: "openclaw", agent: null },
       });
       runRebuild(f);
-      // With fix: session.agent = "hermes" (synced from hermes registry entry)
-      // Without fix: session.agent stays null (from openclaw onboard)
       expect(readSessionAgent(f)).toBe("hermes");
     },
   );
@@ -345,9 +341,6 @@ describe("Issue #2301: rebuild forwards stored --from Dockerfile to onboard", ()
         fromDockerfile: "/tmp/custom/Dockerfile",
       });
       const result = runRebuild(f);
-      // Without fix: exits with "Session was started with --from ..."
-      // With fix: rebuild proceeds past conflict check (may still fail
-      // later in the fake-env backup step — that's expected with stubs).
       expect(result.stderr).not.toMatch(/Session was started with --from/);
     },
   );
