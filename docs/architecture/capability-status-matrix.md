@@ -15,6 +15,6 @@
 | Distributed execution fabric | planned (bounded) | n/a | adapters only | 0002 | implied-claim confusion | governance-defined scope |
 | GPU balancing/scheduling | scaffolded | probe and scheduler tests | `scheduler.ts`, `gpu-telemetry.md` docs | 0006 | fairness assumptions | registry-backed constraints |
 | Dynamo integration | planned | n/a | none in runtime | none | roadmap ambiguity | explicit ADR before implementation |
-| Self-healing daemons/retries | intentionally-not-implemented | degraded-state tests prove explicit failures | degraded-state path | 0005 | operator assumptions | explicit docs guardrails |
+| Autonomous recovery daemons/retries | intentionally-not-implemented | degraded-state tests prove explicit failures | degraded-state path | 0005 | operator assumptions | explicit docs guardrails |
 | Policy learning | intentionally-not-implemented | n/a | none | 0007 | AI-theatre interpretation | keep policy declarative |
 | Cryptographic attestation chain | opt-in (partial) | security verification matrix | trust/capability docs + worker trust modules | 0006 | incomplete ecosystem wiring | formal signer/integrity stack |

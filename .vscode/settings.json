@@ -6,11 +6,13 @@
         "Ollama",
         "openclaw",
         "proofpack",
+        "proofpacks",
         "rollups",
         "serde",
         "TOCTOU",
         "unauditable",
         "unredacted",
+        "userinfo",
         "workstreams"
     ]
 }

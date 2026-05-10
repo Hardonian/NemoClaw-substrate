@@ -20,6 +20,11 @@ const checks = [
     command: ["npm", "run", "verify:control-plane"],
   },
   {
+    id: "execution-lifecycle",
+    label: "Execution lifecycle substrate tests",
+    command: ["npm", "run", "verify:execution-lifecycle"],
+  },
+  {
     id: "local-probes",
     label: "Local probes tests",
     command: ["npm", "run", "verify:local-probes"],

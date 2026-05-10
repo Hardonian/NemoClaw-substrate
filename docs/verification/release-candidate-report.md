@@ -13,7 +13,7 @@ The governed substrate is documented as deterministic, fail-closed, and operator
 - **scaffolded:** deep trust attestation plumbing, GPU balancing constraints.
 - **opt-in:** partial attestation pathways and policy presets.
 - **planned:** bounded distributed execution extensions, Dynamo integration.
-- **intentionally-not-implemented:** autonomous loops, self-healing daemons, policy learning, invisible retries.
+- **intentionally-not-implemented:** autonomous loops, autonomous recovery daemons, policy learning, invisible retries.
 
 ## Release audit normalization
 

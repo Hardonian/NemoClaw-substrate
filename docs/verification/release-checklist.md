@@ -14,7 +14,7 @@ This checklist gates the governed heterogeneous execution substrate integration 
 - [x] No claims of implemented GPU balancing.
 - [x] No claims of implemented Dynamo integration.
 - [x] No claims of autonomous orchestration.
-- [x] No claims of self-healing behavior.
+- [x] No claims of autonomous recovery behavior.
 - [x] No claims of automatic policy learning.
 
 ## Status classification discipline
