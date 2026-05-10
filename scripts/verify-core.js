@@ -7,33 +7,13 @@ const args = new Set(process.argv.slice(2));
 const strictMode = args.has("--strict");
 
 const checks = [
-  {
-    id: "changelog",
-    label: "CHANGELOG hygiene",
-    command: ["npm", "run", "verify:changelog-hygiene"],
-  },
+  { id: "changelog", label: "CHANGELOG hygiene", command: ["npm", "run", "verify:changelog-hygiene"] },
   { id: "typecheck", label: "TypeScript typecheck", command: ["npm", "run", "typecheck"] },
   { id: "lint", label: "Biome lint", command: ["npm", "run", "lint"] },
-  {
-    id: "control-plane",
-    label: "Control-plane tests",
-    command: ["npm", "run", "verify:control-plane"],
-  },
-  {
-    id: "local-probes",
-    label: "Local probes tests",
-    command: ["npm", "run", "verify:local-probes"],
-  },
-  {
-    id: "remote-probes",
-    label: "Remote probes tests",
-    command: ["npm", "run", "verify:remote-probes"],
-  },
-  {
-    id: "governed-routing",
-    label: "Governed routing tests",
-    command: ["npm", "run", "verify:governed-routing"],
-  },
+  { id: "control-plane", label: "Control-plane tests", command: ["npm", "run", "verify:control-plane"] },
+  { id: "local-probes", label: "Local probes tests", command: ["npm", "run", "verify:local-probes"] },
+  { id: "remote-probes", label: "Remote probes tests", command: ["npm", "run", "verify:remote-probes"] },
+  { id: "governed-routing", label: "Governed routing tests", command: ["npm", "run", "verify:governed-routing"] },
 ];
 
 function isToolchainFailure(result) {
@@ -70,17 +50,10 @@ for (const check of checks) {
 
   const output = `${result.stdout ?? ""}${result.stderr ?? ""}`.trim();
   if (output) {
-    console.log(
-      output
-        .split("\n")
-        .map((line) => `  ${line}`)
-        .join("\n"),
-    );
+    console.log(output.split("\n").map((line) => `  ${line}`).join("\n"));
   }
 }
 
 const shouldFail = repoFailures > 0 || (strictMode && warnings > 0);
-console.log(
-  `Summary: PASS=${checks.length - repoFailures - warnings} WARN=${warnings} FAIL=${repoFailures}`,
-);
+console.log(`Summary: PASS=${checks.length - repoFailures - warnings} WARN=${warnings} FAIL=${repoFailures}`);
 process.exit(shouldFail ? 1 : 0);

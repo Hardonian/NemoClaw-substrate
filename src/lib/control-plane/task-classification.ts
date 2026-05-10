@@ -5,7 +5,6 @@ import type { ControlRequestEnvelope } from "./types";
 
 export interface TaskClassification {
   taskKind: "chat" | "tooling" | "shell" | "file_mutation" | "network" | "batch";
-  actionClass: "tool" | "shell" | "file_mutation" | "remote_node" | "provider" | "fallback" | "network_sensitive" | "high_risk" | "generic" | "runtime";
   riskLevel: "low" | "medium" | "high";
   latencySensitivity: "interactive" | "standard" | "deferred";
   contextRequirement: "small" | "medium" | "large";
@@ -26,7 +25,6 @@ export function classifyRequest(request: ControlRequestEnvelope): TaskClassifica
 
   return {
     taskKind,
-    actionClass: (taskKind === "tooling" ? "tool" : taskKind === "shell" ? "shell" : taskKind === "file_mutation" ? "file_mutation" : taskKind === "network" ? "network_sensitive" : "generic"),
     riskLevel: highRisk ? "high" : has("medium-risk") ? "medium" : "low",
     latencySensitivity: has("latency-interactive") ? "interactive" : has("latency-deferred") ? "deferred" : "standard",
     contextRequirement: has("context-large") ? "large" : has("context-medium") ? "medium" : "small",

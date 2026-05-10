@@ -3558,7 +3558,7 @@ async function waitForSandboxReady(sandboxName: string, attempts = 10, delaySeco
       { ignoreError: true },
     );
     if (podPhase === "Running") return true;
-    await new Promise(r => setTimeout(r, delaySeconds * 1000));
+    await new Promise((r) => setTimeout(r, delaySeconds * 1000));
   }
   return false;
 }
