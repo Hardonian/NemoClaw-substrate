@@ -814,6 +814,211 @@ function restoreStateFile(
   return false;
 }
 
+interface DirectoryBackupResult {
+  success: boolean;
+  backedUpDirs: string[];
+  failedDirs: string[];
+  error?: string;
+}
+
+function checkSnapshotNameConflict(sandboxName: string, providedName: string | null): string | null {
+  if (providedName === null) return null;
+
+  const validationError = validateSnapshotName(providedName);
+  if (validationError) return validationError;
+
+  const existingBackups = listBackups(sandboxName);
+  const conflict = existingBackups.find((b) => b.name === providedName);
+  if (conflict) {
+    return `Snapshot name '${providedName}' already exists for '${sandboxName}' (at ${conflict.timestamp}). Pick a different name or delete the existing snapshot.`;
+  }
+
+  return null;
+}
+
+function backupStateDirectories(
+  configFile: string,
+  sandboxName: string,
+  dir: string,
+  stateDirs: string[],
+  backupPath: string
+): DirectoryBackupResult {
+  const backedUpDirs: string[] = [];
+  const failedDirs: string[] = [];
+
+  if (stateDirs.length === 0) {
+    return { success: true, backedUpDirs, failedDirs };
+  }
+
+  // Build tar command that only includes existing directories.
+  // First, check which declared state dirs actually exist in the sandbox,
+  // then additionally discover per-agent `workspace-*` directories produced
+  // by multi-agent OpenClaw deployments (see issue #1260) so they get
+  // snapshotted alongside the manifest-declared dirs. `awk '!seen[$0]++'`
+  // dedupes while preserving order.
+  const existCheckCmd = stateDirs
+    .map((d) => `[ -d ${shellQuote(`${dir}/${d}`)} ] && printf '%s\\n' ${shellQuote(d)}`)
+    .join("; ");
+  const workspaceGlobCmd = `for d in ${shellQuote(dir)}/workspace-*/; do [ -d "$d" ] && basename "$d"; done 2>/dev/null`;
+  const fullCheckCmd = `{ ${existCheckCmd}; ${workspaceGlobCmd}; } 2>/dev/null | awk '!seen[$0]++'`;
+  _log(`Checking existing dirs via SSH: ${fullCheckCmd.substring(0, 100)}...`);
+  const existResult = spawnSync("ssh", [...sshArgs(configFile, sandboxName), fullCheckCmd], {
+    encoding: "utf-8",
+    stdio: ["ignore", "pipe", "pipe"],
+    timeout: 30000,
+  });
+  _log(
+    `Dir check: exit=${existResult.status}, stdout=${(existResult.stdout || "").trim().substring(0, 200)}, stderr=${(existResult.stderr || "").trim().substring(0, 200)}`,
+  );
+  const existingDirs = (existResult.stdout || "")
+    .trim()
+    .split("\n")
+    .filter((d) => d.length > 0);
+  _log(
+    `Existing dirs in sandbox: [${existingDirs.join(",")}] (${existingDirs.length}/${stateDirs.length})`,
+  );
+
+  if (existResult.status !== 0) {
+    _log(
+      `FAILED: SSH dir check exited ${existResult.status} — cannot determine which dirs exist`,
+    );
+    return {
+      success: false,
+      backedUpDirs,
+      failedDirs: [...stateDirs],
+      error: `FAILED: SSH dir check exited ${existResult.status} — cannot determine which dirs exist`,
+    };
+  }
+
+  if (existingDirs.length === 0) {
+    _log("No state dirs found in sandbox (all empty)");
+    return { success: true, backedUpDirs, failedDirs };
+  }
+
+  // NC-2227-04: Pre-backup audit — reject symlinks, hardlinks, and special
+  // files inside state dirs. A compromised agent could plant a symlink like
+  // workspace/copy -> ../openclaw.json to exfiltrate config via backup.
+  const auditCmd = existingDirs
+    .map(
+      (d) =>
+        `find ${shellQuote(`${dir}/${d}`)} \\( -type l -o \\( -type f -a -links +1 \\) -o \\( ! -type f -a ! -type d \\) \\) -printf "%y %p\\n" 2>/dev/null`,
+    )
+    .join(" && ");
+  _log(`Pre-backup audit: checking for symlinks, hard links, and special files`);
+  const auditResult = spawnSync("ssh", [...sshArgs(configFile, sandboxName), auditCmd], {
+    encoding: "utf-8",
+    stdio: ["ignore", "pipe", "pipe"],
+    timeout: 30000,
+  });
+  if (auditResult.status !== 0) {
+    const stderr = (auditResult.stderr || "").trim();
+    const detail =
+      stderr || auditResult.error?.message || `exit ${String(auditResult.status)}`;
+    _log(`FAILED: Pre-backup audit command failed — ${detail}`);
+    return {
+      success: false,
+      backedUpDirs,
+      failedDirs: [...existingDirs],
+      error: `Pre-backup audit failed: ${detail}`,
+    };
+  }
+  const auditOutput = (auditResult.stdout || "").trim();
+  if (auditOutput.length > 0) {
+    // Found symlinks or special files — log them and reject the backup
+    const violations = auditOutput.split("\n").filter((l) => l.length > 0);
+    _log(
+      `SECURITY: Pre-backup audit found ${violations.length} unsafe entries: ${violations.slice(0, 5).join("; ")}`,
+    );
+    return {
+      success: false,
+      backedUpDirs,
+      failedDirs: [...existingDirs],
+      error: `Pre-backup audit rejected: symlinks, hard links, or special files found in state dirs: ${violations.slice(0, 3).join("; ")}`,
+    };
+  }
+  _log("Pre-backup audit passed — no symlinks, hard links, or special files found");
+
+  // Download via SSH+tar
+  // NC-2227-04: Removed -h flag (was following symlinks). State dirs are
+  // now agent-writable and co-located with config — a compromised agent
+  // could create symlinks to exfiltrate config contents via backup.
+  const tarCmd = `tar -cf - -C ${shellQuote(dir)} -- ${existingDirs.map(shellQuote).join(" ")}`;
+  _log(`Downloading via SSH+tar: ${tarCmd}`);
+  const result = spawnSync("ssh", [...sshArgs(configFile, sandboxName), tarCmd], {
+    stdio: ["ignore", "pipe", "pipe"],
+    timeout: 120000,
+    maxBuffer: 256 * 1024 * 1024,
+  });
+  _log(
+    `SSH+tar download: exit=${result.status}, stdout=${result.stdout ? result.stdout.length + " bytes" : "null"}, stderr=${(result.stderr?.toString() || "").substring(0, 200)}`,
+  );
+
+  // GNU tar exit codes: 0 = success, 1 = files changed during archive,
+  // 2 = errors (e.g. permission denied) but archive still written to stdout.
+  // Accept exit 0, 1, or 2 when stdout has data — extract what tar produced
+  // and determine per-dir success from tar's reported read errors.
+  const tarExitedWithData =
+    result.stdout && result.stdout.length > 0 && (result.status === 0 || result.status === 1 || result.status === 2);
+
+  if (result.status !== 0 && result.stdout && result.stdout.length > 0) {
+    _log(
+      `tar exited ${result.status} but produced ${result.stdout.length} bytes — attempting partial extraction`,
+    );
+  }
+
+  if (tarExitedWithData) {
+    // SECURITY: Validate tar entries, extract safely, audit symlinks
+    const extractResult = safeTarExtract(result.stdout, backupPath);
+    if (extractResult.success) {
+      const extractedDirs = new Set(existingBackupDirs(backupPath, existingDirs));
+      if (result.status === 0) {
+        for (const d of existingDirs) {
+          if (extractedDirs.has(d)) {
+            backedUpDirs.push(d);
+          } else {
+            _log(`Dir ${d} missing from clean tar extraction — marking failed`);
+            failedDirs.push(d);
+          }
+        }
+      } else {
+        const tarFailedDirs = failedDirsFromTarStderr(
+          result.stderr?.toString() || "",
+          existingDirs,
+        );
+        if (tarFailedDirs.size === 0) {
+          _log(
+            `tar exited ${result.status} without attributable failed dirs — marking all dirs failed`,
+          );
+          failedDirs.push(...existingDirs);
+        } else {
+          for (const d of existingDirs) {
+            if (tarFailedDirs.has(d)) {
+              _log(`Dir ${d} had tar read errors — marking failed`);
+              failedDirs.push(d);
+            } else if (!extractedDirs.has(d)) {
+              _log(`Dir ${d} missing from partial tar extraction — marking failed`);
+              failedDirs.push(d);
+            } else {
+              backedUpDirs.push(d);
+            }
+          }
+        }
+      }
+    } else {
+      _log(`SECURITY: tar extraction blocked: ${extractResult.error}`);
+      failedDirs.push(...existingDirs);
+    }
+  } else {
+    failedDirs.push(...existingDirs);
+  }
+
+  return {
+    success: failedDirs.length === 0,
+    backedUpDirs,
+    failedDirs,
+  };
+}
+
 // ── Backup ─────────────────────────────────────────────────────────
 
 /**
@@ -833,35 +1038,19 @@ export function backupSandboxState(sandboxName: string, options: BackupOptions =
 
   // Validate user-supplied name and check for conflicts BEFORE creating any
   // files on disk.
-  const existingBackups = listBackups(sandboxName);
   // Preserve empty strings so `--name ""` hits validateSnapshotName and fails
   // with a clear error instead of silently creating an unnamed snapshot.
   const providedName = options.name ?? null;
-  if (providedName !== null) {
-    const validationError = validateSnapshotName(providedName);
-    if (validationError) {
-      return {
-        success: false,
-        backedUpDirs: [],
-        failedDirs: [],
-        backedUpFiles: [],
-        failedFiles: [],
-        error: validationError,
-      };
-    }
-    const conflict = existingBackups.find((b) => b.name === providedName);
-    if (conflict) {
-      return {
-        success: false,
-        backedUpDirs: [],
-        failedDirs: [],
-        backedUpFiles: [],
-        failedFiles: [],
-        error:
-          `Snapshot name '${providedName}' already exists for '${sandboxName}' ` +
-          `(at ${conflict.timestamp}). Pick a different name or delete the existing snapshot.`,
-      };
-    }
+  const nameError = checkSnapshotNameConflict(sandboxName, providedName);
+  if (nameError) {
+    return {
+      success: false,
+      backedUpDirs: [],
+      failedDirs: [],
+      backedUpFiles: [],
+      failedFiles: [],
+      error: nameError,
+    };
   }
   const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
   const backupPath = path.join(REBUILD_BACKUPS_DIR, sandboxName, timestamp);
@@ -927,175 +1116,20 @@ export function backupSandboxState(sandboxName: string, options: BackupOptions =
 
   const configFile = writeTempSshConfig(sshConfig);
   try {
-    if (stateDirs.length > 0) {
-      // Build tar command that only includes existing directories.
-      // First, check which declared state dirs actually exist in the sandbox,
-      // then additionally discover per-agent `workspace-*` directories produced
-      // by multi-agent OpenClaw deployments (see issue #1260) so they get
-      // snapshotted alongside the manifest-declared dirs. `awk '!seen[$0]++'`
-      // dedupes while preserving order.
-      const existCheckCmd = stateDirs
-        .map((d) => `[ -d ${shellQuote(`${dir}/${d}`)} ] && printf '%s\\n' ${shellQuote(d)}`)
-        .join("; ");
-      const workspaceGlobCmd = `for d in ${shellQuote(dir)}/workspace-*/; do [ -d "$d" ] && basename "$d"; done 2>/dev/null`;
-      const fullCheckCmd = `{ ${existCheckCmd}; ${workspaceGlobCmd}; } 2>/dev/null | awk '!seen[$0]++'`;
-      _log(`Checking existing dirs via SSH: ${fullCheckCmd.substring(0, 100)}...`);
-      const existResult = spawnSync("ssh", [...sshArgs(configFile, sandboxName), fullCheckCmd], {
-        encoding: "utf-8",
-        stdio: ["ignore", "pipe", "pipe"],
-        timeout: 30000,
-      });
-      _log(
-        `Dir check: exit=${existResult.status}, stdout=${(existResult.stdout || "").trim().substring(0, 200)}, stderr=${(existResult.stderr || "").trim().substring(0, 200)}`,
-      );
-      const existingDirs = (existResult.stdout || "")
-        .trim()
-        .split("\n")
-        .filter((d) => d.length > 0);
-      _log(
-        `Existing dirs in sandbox: [${existingDirs.join(",")}] (${existingDirs.length}/${stateDirs.length})`,
-      );
+    const dirResult = backupStateDirectories(configFile, sandboxName, dir, stateDirs, backupPath);
+    backedUpDirs.push(...dirResult.backedUpDirs);
+    failedDirs.push(...dirResult.failedDirs);
 
-      if (existResult.status !== 0) {
-        _log(
-          `FAILED: SSH dir check exited ${existResult.status} — cannot determine which dirs exist`,
-        );
-        return {
-          success: false,
-          manifest,
-          backedUpDirs,
-          failedDirs: [...stateDirs],
-          backedUpFiles,
-          failedFiles: stateFiles.map((f) => f.path),
-        };
-      }
-
-      if (existingDirs.length === 0) {
-        _log("No state dirs found in sandbox (all empty)");
-      } else {
-        // NC-2227-04: Pre-backup audit — reject symlinks, hardlinks, and special
-        // files inside state dirs. A compromised agent could plant a symlink like
-        // workspace/copy -> ../openclaw.json to exfiltrate config via backup.
-        const auditCmd = existingDirs
-          .map(
-            (d) =>
-              `find ${shellQuote(`${dir}/${d}`)} \\( -type l -o \\( -type f -a -links +1 \\) -o \\( ! -type f -a ! -type d \\) \\) -printf "%y %p\\n" 2>/dev/null`,
-          )
-          .join(" && ");
-        _log(`Pre-backup audit: checking for symlinks, hard links, and special files`);
-        const auditResult = spawnSync("ssh", [...sshArgs(configFile, sandboxName), auditCmd], {
-          encoding: "utf-8",
-          stdio: ["ignore", "pipe", "pipe"],
-          timeout: 30000,
-        });
-        if (auditResult.status !== 0) {
-          const stderr = (auditResult.stderr || "").trim();
-          const detail =
-            stderr || auditResult.error?.message || `exit ${String(auditResult.status)}`;
-          _log(`FAILED: Pre-backup audit command failed — ${detail}`);
-          return {
-            success: false,
-            manifest,
-            backedUpDirs,
-            failedDirs: [...existingDirs],
-            backedUpFiles,
-            failedFiles: stateFiles.map((f) => f.path),
-            error: `Pre-backup audit failed: ${detail}`,
-          };
-        }
-        const auditOutput = (auditResult.stdout || "").trim();
-        if (auditOutput.length > 0) {
-          // Found symlinks or special files — log them and reject the backup
-          const violations = auditOutput.split("\n").filter((l) => l.length > 0);
-          _log(
-            `SECURITY: Pre-backup audit found ${violations.length} unsafe entries: ${violations.slice(0, 5).join("; ")}`,
-          );
-          return {
-            success: false,
-            manifest,
-            backedUpDirs,
-            failedDirs: [...existingDirs],
-            backedUpFiles,
-            failedFiles: stateFiles.map((f) => f.path),
-            error: `Pre-backup audit rejected: symlinks, hard links, or special files found in state dirs: ${violations.slice(0, 3).join("; ")}`,
-          };
-        }
-        _log("Pre-backup audit passed — no symlinks, hard links, or special files found");
-
-        // Download via SSH+tar
-        // NC-2227-04: Removed -h flag (was following symlinks). State dirs are
-        // now agent-writable and co-located with config — a compromised agent
-        // could create symlinks to exfiltrate config contents via backup.
-        const tarCmd = `tar -cf - -C ${shellQuote(dir)} -- ${existingDirs.map(shellQuote).join(" ")}`;
-        _log(`Downloading via SSH+tar: ${tarCmd}`);
-        const result = spawnSync("ssh", [...sshArgs(configFile, sandboxName), tarCmd], {
-          stdio: ["ignore", "pipe", "pipe"],
-          timeout: 120000,
-          maxBuffer: 256 * 1024 * 1024,
-        });
-        _log(
-          `SSH+tar download: exit=${result.status}, stdout=${result.stdout ? result.stdout.length + " bytes" : "null"}, stderr=${(result.stderr?.toString() || "").substring(0, 200)}`,
-        );
-
-        // GNU tar exit codes: 0 = success, 1 = files changed during archive,
-        // 2 = errors (e.g. permission denied) but archive still written to stdout.
-        // Accept exit 0, 1, or 2 when stdout has data — extract what tar produced
-        // and determine per-dir success from tar's reported read errors.
-        const tarExitedWithData =
-          result.stdout && result.stdout.length > 0 && (result.status === 0 || result.status === 1 || result.status === 2);
-
-        if (result.status !== 0 && result.stdout && result.stdout.length > 0) {
-          _log(
-            `tar exited ${result.status} but produced ${result.stdout.length} bytes — attempting partial extraction`,
-          );
-        }
-
-        if (tarExitedWithData) {
-          // SECURITY: Validate tar entries, extract safely, audit symlinks
-          const extractResult = safeTarExtract(result.stdout, backupPath);
-          if (extractResult.success) {
-            const extractedDirs = new Set(existingBackupDirs(backupPath, existingDirs));
-            if (result.status === 0) {
-              for (const d of existingDirs) {
-                if (extractedDirs.has(d)) {
-                  backedUpDirs.push(d);
-                } else {
-                  _log(`Dir ${d} missing from clean tar extraction — marking failed`);
-                  failedDirs.push(d);
-                }
-              }
-            } else {
-              const tarFailedDirs = failedDirsFromTarStderr(
-                result.stderr?.toString() || "",
-                existingDirs,
-              );
-              if (tarFailedDirs.size === 0) {
-                _log(
-                  `tar exited ${result.status} without attributable failed dirs — marking all dirs failed`,
-                );
-                failedDirs.push(...existingDirs);
-              } else {
-                for (const d of existingDirs) {
-                  if (tarFailedDirs.has(d)) {
-                    _log(`Dir ${d} had tar read errors — marking failed`);
-                    failedDirs.push(d);
-                  } else if (!extractedDirs.has(d)) {
-                    _log(`Dir ${d} missing from partial tar extraction — marking failed`);
-                    failedDirs.push(d);
-                  } else {
-                    backedUpDirs.push(d);
-                  }
-                }
-              }
-            }
-          } else {
-            _log(`SECURITY: tar extraction blocked: ${extractResult.error}`);
-            failedDirs.push(...existingDirs);
-          }
-        } else {
-          failedDirs.push(...existingDirs);
-        }
-      }
+    if (dirResult.error) {
+      return {
+        success: false,
+        manifest,
+        backedUpDirs,
+        failedDirs,
+        backedUpFiles,
+        failedFiles: stateFiles.map((f) => f.path),
+        error: dirResult.error,
+      };
     }
 
     for (const spec of stateFiles) {
