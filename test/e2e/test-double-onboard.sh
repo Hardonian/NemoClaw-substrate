@@ -43,7 +43,6 @@ section() {
 }
 info() { printf '\033[1;34m  [info]\033[0m %s\n' "$1"; }
 
-# TODO(#2562): replace shell timeout with structured timeout once unified abstraction lands
 
 # Per-phase timeout in seconds (20 min per onboard phase, generous for CI)
 PHASE_TIMEOUT="${NEMOCLAW_E2E_PHASE_TIMEOUT:-1200}"
@@ -172,7 +171,6 @@ PY
   return 1
 }
 
-# TODO(#2562): replace shell timeout with structured timeout once unified abstraction lands
 run_onboard() {
   local sandbox_name="$1"
   local recreate="${2:-0}"
