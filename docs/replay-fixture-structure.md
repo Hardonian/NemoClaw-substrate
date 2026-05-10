@@ -50,7 +50,7 @@ The `validateReplayEnvelope()` function checks:
 1. Event count matches actual event list length
 2. All sequences are consecutive (0, 1, 2, ...)
 3. All events have replay lineage
-4. All degraded/fallback/policy events have reason codes
+4. All degraded/policy events have reason codes
 5. Digest matches recomputed digest
 
 ## Replay Evidence Package
@@ -76,6 +76,6 @@ interface ReplayEvidencePackage {
 The package:
 
 - Embeds a replay envelope for event replay
-- Embeds an evidence bundle for artifact-level integrity
+- Embeds a Proofpack for artifact-level integrity
 - Categorizes events by type for easy access
 - Has a package-level digest for integrity verification

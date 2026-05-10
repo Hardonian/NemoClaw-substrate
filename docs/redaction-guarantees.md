@@ -99,10 +99,10 @@ const result = validateReplayPackageRedaction(pkg);
 
 Validates:
 
-- Evidence bundle artifacts
+- Proofpack artifacts
 - Governance event payloads
 - Diagnostics snapshot payloads
-- Fallback evidence payloads
+- Degraded State evidence payloads
 - Approval lineage payloads
 
 ### Receipt Validation
