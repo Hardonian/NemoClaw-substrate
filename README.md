@@ -15,7 +15,6 @@ The fork prioritizes deterministic and auditable control over opaque autonomy. I
 - supervised policy promotion,
 - explainable routing/control decisions.
 
-
 ## Current state vs roadmap
 
 - **Implemented:** existing CLI/plugin/sandbox orchestration and inference onboarding flows; control-plane verification gates.

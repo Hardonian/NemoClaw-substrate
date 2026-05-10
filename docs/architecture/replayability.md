@@ -32,7 +32,7 @@ The execution lifecycle substrate validates replay consistency across plan and q
 - replay reference drift
 - governance metadata loss or drift
 - trust metadata loss or drift
-- fallback permission drift
+- recovery permission drift
 - candidate mismatch
 - ownership mismatch
 - lease mismatch

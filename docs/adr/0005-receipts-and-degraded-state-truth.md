@@ -18,7 +18,7 @@ The execution lifecycle substrate extends this decision to plan, queue, lease, r
 
 Audits, replay, and incident diagnosis can rely on explicit machine-readable evidence.
 
-The substrate must reject hidden fallback, hidden retry, replay drift, receipt mismatch, lease mismatch, ownership mismatch, trust drift, governance metadata loss, and degraded states without reasons.
+The substrate must reject hidden recovery, hidden retry, replay drift, receipt mismatch, lease mismatch, ownership mismatch, trust drift, governance metadata loss, and degraded states without reasons.
 
 ## Alternatives considered
 

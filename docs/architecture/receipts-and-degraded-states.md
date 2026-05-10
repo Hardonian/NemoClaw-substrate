@@ -32,4 +32,4 @@ Not implemented in this phase: orchestration, distributed execution rollout, aut
 
 The execution lifecycle substrate adds deterministic receipt creation for plan transitions, queueing, lease acquisition/renewal/expiration/revocation, execution start/completion/failure/cancellation/blocking, and proofpack validation. Receipt ids and digests are derived from deterministic serialized payloads, the plan id, replay reference, reason code, and timestamp supplied by the caller.
 
-Degraded states remain explicit. Blocked, degraded, failed, expired, and revoked paths carry reason codes and are preserved in queue records, plan records, diagnostics snapshots, and proofpacks. Hidden retry and hidden fallback payloads are rejected during proofpack validation.
+Degraded states remain explicit. Blocked, degraded, failed, expired, and revoked paths carry reason codes and are preserved in queue records, plan records, diagnostics snapshots, and proofpacks. Hidden retry and hidden recovery path payloads are rejected during proofpack validation.
