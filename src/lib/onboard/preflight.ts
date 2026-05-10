@@ -384,6 +384,45 @@ function parseSystemctlState(value = ""): boolean | null {
   return null;
 }
 
+function getDockerState(
+  dockerInstalled: boolean,
+  dockerInfoOutput: string | undefined,
+  runCaptureImpl: RunCaptureFn,
+): { dockerInfoOutput: string | undefined; dockerReachable: boolean; dockerRunning: boolean } {
+  let reachable = false;
+  let running = false;
+  let infoOutput = dockerInfoOutput;
+  if (dockerInstalled && infoOutput === undefined) {
+    infoOutput = runCaptureImpl(["docker", "info", "--format", "{{json .}}"], {
+      ignoreError: true,
+    });
+  }
+  if (dockerInstalled && String(infoOutput || "").trim()) {
+    reachable = true;
+    running = true;
+  }
+  return { dockerInfoOutput: infoOutput, dockerReachable: reachable, dockerRunning: running };
+}
+
+function getDockerServiceState(
+  platform: NodeJS.Platform | string,
+  systemctlAvailable: boolean,
+  dockerInstalled: boolean,
+  runCaptureImpl: RunCaptureFn,
+): { active: boolean | null; enabled: boolean | null } {
+  let active: boolean | null = null;
+  let enabled: boolean | null = null;
+  if (platform === "linux" && systemctlAvailable && dockerInstalled) {
+    active = parseSystemctlState(
+      runCaptureImpl(["systemctl", "is-active", "docker"], { ignoreError: true }),
+    );
+    enabled = parseSystemctlState(
+      runCaptureImpl(["systemctl", "is-enabled", "docker"], { ignoreError: true }),
+    );
+  }
+  return { active, enabled };
+}
+
 export function assessHost(opts: AssessHostOpts = {}): HostAssessment {
   const platform = opts.platform ?? process.platform;
   const env = opts.env ?? process.env;
@@ -402,18 +441,11 @@ export function assessHost(opts: AssessHostOpts = {}): HostAssessment {
   const packageManager = detectPackageManager(runCaptureImpl);
   const systemctlAvailable = commandExists("systemctl", runCaptureImpl);
 
-  let dockerInfoOutput = opts.dockerInfoOutput;
-  let dockerReachable = false;
-  let dockerRunning = false;
-  if (dockerInstalled && dockerInfoOutput === undefined) {
-    dockerInfoOutput = runCaptureImpl(["docker", "info", "--format", "{{json .}}"], {
-      ignoreError: true,
-    });
-  }
-  if (dockerInstalled && String(dockerInfoOutput || "").trim()) {
-    dockerReachable = true;
-    dockerRunning = true;
-  }
+  const { dockerInfoOutput, dockerReachable, dockerRunning } = getDockerState(
+    dockerInstalled,
+    opts.dockerInfoOutput,
+    runCaptureImpl,
+  );
 
   const release = opts.release ?? os.release();
   const procVersion =
@@ -482,18 +514,13 @@ export function assessHost(opts: AssessHostOpts = {}): HostAssessment {
     dockerStorageDriver === "overlayfs" &&
     dockerUsesContainerdSnapshotter;
   const dockerDefaultCgroupnsMode = readDockerDefaultCgroupnsMode(readFileImpl);
-  const dockerServiceActive =
-    platform === "linux" && systemctlAvailable && dockerInstalled
-      ? parseSystemctlState(
-          runCaptureImpl(["systemctl", "is-active", "docker"], { ignoreError: true }),
-        )
-      : null;
-  const dockerServiceEnabled =
-    platform === "linux" && systemctlAvailable && dockerInstalled
-      ? parseSystemctlState(
-          runCaptureImpl(["systemctl", "is-enabled", "docker"], { ignoreError: true }),
-        )
-      : null;
+  const { active: dockerServiceActive, enabled: dockerServiceEnabled } = getDockerServiceState(
+    platform,
+    systemctlAvailable,
+    dockerInstalled,
+    runCaptureImpl,
+  );
+
   const assessment: HostAssessment = {
     platform,
     isWsl: isWslHost,
