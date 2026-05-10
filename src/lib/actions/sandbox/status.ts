@@ -1,7 +1,6 @@
 // SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-
 import { CLI_DISPLAY_NAME, CLI_NAME } from "../../cli/branding";
 import { parseSandboxPhase } from "../../state/gateway";
 import { getNamedGatewayLifecycleState } from "../../gateway-runtime-action";
@@ -55,108 +54,74 @@ export function getSandboxStatusInferenceHealth(
   });
 }
 
-// eslint-disable-next-line complexity
-export async function showSandboxStatus(sandboxName: string): Promise<void> {
-  const sb = registry.getSandbox(sandboxName);
-  // #2666: never let an unexpected throw from the gateway probe (e.g. openshell
-  // hanging when its container is stopped and the published port is held by a
-  // foreign listener) suppress the sandbox header. The downstream switch
-  // handles `gateway_error` by printing an actionable block + exit(1), so a
-  // synthesized fallback keeps the user-visible contract intact.
-  let lookup: SandboxGatewayState;
+function printSandboxDetails(
+  sb: NonNullable<ReturnType<typeof registry.getSandbox>>,
+  gatewayPresent: boolean,
+  currentModel: string,
+  currentProvider: string,
+  inferenceHealth: ProviderHealthStatus | null,
+  sandboxName: string,
+) {
+  console.log("");
+  console.log(`  Sandbox: ${sb.name}`);
+  console.log(`    Model:    ${currentModel}`);
+  console.log(`    Provider: ${currentProvider}`);
+  if (inferenceHealth) {
+    if (!inferenceHealth.probed) {
+      console.log(`    Inference: ${D}not probed${R} (${inferenceHealth.detail})`);
+    } else if (inferenceHealth.ok) {
+      console.log(`    Inference: ${G}healthy${R} (${inferenceHealth.endpoint})`);
+    } else {
+      console.log(
+        `    Inference: ${RD}${inferenceHealth.failureLabel || "unreachable"}${R} (${inferenceHealth.endpoint})`,
+      );
+      console.log(`      ${inferenceHealth.detail}`);
+    }
+  }
+  if (!gatewayPresent) {
+    console.log("    Inference: not verified (gateway/sandbox state not verified)");
+  }
+  console.log(`    GPU:      ${sb.gpuEnabled ? "yes" : "no"}`);
+  console.log(`    Policies: ${(sb.policies || []).join(", ") || "none"}`);
+
+  // Active session indicator
   try {
-    lookup = await getReconciledSandboxGatewayState(sandboxName, {
-      getState: getSandboxGatewayStateForStatus,
-    });
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    lookup = {
-      state: "gateway_error",
-      output: `  Could not probe live gateway state: ${message}`,
-    };
-  }
-  let liveResult: Awaited<ReturnType<typeof captureOpenshellForStatus>> | null = null;
-  if (lookup.state === "present") {
-    try {
-      liveResult = await captureOpenshellForStatus(["inference", "get"], {
-        ignoreError: true,
-      });
-    } catch {
-      liveResult = null;
-    }
-  }
-  const live =
-    liveResult && !isCommandTimeout(liveResult) ? parseGatewayInference(liveResult.output) : null;
-  const currentModel = (live && live.model) || (sb && sb.model) || "unknown";
-  const currentProvider = (live && live.provider) || (sb && sb.provider) || "unknown";
-  const inferenceHealth = getSandboxStatusInferenceHealth(
-    lookup.state === "present",
-    currentProvider,
-    currentModel,
-  );
-  if (sb) {
-    console.log("");
-    console.log(`  Sandbox: ${sb.name}`);
-    console.log(`    Model:    ${currentModel}`);
-    console.log(`    Provider: ${currentProvider}`);
-    if (inferenceHealth) {
-      if (!inferenceHealth.probed) {
-        console.log(`    Inference: ${D}not probed${R} (${inferenceHealth.detail})`);
-      } else if (inferenceHealth.ok) {
-        console.log(`    Inference: ${G}healthy${R} (${inferenceHealth.endpoint})`);
-      } else {
+    const opsBinStatus = resolveOpenshell();
+    if (opsBinStatus) {
+      const sessionResult = getActiveSandboxSessions(sandboxName, createSessionDeps(opsBinStatus));
+      if (sessionResult.detected) {
+        const count = sessionResult.sessions.length;
         console.log(
-          `    Inference: ${RD}${inferenceHealth.failureLabel || "unreachable"}${R} (${inferenceHealth.endpoint})`,
+          `    Connected: ${count > 0 ? `${G}yes${R} (${count} session${count > 1 ? "s" : ""})` : "no"}`,
         );
-        console.log(`      ${inferenceHealth.detail}`);
       }
     }
-    if (lookup.state !== "present") {
-      console.log("    Inference: not verified (gateway/sandbox state not verified)");
-    }
-    console.log(`    GPU:      ${sb.gpuEnabled ? "yes" : "no"}`);
-    console.log(`    Policies: ${(sb.policies || []).join(", ") || "none"}`);
-
-    // Active session indicator
-    try {
-      const opsBinStatus = resolveOpenshell();
-      if (opsBinStatus) {
-        const sessionResult = getActiveSandboxSessions(
-          sandboxName,
-          createSessionDeps(opsBinStatus),
-        );
-        if (sessionResult.detected) {
-          const count = sessionResult.sessions.length;
-          console.log(
-            `    Connected: ${count > 0 ? `${G}yes${R} (${count} session${count > 1 ? "s" : ""})` : "no"}`,
-          );
-        }
-      }
-    } catch {
-      /* non-fatal */
-    }
-
-    if (shields.isShieldsDown(sandboxName)) {
-      console.log("    Permissions: shields down (check `shields status` for details)");
-    }
-
-    // Agent version check
-    try {
-      const versionCheck = sandboxVersion.checkAgentVersion(sandboxName, { skipProbe: true });
-      const agent = agentRuntime.getSessionAgent(sandboxName);
-      const agentName = agentRuntime.getAgentDisplayName(agent);
-      if (versionCheck.sandboxVersion) {
-        console.log(`    Agent:    ${agentName} v${versionCheck.sandboxVersion}`);
-      }
-      if (versionCheck.isStale) {
-        console.log(`    ${YW}Update:   v${versionCheck.expectedVersion} available${R}`);
-        console.log(`              Run \`${CLI_NAME} ${sandboxName} rebuild\` to upgrade`);
-      }
-    } catch {
-      /* non-fatal */
-    }
+  } catch {
+    /* non-fatal */
   }
 
+  if (shields.isShieldsDown(sandboxName)) {
+    console.log("    Permissions: shields down (check `shields status` for details)");
+  }
+
+  // Agent version check
+  try {
+    const versionCheck = sandboxVersion.checkAgentVersion(sandboxName, { skipProbe: true });
+    const agent = agentRuntime.getSessionAgent(sandboxName);
+    const agentName = agentRuntime.getAgentDisplayName(agent);
+    if (versionCheck.sandboxVersion) {
+      console.log(`    Agent:    ${agentName} v${versionCheck.sandboxVersion}`);
+    }
+    if (versionCheck.isStale) {
+      console.log(`    ${YW}Update:   v${versionCheck.expectedVersion} available${R}`);
+      console.log(`              Run \`${CLI_NAME} ${sandboxName} rebuild\` to upgrade`);
+    }
+  } catch {
+    /* non-fatal */
+  }
+}
+
+function checkAndHandleGatewayState(lookup: SandboxGatewayState, sandboxName: string): void {
   if (lookup.state === "present") {
     console.log("");
     if ("recoveredGateway" in lookup && lookup.recoveredGateway) {
@@ -178,7 +143,10 @@ export async function showSandboxStatus(sandboxName: string): Promise<void> {
         `  Run \`${CLI_NAME} ${sandboxName} rebuild --yes\` to recreate the sandbox (--yes skips the confirmation prompt; workspace state will be preserved).`,
       );
     }
-  } else if (lookup.state === "wrong_gateway_active") {
+    return;
+  }
+
+  if (lookup.state === "wrong_gateway_active") {
     const activeGateway =
       "activeGateway" in lookup && typeof lookup.activeGateway === "string"
         ? lookup.activeGateway
@@ -187,9 +155,6 @@ export async function showSandboxStatus(sandboxName: string): Promise<void> {
     printWrongGatewayActiveGuidance(sandboxName, activeGateway, console.log);
     process.exit(1);
   } else if (lookup.state === "missing") {
-    // Belt-and-suspenders: only destroy registry state if the nemoclaw gateway
-    // is demonstrably the healthy active gateway. Guards against regressions
-    // in the reconciler.
     const guard = getNamedGatewayLifecycleState();
     if (guard.state !== "healthy_named") {
       console.log("");
@@ -266,34 +231,34 @@ export async function showSandboxStatus(sandboxName: string): Promise<void> {
     printGatewayLifecycleHint(lookup.output, sandboxName, console.log);
     process.exit(1);
   }
+}
 
-  // OpenClaw process health inside the sandbox
-  if (lookup.state === "present") {
-    const running = await isSandboxGatewayRunningForStatus(sandboxName);
-    if (running !== null) {
-      const sessionAgent = agentRuntime.getSessionAgent(sandboxName);
-      const sessionAgentName = agentRuntime.getAgentDisplayName(sessionAgent);
-      if (running) {
-        console.log(`    ${sessionAgentName}: ${G}running${R}`);
-      } else {
-        console.log(`    ${sessionAgentName}: ${RD}not running${R}`);
-        console.log("");
-        console.log(
-          `  The sandbox is alive but the ${sessionAgentName} gateway process is not running.`,
-        );
-        console.log("  This typically happens after a gateway restart (e.g., laptop close/open).");
-        console.log("");
-        console.log("  To recover, run:");
-        console.log(`    ${D}${CLI_NAME} ${sandboxName} connect${R}  (auto-recovers on connect)`);
-        console.log("  Or manually inside the sandbox:");
-        console.log(`    ${D}${agentRuntime.getGatewayCommand(sessionAgent)}${R}`);
-      }
+async function printOpenClawHealth(sandboxName: string): Promise<void> {
+  const running = await isSandboxGatewayRunningForStatus(sandboxName);
+  if (running !== null) {
+    const sessionAgent = agentRuntime.getSessionAgent(sandboxName);
+    const sessionAgentName = agentRuntime.getAgentDisplayName(sessionAgent);
+    if (running) {
+      console.log(`    ${sessionAgentName}: ${G}running${R}`);
+    } else {
+      console.log(`    ${sessionAgentName}: ${RD}not running${R}`);
+      console.log("");
+      console.log(
+        `  The sandbox is alive but the ${sessionAgentName} gateway process is not running.`,
+      );
+      console.log("  This typically happens after a gateway restart (e.g., laptop close/open).");
+      console.log("");
+      console.log("  To recover, run:");
+      console.log(`    ${D}${CLI_NAME} ${sandboxName} connect${R}  (auto-recovers on connect)`);
+      console.log("  Or manually inside the sandbox:");
+      console.log(`    ${D}${agentRuntime.getGatewayCommand(sessionAgent)}${R}`);
     }
   }
+}
 
-  const nimStat =
-    sb && sb.nimContainer ? nim.nimStatusByName(sb.nimContainer) : nim.nimStatus(sandboxName);
-  if (nim.shouldShowNimLine(sb && sb.nimContainer, nimStat.running)) {
+function printNimStatus(sandboxName: string, nimContainer?: string): void {
+  const nimStat = nimContainer ? nim.nimStatusByName(nimContainer) : nim.nimStatus(sandboxName);
+  if (nim.shouldShowNimLine(nimContainer, nimStat.running)) {
     console.log(
       `    NIM:      ${nimStat.running ? `running (${nimStat.container})` : "not running"}`,
     );
@@ -301,5 +266,54 @@ export async function showSandboxStatus(sandboxName: string): Promise<void> {
       console.log(`    Healthy:  ${nimStat.healthy ? "yes" : "no"}`);
     }
   }
+}
+
+export async function showSandboxStatus(sandboxName: string): Promise<void> {
+  const sb = registry.getSandbox(sandboxName);
+
+  let lookup: SandboxGatewayState;
+  try {
+    lookup = await getReconciledSandboxGatewayState(sandboxName, {
+      getState: getSandboxGatewayStateForStatus,
+    });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    lookup = {
+      state: "gateway_error",
+      output: `  Could not probe live gateway state: ${message}`,
+    };
+  }
+
+  let liveResult: Awaited<ReturnType<typeof captureOpenshellForStatus>> | null = null;
+  if (lookup.state === "present") {
+    try {
+      liveResult = await captureOpenshellForStatus(["inference", "get"], {
+        ignoreError: true,
+      });
+    } catch {
+      liveResult = null;
+    }
+  }
+
+  const live = liveResult && !isCommandTimeout(liveResult) ? parseGatewayInference(liveResult.output) : null;
+  const currentModel = (live && live.model) || (sb && sb.model) || "unknown";
+  const currentProvider = (live && live.provider) || (sb && sb.provider) || "unknown";
+  const inferenceHealth = getSandboxStatusInferenceHealth(
+    lookup.state === "present",
+    currentProvider,
+    currentModel,
+  );
+
+  if (sb) {
+    printSandboxDetails(sb, lookup.state === "present", currentModel, currentProvider, inferenceHealth, sandboxName);
+  }
+
+  checkAndHandleGatewayState(lookup, sandboxName);
+
+  if (lookup.state === "present") {
+    await printOpenClawHealth(sandboxName);
+  }
+
+  printNimStatus(sandboxName, sb?.nimContainer || undefined);
   console.log("");
 }
