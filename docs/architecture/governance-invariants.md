@@ -22,6 +22,7 @@ This document formalizes the hard invariants that govern the NemoClaw substrate.
 **Violation impact:** Forged or drifted execution history could pass audit checks, undermining governance trust.
 
 **Enforcement points:**
+
 - `src/lib/control-plane/replay.ts` — digest validation, sequence continuity checks.
 - `src/lib/control-plane/degraded-state-chaos.test.ts` — replay digest mismatch detection.
 
@@ -40,6 +41,7 @@ This document formalizes the hard invariants that govern the NemoClaw substrate.
 **Violation impact:** Routing decisions driven by telemetry could be manipulated via probe forgery or stale cache injection.
 
 **Enforcement points:**
+
 - `src/lib/control-plane/operational-intelligence.ts` — telemetry aggregation outputs are non-authoritative.
 - `src/lib/control-plane/worker-probes.ts` — probe results update registry evidence, not authorization state.
 - Policy evaluator (`src/lib/control-plane/types.ts`) — policy decisions are independent of telemetry.
@@ -59,6 +61,7 @@ This document formalizes the hard invariants that govern the NemoClaw substrate.
 **Violation impact:** A worker with high trust but denied policy could execute unauthorized remote work.
 
 **Enforcement points:**
+
 - `src/lib/control-plane/types.ts` — `TrustLevel` and `AttestationStatus` are separate from `PolicyDecision`.
 - Remote execution adapter — policy gating precedes transport regardless of trust level.
 - `src/lib/control-plane/degraded-state-chaos.test.ts` — trust-denied workers are blocked before transport.
@@ -78,10 +81,11 @@ This document formalizes the hard invariants that govern the NemoClaw substrate.
 **Violation impact:** Expired attestations could silently drop trust, or valid attestations could grant unearned trust.
 
 **Enforcement points:**
+
 - `src/lib/control-plane/types.ts` — `AttestationStatus` and `TrustLevel` are distinct fields.
 - Capability attestation helpers evaluate both independently.
 
-**Verification:** Attestation/trust decision helper tests.
+**Verification:** Attestation/authorization helper tests.
 
 **Future distributed implications:** Cryptographic attestation (not yet implemented) must update attestation status without automatically elevating trust. Operator review of attestation changes remains required.
 
@@ -96,6 +100,7 @@ This document formalizes the hard invariants that govern the NemoClaw substrate.
 **Violation impact:** A manipulated probe response could authorize or deny execution without policy evaluation.
 
 **Enforcement points:**
+
 - `src/lib/control-plane/local-runtime-probes.ts` — probes update registry, not policy.
 - `src/lib/control-plane/worker-probes.ts` — remote probes update evidence fields, not authorization.
 - Diagnostics summary — reports probe evidence without making authorization claims.
@@ -115,6 +120,7 @@ This document formalizes the hard invariants that govern the NemoClaw substrate.
 **Violation impact:** Execution could silently route to unintended targets without operator visibility or audit trail.
 
 **Enforcement points:**
+
 - `src/lib/control-plane/types.ts` — `FallbackRecord` with explicit fields.
 - Governed routing — no-candidate paths are explicit failures, not silent fallback.
 - `src/lib/control-plane/degraded-state-chaos.test.ts` — no-hidden-fallback assertions.
@@ -134,6 +140,7 @@ This document formalizes the hard invariants that govern the NemoClaw substrate.
 **Violation impact:** Diagnostic collection could alter routing outcomes or mask failures.
 
 **Enforcement points:**
+
 - `src/lib/control-plane/local-diagnostics-summary.ts` — pure aggregation functions.
 - Diagnostics command paths — read-only access to state.
 
@@ -152,6 +159,7 @@ This document formalizes the hard invariants that govern the NemoClaw substrate.
 **Violation impact:** Decisions without lineage could pass replay validation, creating unauditable execution history.
 
 **Enforcement points:**
+
 - `src/lib/control-plane/replay.ts` — required governance metadata validation.
 - Replay validation tests — explicit rejection of missing lineage fields.
 
@@ -170,6 +178,7 @@ This document formalizes the hard invariants that govern the NemoClaw substrate.
 **Violation impact:** Events without governance metadata could accumulate, creating an unauditable operational history.
 
 **Enforcement points:**
+
 - `src/lib/control-plane/types.ts` — required fields on `ExecutionReceipt`, `DegradedState`, operational events.
 - Deterministic serialization — validates presence of required fields.
 
@@ -188,6 +197,7 @@ This document formalizes the hard invariants that govern the NemoClaw substrate.
 **Violation impact:** Local workloads could execute on untrusted remote workers without operator awareness.
 
 **Enforcement points:**
+
 - `src/lib/control-plane/remote-execution-adapter.ts` — flag gating before any transport.
 - Policy evaluation — explicit `deny` or `approval_required` blocking.
 - `src/lib/control-plane/degraded-state-chaos.test.ts` — remote execution disabled/denied assertions.
@@ -207,6 +217,7 @@ This document formalizes the hard invariants that govern the NemoClaw substrate.
 **Violation impact:** Stale approvals could authorize execution that the operator would no longer permit.
 
 **Enforcement points:**
+
 - Remote execution adapter — `approval_required` blocks without explicit approval context.
 - Policy evaluator — approval decisions are per-evaluation, not cached.
 
@@ -225,6 +236,7 @@ This document formalizes the hard invariants that govern the NemoClaw substrate.
 **Violation impact:** Operators could believe the system is healthy when it is degraded, missing required intervention windows.
 
 **Enforcement points:**
+
 - `src/lib/control-plane/types.ts` — `DegradedState` with required fields.
 - Observability aggregation — degraded states are surfaced, not suppressed.
 - Diagnostics — explicit degraded-state reporting in summaries.
@@ -244,6 +256,7 @@ This document formalizes the hard invariants that govern the NemoClaw substrate.
 **Violation impact:** Missing telemetry could appear as healthy state, preventing detection of actual failures.
 
 **Enforcement points:**
+
 - `src/lib/control-plane/observability.ts` — outputs distinguish observed/unavailable states.
 - Telemetry registry — unavailable telemetry does not clear previously observed data.
 - Diagnostics — explicit unavailable/stale reporting.
@@ -263,6 +276,7 @@ This document formalizes the hard invariants that govern the NemoClaw substrate.
 **Violation impact:** Temporary probe failures could erase device registry state, causing scheduling instability.
 
 **Enforcement points:**
+
 - `src/lib/control-plane/worker-probes.ts` — unavailable/stale telemetry preserved with provenance markers.
 - Registry telemetry persistence policy — observed/partial/unavailable/stale/conflict provenance.
 
@@ -281,6 +295,7 @@ This document formalizes the hard invariants that govern the NemoClaw substrate.
 **Violation impact:** Operators could believe telemetry coverage is complete when critical nodes are unmonitored.
 
 **Enforcement points:**
+
 - `src/lib/control-plane/operational-intelligence.ts` — explicit unavailable categorization.
 - Diagnostics — telemetry availability state explicitly reported.
 - `src/lib/control-plane/degraded-state-chaos.test.ts` — telemetry non-erasure under unavailable probes.
@@ -300,6 +315,7 @@ This document formalizes the hard invariants that govern the NemoClaw substrate.
 **Violation impact:** Accumulated memory could silently shift routing behavior away from operator intent.
 
 **Enforcement points:**
+
 - `src/lib/control-plane/operational-memory.ts` — append-only interface, no mutation APIs.
 - Policy promotion — supervised proposals only, no automatic application.
 
@@ -318,6 +334,7 @@ This document formalizes the hard invariants that govern the NemoClaw substrate.
 **Violation impact:** Execution could bypass operator-configured policy through trust escalation, telemetry manipulation, or memory influence.
 
 **Enforcement points:**
+
 - `src/lib/control-plane/types.ts` — `PolicyDecision` is the gating type for execution.
 - Governed routing — policy evaluation precedes candidate selection.
 - Remote execution — policy gating precedes transport.
@@ -337,6 +354,7 @@ This document formalizes the hard invariants that govern the NemoClaw substrate.
 **Violation impact:** Replay validation would fail on legitimate executions due to serialization instability.
 
 **Enforcement points:**
+
 - `src/lib/control-plane/types.ts` — deterministic serialization for receipts.
 - Receipt emission in governed routing and remote execution paths.
 

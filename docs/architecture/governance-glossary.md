@@ -14,12 +14,14 @@ This glossary defines the canonical terminology for the NemoClaw governed execut
 - **Degraded State**: An explicitly identified state where an execution or system component has failed, timed out, or fallen back to a lower-fidelity mode. Requires operator intervention. (Do not use: *fallback*, *failover*, *fail-safe*, *self-healing*).
 - **Replay Receipt**: The immutable, deterministic record of an execution's lifecycle, lineage, and inputs. (Do not use: *replay log*).
 - **Replay Inspector**: The diagnostic tool used to analyze replay receipts.
-- **Authorization**: A binary policy decision to allow or deny an action. 
+- **Authorization**: A binary policy decision to allow or deny an action.
 - **Trust**: A confidence gradient derived from evidence. Trust does not bypass authorization.
 - **Reason Code**: An explicit, deterministic identifier for a policy outcome or degraded state (e.g., `policy_outcome`, `missing_replay_reason_code`).
 
 ## Execution Lifecycle States
+
 The 10 canonical state-machine phases are:
+
 1. `planned`
 2. `queued`
 3. `leased`

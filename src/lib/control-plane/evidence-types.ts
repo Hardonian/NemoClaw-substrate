@@ -151,6 +151,8 @@ export interface ReplayEvidencePackage {
 
 export const GOVERNANCE_EVENT_CATEGORIES: ReadonlySet<OperationalEventCategory> = new Set([
   "execution_plan_created",
+  "execution_plan_blocked",
+  "execution_plan_cancelled",
   "execution_plan_phase_transition",
   "execution_approval_requested",
   "execution_plan_approved",
@@ -163,11 +165,29 @@ export const GOVERNANCE_EVENT_CATEGORIES: ReadonlySet<OperationalEventCategory> 
   "execution_trust_snapshot_recorded",
   "execution_replay_validation_succeeded",
   "execution_replay_validation_failed",
+  "queue_item_queued",
+  "queue_item_leased",
+  "queue_item_expired",
+  "queue_conflict_detected",
+  "lease_acquired",
+  "lease_expired",
+  "lease_revoked",
+  "lease_conflict_detected",
+  "execution_started",
+  "execution_completed",
+  "execution_failed",
+  "execution_cancelled",
+  "execution_blocked",
+  "proofpack_generated",
+  "proofpack_validation_failed",
 ]);
 
 export const DIAGNOSTICS_EVENT_CATEGORIES: ReadonlySet<OperationalEventCategory> = new Set([
   "diagnostics_snapshot",
   "replay_metadata",
+  "queue_conflict_detected",
+  "lease_conflict_detected",
+  "proofpack_validation_failed",
 ]);
 
 export const FALLBACK_EVENT_CATEGORIES: ReadonlySet<OperationalEventCategory> = new Set([

@@ -13,9 +13,11 @@ Local diagnostics summary includes:
 - degraded-state reason codes
 
 ## 2026-05-09 remote execution diagnostics update
+
 - Diagnostics now include remote execution enablement state and last execution status/reason/receipt reference when available.
 
 ## 2026-05-09 heterogeneous routing update
+
 - Default local/provider behavior remains unchanged unless heterogeneous routing is explicitly enabled.
 - Heterogeneous routing is opt-in via `NEMOCLAW_HETEROGENEOUS_ROUTING=1` and does not imply remote execution enablement.
 - Remote execution requires separate `NEMOCLAW_REMOTE_EXECUTION=1` and policy eligibility.
@@ -24,10 +26,11 @@ Local diagnostics summary includes:
 - Telemetry confidence and degraded states reflect observed registry/probe data only.
 
 ## 2026-05-09 dispatch diagnostics
+
 - Heterogeneous dispatch wrapper diagnostics now report bridge enablement, governed state, remote execution state, selected candidate, and receipt id.
 
-
 ## 2026-05-09 telemetry truth update
+
 - Telemetry is explicit probe-only and best effort.
 - Unavailable telemetry is acceptable and non-fatal.
 - No background polling daemons are introduced.
@@ -39,6 +42,7 @@ Local diagnostics summary includes:
 Diagnostics explicitly report source (local/remote), parser confidence (observed/partial/unavailable/stale), registry update applied/skipped reason codes, and model/GPU known-vs-unknown state.
 
 ## Worker trust and attestation constraints (2026-05-09)
+
 - Self-reported claims are evidence only and are **not automatically trusted**.
 - Probe-observed evidence improves visibility but is **not authorization**.
 - Operator approval is explicit and required before remote trust elevation.
@@ -48,4 +52,5 @@ Diagnostics explicitly report source (local/remote), parser confidence (observed
 - No orchestration/Dynamo integration is implemented in this phase.
 
 ## Residual closure assertions (2026-05-09)
+
 Diagnostics remain explicit for trust, telemetry, replay, and fallback states. Blocked branches fail closed with visible reason-coded receipts; no hidden fallback or implicit transport retry is allowed.

@@ -6,6 +6,7 @@
 Remote probe and remote execution seams are deny-by-default and policy-governed.
 
 For remote execution specifically:
+
 - disabled unless `NEMOCLAW_REMOTE_EXECUTION=1`
 - auth metadata is redacted in diagnostics/receipts/events
 - non-2xx, timeout, malformed response, auth rejection, and network-unavailable paths are explicit degraded truths

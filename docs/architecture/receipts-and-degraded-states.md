@@ -14,6 +14,7 @@ Receipts are append-friendly and replay-oriented and emitted on governed routing
 Execution receipt construction includes policy rationale, tool metadata, fallback metadata, degraded states, and timing summary in a thin runtime seam adapter.
 
 Replay validation fails closed on envelope integrity mismatches and explicit governance metadata requirements:
+
 - deterministic sequence continuity
 - digest integrity
 - required replay lineage
@@ -22,6 +23,7 @@ Replay validation fails closed on envelope integrity mismatches and explicit gov
 No silent replay adaptation is implemented.
 
 ## 2026-05-09 governed routing update
+
 Opt-in governed provider routing is available behind `NEMOCLAW_GOVERNED_ROUTING=1` (default off). Default routing is preserved when disabled.
 
 Not implemented in this phase: orchestration, distributed execution rollout, autonomous execution, self-healing behavior, queue workers/daemons, GPU balancing, Dynamo integration, automatic retries, and automatic policy learning.

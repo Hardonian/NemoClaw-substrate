@@ -6,18 +6,21 @@
 Remote worker execution is **opt-in only** via `NEMOCLAW_REMOTE_EXECUTION=1`.
 
 Current implementation is a **guarded scaffold seam**:
+
 - policy-gated before any transport call
 - explicit `approval_required` blocking unless approved context is provided
 - HTTP adapter prototype with mockable transport and timeout-bounded calls
 - receipt/event emission and replay-safe result records
 
 Not implemented in this phase:
+
 - SSH execution
 - background daemon
 - distributed orchestration/Dynamo integration
 - automatic worker routing or provider behavior mutation
 
 ## 2026-05-09 heterogeneous routing update
+
 - Default local/provider behavior remains unchanged unless heterogeneous routing is explicitly enabled.
 - Heterogeneous routing is opt-in via `NEMOCLAW_HETEROGENEOUS_ROUTING=1` and does not imply remote execution enablement.
 - Remote execution requires separate `NEMOCLAW_REMOTE_EXECUTION=1` and policy eligibility.
@@ -26,6 +29,7 @@ Not implemented in this phase:
 - Telemetry confidence and degraded states reflect observed registry/probe data only.
 
 ## Worker trust and attestation constraints (2026-05-09)
+
 - Self-reported claims are evidence only and are **not automatically trusted**.
 - Probe-observed evidence improves visibility but is **not authorization**.
 - Operator approval is explicit and required before remote trust elevation.

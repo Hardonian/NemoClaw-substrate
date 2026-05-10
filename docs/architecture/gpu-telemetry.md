@@ -1,7 +1,7 @@
 # Placeholder
 
-
 ## 2026-05-09 telemetry truth update
+
 - Telemetry is explicit probe-only and best effort.
 - Unavailable telemetry is acceptable and non-fatal.
 - No background polling daemons are introduced.

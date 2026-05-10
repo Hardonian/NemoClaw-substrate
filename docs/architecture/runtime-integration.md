@@ -40,24 +40,28 @@ This document tracks low-risk runtime seams where governed execution primitives 
 - Routing behavior remains unchanged; scheduler routing handoff is still planned.
 
 ## 2026-05-09 adapter/dry-run update
+
 Worker/provider adapter contracts and scheduler-to-provider dry-run bridge are implemented for diagnostics and receipt/event emission only. Live provider routing is unchanged. Remote execution, Dynamo adapters, and GPU telemetry remain planned future work.
 
 ## 2026-05-09 governed routing update
+
 Opt-in governed provider routing is available behind `NEMOCLAW_GOVERNED_ROUTING=1` (default off). Default routing is preserved when disabled. Remote worker execution, Dynamo orchestration, and GPU telemetry adapters are not implemented in this phase.
 
-
 ## Worker probe and telemetry adapter note (2026-05-09)
+
 - Probes are explicit operator-invoked actions (manual/invoked-only), not autonomous loops.
 - Remote execution remains disabled in this phase; governed routing remains opt-in.
 - Telemetry fields can be unavailable/stale and are surfaced truthfully without fabrication.
 - Dynamo integration is planned only and not implemented.
 
 ## 2026-05-09 guarded remote execution adapter update
+
 - Added opt-in remote execution seam behind `NEMOCLAW_REMOTE_EXECUTION=1`.
 - HTTP remote execution adapter is scaffolded/guarded only; SSH execution is not implemented.
 - No background daemon, no distributed orchestration, no Dynamo integration, no automatic provider/worker routing changes.
 - Policy + approval gates block attempts before transport; receipts/events/diagnostics capture outcomes.
 
 ## 2026-05-09 guarded dispatch integration
+
 - Integrated heterogeneous bridge at runtime/provider dispatch seam behind explicit flags.
 - Receipts/events are emitted only when governed heterogeneous path is active.

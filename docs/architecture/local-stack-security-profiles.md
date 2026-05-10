@@ -63,6 +63,7 @@ This document defines the trust boundaries, security profiles, and worker classi
 | Credential persistence | Stripped from configs, injected at runtime |
 
 **Trust assumptions:**
+
 - Operator host is trusted.
 - Sandbox container is partially trusted (capability-restricted).
 - Agent code runs with sandbox-level isolation.
@@ -84,6 +85,7 @@ Adds to local-only profile:
 | Response integrity | Validated (JSON structure, status code); content not signed |
 
 **Trust assumptions:**
+
 - Remote workers are untrusted by default.
 - Trust is a classification signal, not authorization (INV-003).
 - Attestation is not trust (INV-004).

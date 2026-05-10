@@ -4,6 +4,7 @@
 # Policy promotion (supervised)
 
 ## Status (2026-05-09)
+
 Implemented review-only proposal substrate in `src/lib/control-plane/policy-promotion.ts`.
 
 `PolicyCandidate` and `PolicyPromotionProposal` are generated deterministically from repeated deny/override/degraded/fallback patterns.

@@ -41,6 +41,7 @@ SSRF protection (`nemoclaw/src/blueprint/ssrf.ts`) supplements the network polic
 **Scope:** Governs how subprocess commands are executed.
 
 Hard constraints (not configurable — always enforced):
+
 - Commands must be `argv` arrays. String commands are rejected.
 - `shell: true` is forbidden and throws at runtime.
 - All subprocess output is redacted before terminal emission.
@@ -53,6 +54,7 @@ These constraints are structural (enforced in `src/lib/runner.ts`) and cannot be
 **Scope:** Controls whether execution may cross trust boundaries to remote workers.
 
 Policy evaluation chain (implemented in `src/lib/control-plane/remote-execution.ts`):
+
 1. **Flag gate:** Disabled unless `NEMOCLAW_REMOTE_EXECUTION=1`.
 2. **Policy evaluation:** `evaluatePolicy()` from `src/lib/control-plane/governance.ts` determines allow/deny/approval_required.
 3. **Approval gate:** If `approval_required`, explicit operator approval must be present.
@@ -66,6 +68,7 @@ Policy evaluation chain (implemented in `src/lib/control-plane/remote-execution.
 **Scope:** Controls credential handling across persistence boundaries.
 
 Rules (enforced in `src/lib/security/credential-filter.ts`):
+
 - Credential fields are stripped from config files during migration and backup.
 - Sensitive files (`auth-profiles.json`, `auth.json`) are excluded from backups entirely.
 - Config files written after sanitization have permissions set to `0o600`.
@@ -93,6 +96,7 @@ All tiers source patterns from `src/lib/security/secret-patterns.ts`.
 **Scope:** Controls what content may be written to persistent workspace memory.
 
 Rules (enforced in `nemoclaw/src/security/secret-scanner.ts`):
+
 - All writes targeting memory paths are scanned for high-confidence secret patterns.
 - 14 protected path segments are monitored (`.openclaw/memory/`, `.openclaw/credentials/`, `.nemoclaw/`, etc.).
 - Detected secrets are reported with redacted snippets; writes may be blocked.
