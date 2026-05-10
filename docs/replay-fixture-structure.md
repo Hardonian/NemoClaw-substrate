@@ -74,6 +74,7 @@ interface ReplayEvidencePackage {
 ```
 
 The package:
+
 - Embeds a replay envelope for event replay
 - Embeds an evidence bundle for artifact-level integrity
 - Categorizes events by type for easy access

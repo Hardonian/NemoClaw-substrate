@@ -21,6 +21,7 @@ const fixture = generateSeededFixture({
 ```
 
 Returns:
+
 - `events`: Array of `OperationalEvent`
 - `envelope`: `ReplayEnvelope` wrapping the events
 - `manifestHash`: SHA-256 hash of the fixture manifest
@@ -58,6 +59,7 @@ const fixture = generateDegradedFixture({
 ```
 
 Degraded categories covered:
+
 - `constrained` (node_missing)
 - `degraded` (heartbeat_stale)
 - `unavailable` (transport_unreachable)

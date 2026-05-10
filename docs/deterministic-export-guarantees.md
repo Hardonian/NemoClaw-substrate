@@ -28,6 +28,7 @@ function sortValue(value: unknown): unknown {
 ```
 
 Guarantees:
+
 - Object keys are always sorted alphabetically
 - Nested objects are recursively sorted
 - Arrays preserve insertion order (elements are not re-ordered)
@@ -42,6 +43,7 @@ const sorted = [...input.artifacts].sort((a, b) => a.artifactId.localeCompare(b.
 ```
 
 Guarantees:
+
 - Same set of artifacts → same ordering, regardless of insertion order
 - Bundle ID is computed from sorted artifact IDs
 
@@ -54,6 +56,7 @@ references: [...input.references].sort((a, b) => a.referenceId.localeCompare(b.r
 ```
 
 Guarantees:
+
 - Same set of references → same ordering
 
 ## Hash Stability
@@ -70,6 +73,7 @@ function stableArtifactId(kind: string, payload: unknown, createdAt: string): st
 ```
 
 Guarantees:
+
 - Same kind + same payload + same timestamp → same artifact ID
 - Different payload (even with different key order) → different artifact ID
 
@@ -85,6 +89,7 @@ function stableBundleId(artifacts: EvidenceArtifact[], generatedAt: string): str
 ```
 
 Guarantees:
+
 - Same artifacts (any order) + same timestamp → same bundle ID
 
 ### Manifest IDs
@@ -121,6 +126,7 @@ All timestamps are **explicit inputs**, never computed from `Date.now()`:
 - `exportedAt`: Provided by caller
 
 Guarantees:
+
 - Same timestamps → same serialization → same hashes
 - No hidden time-dependent behavior
 

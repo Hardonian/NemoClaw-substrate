@@ -52,6 +52,7 @@ const markdown = exportBundleAsMarkdown(bundle, {
 ```
 
 Options:
+
 - `title`: Document title
 - `includeArtifactDetails`: Include per-artifact sections with payload keys
 - `includeReferences`: Include references table

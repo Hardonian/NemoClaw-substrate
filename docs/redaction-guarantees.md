@@ -11,6 +11,7 @@ The system detects secrets through multiple pattern-matching strategies defined 
 ### Token Prefix Patterns
 
 Standalone token patterns that match without context:
+
 - NVIDIA: `nvapi-`, `nvcf-`
 - GitHub: `ghp_`, `github_pat_`
 - OpenAI: `sk-proj-`, `sk-ant-`, `sk-`
@@ -26,6 +27,7 @@ Standalone token patterns that match without context:
 ### Context Patterns
 
 Patterns requiring context anchors:
+
 - Bearer tokens: `Bearer <token>`
 - Environment-like: `KEY=value`, `SECRET=value`, `TOKEN=value`, etc.
 
@@ -40,6 +42,7 @@ const redacted = redactPayloadForExport(payload);
 ```
 
 Uses `security-policy.ts` `redactSecurityPayload()` which:
+
 1. Walks the object tree recursively (up to max depth)
 2. Checks keys against sensitive key patterns (`authorization`, `api-key`, `secret`, etc.)
 3. Replaces sensitive values with `<REDACTED>`
@@ -70,6 +73,7 @@ const result = validateArtifactRedaction(artifact);
 ```
 
 Checks:
+
 - Token patterns in string values
 - Bearer tokens in string values
 - Auth header keys in object keys
@@ -94,6 +98,7 @@ const result = validateReplayPackageRedaction(pkg);
 ```
 
 Validates:
+
 - Evidence bundle artifacts
 - Governance event payloads
 - Diagnostics snapshot payloads

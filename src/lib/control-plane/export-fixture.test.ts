@@ -493,7 +493,7 @@ describe("redaction-validation", () => {
       const bundle = buildEvidenceBundle({ artifacts: [artifact], generatedAt: T0, classification: "internal" });
       const report = generateRedactionReport({ bundle });
       expect(report.bundleId).toBe(bundle.bundleId);
-      expect(result.valid).toBe(true);
+      expect(report.result.valid).toBe(true);
     });
 
     it("generates report for packages", () => {
