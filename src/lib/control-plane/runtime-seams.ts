@@ -9,7 +9,7 @@ import { evaluatePolicy } from "./governance";
 export interface RuntimeActionDescriptor {
   requestId: string;
   action: string;
-  actionClass: string;
+  actionClass: "tool" | "shell" | "file_mutation" | "remote_node" | "provider" | "fallback" | "network_sensitive" | "high_risk" | "generic" | "runtime";
   executionPhase: ExecutionPhase;
   provider?: string;
   model?: string;
