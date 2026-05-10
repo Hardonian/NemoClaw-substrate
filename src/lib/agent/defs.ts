@@ -288,6 +288,18 @@ export function loadAgent(name: string): AgentDefinition {
 
   const raw = loadManifestRecord(manifestPath);
   const agentDir = path.join(AGENTS_DIR, name);
+
+  const agent = createAgentDefinition(name, agentDir, manifestPath, raw);
+  _cache.set(name, agent);
+  return agent;
+}
+
+export function createAgentDefinition(
+  name: string,
+  agentDir: string,
+  manifestPath: string,
+  raw: ManifestRecord,
+): AgentDefinition {
   const manifestName = readString(raw, "name") ?? name;
   const description = readString(raw, "description");
   const displayName = readString(raw, "display_name");
@@ -442,7 +454,6 @@ export function loadAgent(name: string): AgentDefinition {
     },
   };
 
-  _cache.set(name, agent);
   return agent;
 }
 
