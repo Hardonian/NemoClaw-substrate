@@ -22,3 +22,21 @@ Current replay is in-process and export-oriented. Future adapters can persist en
 ## Residual matrix closure note (2026-05-09)
 
 Replay validation now has explicit branch assertions for governance drift classes (policy drift, trust drift, candidate eligibility mismatch, degraded state mismatch) by rejecting envelopes that omit required reason codes.
+
+## Execution lifecycle replay lineage (2026-05-10)
+
+The execution lifecycle substrate validates replay consistency across plan and queue records. It rejects:
+
+- missing lineage
+- lineage drift
+- replay reference drift
+- governance metadata loss or drift
+- trust metadata loss or drift
+- fallback permission drift
+- candidate mismatch
+- ownership mismatch
+- lease mismatch
+- receipt mismatch
+- degraded states without reason codes
+
+Idempotency handling distinguishes deterministic reruns from conflicting replays and blocks cancellation-safe replay of a cancelled plan unless the caller creates a new explicit plan.

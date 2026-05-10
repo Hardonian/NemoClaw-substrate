@@ -30,3 +30,12 @@ Outputs distinguish observed/unavailable states and avoid fabricated orchestrati
 - Legacy consumers that read `degraded_state` / `runtime_action` continue to function; telemetry adds explicit categories for higher-fidelity replay and observability.
 
 - Telemetry observability summaries include registry update applied/skipped counts plus conflict/stale categories to support operator audit trails.
+
+## 2026-05-10 execution lifecycle observability
+
+Execution lifecycle observability now includes:
+
+- `summarizeExecutionLifecycleEventCounts(...)` for `execution_*`, `queue_*`, `lease_*`, and `proofpack_*` event categories.
+- `summarizeExecutionLifecycleTruth(...)` for `observed`, `inferred`, `unavailable`, `degraded`, `stale`, `conflicted`, `blocked`, and `not_implemented` payload states.
+
+These aggregations are counts over recorded events only. They do not infer missing events, invent queue health, or claim proofpack completeness when proofpack validation is unavailable.
