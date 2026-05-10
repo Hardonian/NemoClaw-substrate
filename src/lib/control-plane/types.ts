@@ -204,3 +204,14 @@ export interface ExecutionReceipt {
   executionLineage?: ExecutionReceiptLineage;
   operatorOverrides: Array<{ at: string; actor: string; reason: string }>;
 }
+
+export interface ExecutionReceiptLineage {
+  executionPlanId?: string;
+  executionApprovalId?: string;
+  authorizationLineageId?: string;
+  executionIntentHash?: string;
+  executionPolicySnapshotHash?: string;
+  executionTrustSnapshotHash?: string;
+  authorizationSource?: string;
+  replayReferenceId?: string;
+}

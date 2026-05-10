@@ -13,6 +13,7 @@ export interface TaskClassification {
   batchSuitable: boolean;
   remoteExecutionEligible: boolean;
   approvalRequirementHint: "none" | "recommended" | "required";
+  actionClass: "tool" | "shell" | "file_mutation" | "remote_node" | "provider" | "fallback" | "network_sensitive" | "high_risk" | "generic" | "runtime";
   providerConstraints: string[];
   actionClass?: string;
 }
@@ -34,6 +35,7 @@ export function classifyRequest(request: ControlRequestEnvelope): TaskClassifica
     batchSuitable: taskKind === "batch" || has("batch-ok"),
     remoteExecutionEligible: !has("local-only") && !highRisk,
     approvalRequirementHint: highRisk ? "required" : has("approval-recommended") ? "recommended" : "none",
+    actionClass: highRisk ? "high_risk" : "generic",
     providerConstraints: [...constraints].filter((item) => item.startsWith("provider:") || item.startsWith("model:"))
       .sort(),
   };
