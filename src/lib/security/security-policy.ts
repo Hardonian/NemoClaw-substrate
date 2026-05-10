@@ -128,6 +128,10 @@ export const LOCAL_ONLY_SECURITY_POLICY: SecurityPolicy = {
     allowTailscaleLan: false,
     allowPublic: false,
   },
+  transport: {
+    ...DEFAULT_SECURITY_POLICY.transport,
+    allowedSchemes: ["http:", "https:"],
+  },
 };
 
 export const INSECURE_HTTP_TRANSPORT_POLICY: SecurityPolicy = {
