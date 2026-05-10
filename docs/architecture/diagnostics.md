@@ -53,4 +53,34 @@ Diagnostics explicitly report source (local/remote), parser confidence (observed
 
 ## Residual closure assertions (2026-05-09)
 
-Diagnostics remain explicit for trust, telemetry, replay, and degraded state states. Blocked branches fail closed with visible reason-coded receipts; no hidden degraded state or implicit transport retry is allowed.
+Diagnostics remain explicit for trust, telemetry, replay, and degraded states. Blocked branches fail closed with visible reason-coded receipts; no hidden degraded state or implicit transport retry is allowed.
+
+## Execution lifecycle diagnostics (2026-05-10)
+
+The execution lifecycle substrate adds deterministic diagnostics snapshots for governed execution records. Each fact is classified as one of:
+
+- `observed`
+- `inferred`
+- `unavailable`
+- `degraded`
+- `stale`
+- `conflicted`
+- `blocked`
+- `not_implemented`
+
+Implemented diagnostic facts:
+
+| Fact | Source | Truth behavior |
+|---|---|---|
+| queue state | `QueueItem.state` | observed, blocked, degraded, or unavailable |
+| lease state | `QueueLease` | observed, stale, blocked, or unavailable |
+| ownership | queue ownership + lease owner | observed, conflicted, or unavailable |
+| execution lifecycle | `ExecutionPlan.status` | observed or unavailable |
+| replay integrity | plan + queue replay refs | observed or conflicted |
+| proofpack integrity | proofpack validation | observed, degraded, or unavailable |
+| degraded propagation | plan/queue degraded records | observed or degraded |
+| governance lineage | plan governance metadata | observed or unavailable |
+| trust lineage | plan trust metadata | observed or unavailable |
+| attestation state | trust metadata | observed or unavailable |
+
+Diagnostics do not claim completeness. Missing proofpacks, missing queues, unavailable attestation, and unavailable telemetry are reported as unavailable rather than filled with placeholders.

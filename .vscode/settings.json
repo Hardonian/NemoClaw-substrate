@@ -9,6 +9,7 @@
         "proofpacks",
         "rollups",
         "serde",
+        "timestamping",
         "TOCTOU",
         "unauditable",
         "unredacted",
