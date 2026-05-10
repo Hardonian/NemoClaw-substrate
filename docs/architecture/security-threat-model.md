@@ -16,8 +16,8 @@ This document catalogs the security threats relevant to the NemoClaw governed ex
 
 ## THREAT-001: Credential leakage via CLI output
 
-**Category:** Secret exposure  
-**Status:** Mitigated  
+**Category:** Secret exposure
+**Status:** Mitigated
 **Attack vector:** API keys, tokens, or passwords embedded in subprocess stdout/stderr leak to the operator terminal or diagnostic logs.
 
 **Enforcement:**
@@ -37,8 +37,8 @@ This document catalogs the security threats relevant to the NemoClaw governed ex
 
 ## THREAT-002: Credential persistence in config files
 
-**Category:** Secret exposure  
-**Status:** Mitigated  
+**Category:** Secret exposure
+**Status:** Mitigated
 **Attack vector:** API keys baked into sandbox filesystem or local backup archives survive beyond their intended runtime scope.
 
 **Enforcement:**
@@ -57,8 +57,8 @@ This document catalogs the security threats relevant to the NemoClaw governed ex
 
 ## THREAT-003: Credential leakage via URLs
 
-**Category:** Secret exposure  
-**Status:** Mitigated  
+**Category:** Secret exposure
+**Status:** Mitigated
 **Attack vector:** Tokens embedded in URL query parameters, userinfo, or path segments leak through logging or diagnostic output.
 
 **Enforcement:**
@@ -74,8 +74,8 @@ This document catalogs the security threats relevant to the NemoClaw governed ex
 
 ## THREAT-004: Secret persistence in workspace memory writes
 
-**Category:** Secret exposure  
-**Status:** Mitigated  
+**Category:** Secret exposure
+**Status:** Mitigated
 **Attack vector:** An agent writes an API key or credential into a persistent memory file (MEMORY.md, workspace files, agent skills), where it survives across sessions.
 
 **Enforcement:**
@@ -93,8 +93,8 @@ This document catalogs the security threats relevant to the NemoClaw governed ex
 
 ## THREAT-005: Command injection via shell interpretation
 
-**Category:** Command execution safety  
-**Status:** Mitigated  
+**Category:** Command execution safety
+**Status:** Mitigated
 **Attack vector:** An attacker crafts input containing shell metacharacters (`$(whoami)`, `&& rm -rf /`, backtick expansion) that are interpreted if commands are executed via shell.
 
 **Enforcement:**
@@ -111,8 +111,8 @@ This document catalogs the security threats relevant to the NemoClaw governed ex
 
 ## THREAT-006: SSRF via DNS rebinding (TOCTOU)
 
-**Category:** Network safety  
-**Status:** Mitigated  
+**Category:** Network safety
+**Status:** Mitigated
 **Attack vector:** An attacker controls a DNS record that returns a public IP at validation time and a private/internal IP at connection time, bypassing the private-IP check.
 
 **Enforcement:**
@@ -131,8 +131,8 @@ This document catalogs the security threats relevant to the NemoClaw governed ex
 
 ## THREAT-007: Malicious or compromised remote worker
 
-**Category:** Transport/trust boundary  
-**Status:** Scaffolded  
+**Category:** Transport/trust boundary
+**Status:** Scaffolded
 **Attack vector:** A remote worker endpoint returns forged execution results, manipulated telemetry, or exfiltrates command payloads.
 
 **Enforcement (current):**
@@ -151,8 +151,8 @@ This document catalogs the security threats relevant to the NemoClaw governed ex
 
 ## THREAT-008: Forged telemetry injection
 
-**Category:** Observability integrity  
-**Status:** Partially mitigated  
+**Category:** Observability integrity
+**Status:** Partially mitigated
 **Attack vector:** An attacker injects fabricated telemetry data (fake GPU counts, false health status) to influence operational intelligence or mislead operators.
 
 **Enforcement (current):**
@@ -169,8 +169,8 @@ This document catalogs the security threats relevant to the NemoClaw governed ex
 
 ## THREAT-009: Replay envelope tampering
 
-**Category:** Audit integrity  
-**Status:** Mitigated  
+**Category:** Audit integrity
+**Status:** Mitigated
 **Attack vector:** An attacker modifies exported replay envelopes (event payloads, sequence numbers, lineage references) to forge execution history.
 
 **Enforcement:**
@@ -186,8 +186,8 @@ This document catalogs the security threats relevant to the NemoClaw governed ex
 
 ## THREAT-010: Remote execution without operator consent
 
-**Category:** Authorization boundary  
-**Status:** Mitigated  
+**Category:** Authorization boundary
+**Status:** Mitigated
 **Attack vector:** A local command silently dispatches execution to a remote worker without the operator being aware of the trust boundary crossing.
 
 **Enforcement:**
@@ -203,8 +203,8 @@ This document catalogs the security threats relevant to the NemoClaw governed ex
 
 ## THREAT-011: Proofpack / export integrity compromise
 
-**Category:** Evidence integrity  
-**Status:** Partially mitigated  
+**Category:** Evidence integrity
+**Status:** Partially mitigated
 **Attack vector:** Exported evidence bundles (receipts, plans, telemetry) are modified after export, creating a false audit trail.
 
 **Enforcement (current):**
@@ -221,8 +221,8 @@ This document catalogs the security threats relevant to the NemoClaw governed ex
 
 ## THREAT-012: Unauthorized privilege escalation via trust conflation
 
-**Category:** Authorization boundary  
-**Status:** Mitigated  
+**Category:** Authorization boundary
+**Status:** Mitigated
 **Attack vector:** A worker with high trust (based on telemetry or self-reported claims) bypasses policy evaluation to execute unauthorized work.
 
 **Enforcement:**

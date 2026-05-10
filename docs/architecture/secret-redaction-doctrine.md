@@ -79,8 +79,8 @@ Additional high-confidence patterns for persistent content:
 
 ### Tier 1: Partial redaction (`redact()`)
 
-**Consumer:** `src/lib/runner.ts` (CLI subprocess output)  
-**Behavior:** Preserves first 4 characters, replaces remainder with `*` (capped at 20 asterisks).  
+**Consumer:** `src/lib/runner.ts` (CLI subprocess output)
+**Behavior:** Preserves first 4 characters, replaces remainder with `*` (capped at 20 asterisks).
 **Rationale:** Allows operators to identify which key is in use without exposing the full secret.
 
 ```text
@@ -92,8 +92,8 @@ URL handling: Replaces userinfo with `****`, redacts sensitive query parameters.
 
 ### Tier 2: Full redaction (`redactFull()`)
 
-**Consumer:** `src/lib/debug.ts` (diagnostic dump files)  
-**Behavior:** Replaces entire match with `<REDACTED>`. Also covers `KEY=value` patterns and `Bearer` tokens.  
+**Consumer:** `src/lib/debug.ts` (diagnostic dump files)
+**Behavior:** Replaces entire match with `<REDACTED>`. Also covers `KEY=value` patterns and `Bearer` tokens.
 **Rationale:** Diagnostic dumps may be shared with support; no partial exposure is acceptable.
 
 ```text
@@ -103,8 +103,8 @@ Output: NVIDIA_API_KEY=<REDACTED>
 
 ### Tier 3: Sensitive text redaction (`redactSensitiveText()`)
 
-**Consumer:** `src/lib/onboard-session.ts` (onboarding session logs)  
-**Behavior:** Full replacement + 240-character output truncation.  
+**Consumer:** `src/lib/onboard-session.ts` (onboarding session logs)
+**Behavior:** Full replacement + 240-character output truncation.
 **Rationale:** Onboarding logs may contain user-typed credentials; truncation prevents accumulation of sensitive context.
 
 ---
