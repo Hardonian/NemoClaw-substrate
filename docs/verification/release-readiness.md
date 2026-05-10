@@ -18,7 +18,7 @@ Implemented:
 
 - deterministic execution plan, queue, lease, receipt, replay, proofpack, and diagnostics contracts
 - explicit fail-closed illegal transition handling
-- stale ownership, duplicate lease, split-brain, replay drift, receipt drift, trust drift, fallback drift, cancellation-safe replay, hidden fallback, and hidden retry coverage
+- stale ownership, duplicate lease, split-brain, replay drift, receipt drift, trust drift, degraded state drift, cancellation-safe replay, hidden recovery, and hidden retry coverage
 - deterministic proofpack integrity validation
 
 Deferred:

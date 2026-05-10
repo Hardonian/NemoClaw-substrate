@@ -8,3 +8,4 @@
 - No policy learning from prompts.
 - No unsupported distributed execution claims.
 - No runtime claim without verification evidence.
+- No automatic queue workers, lease renewal loops, speculative fanout, GPU balancing, Dynamo integration, or automatic remote execution enablement in the execution lifecycle substrate.
