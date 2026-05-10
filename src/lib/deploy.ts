@@ -250,6 +250,250 @@ function validateDeploySandboxName(
   }
 }
 
+async function provisionBrevInstance(
+  name: string,
+  gpu: string,
+  brevProvider: string,
+  execFileSync: DeployExecutionOptions["execFileSync"],
+  run: DeployExecutionOptions["run"],
+  log: DeployExecutionOptions["log"],
+  stdoutWrite: DeployExecutionOptions["stdoutWrite"],
+  error: DeployExecutionOptions["error"],
+  exit: DeployExecutionOptions["exit"],
+): Promise<void> {
+  try {
+    execFileSync("which", ["brev"], { stdio: "ignore" });
+  } catch {
+    return fail(["brev CLI not found. Install: https://brev.nvidia.com"], error, exit);
+  }
+
+  let exists = false;
+  try {
+    const out = execFileSync("brev", ["ls"], { encoding: "utf-8" });
+    exists = outputHasExactLine(out, name);
+  } catch (caught) {
+    const caughtObject = typeof caught === "object" && caught !== null ? caught : null;
+    if (outputHasExactLine(readCommandOutput(caughtObject, "stdout"), name)) exists = true;
+    if (outputHasExactLine(readCommandOutput(caughtObject, "stderr"), name)) exists = true;
+  }
+
+  if (!exists) {
+    log(`  Creating Brev instance '${name}' (${gpu}, provider=${brevProvider})...`);
+    run(["brev", "create", name, "--type", gpu, "--provider", brevProvider]);
+  } else {
+    log(`  Brev instance '${name}' already exists.`);
+  }
+
+  run(["brev", "refresh"], { ignoreError: true });
+
+  stdoutWrite("  Waiting for Brev instance readiness ");
+  for (let i = 0; i < 60; i++) {
+    const brevStatus = getBrevInstanceStatus(name, execFileSync);
+    if (isBrevInstanceFailed(brevStatus)) {
+      stdoutWrite("\n");
+      error(`  Brev instance '${name}' did not become ready.`);
+      error(
+        `  Brev status: status=${brevStatus?.status || "unknown"} build=${brevStatus?.build_status || "unknown"} shell=${brevStatus?.shell_status || "unknown"}`,
+      );
+      if (brevStatus?.id) error(`  Instance id: ${brevStatus.id}`);
+      return fail([`  Try: brev reset ${name}`], error, exit);
+    }
+    if (isBrevInstanceReady(brevStatus)) {
+      stdoutWrite(" ✓\n");
+      break;
+    }
+
+    if (i === 59) {
+      stdoutWrite("\n");
+      const finalBrevStatus = getBrevInstanceStatus(name, execFileSync);
+      if (finalBrevStatus) {
+        error(
+          `  Brev status at timeout: status=${finalBrevStatus.status || "unknown"} build=${finalBrevStatus.build_status || "unknown"} shell=${finalBrevStatus.shell_status || "unknown"}`,
+        );
+        if (finalBrevStatus.id) error(`  Instance id: ${finalBrevStatus.id}`);
+      }
+      return fail([`  Timed out waiting for Brev instance readiness for ${name}`], error, exit);
+    }
+    stdoutWrite(".");
+    sleepSeconds(3);
+  }
+}
+
+async function ensureSshTrust(
+  name: string,
+  execFileSync: DeployExecutionOptions["execFileSync"],
+  stdoutWrite: DeployExecutionOptions["stdoutWrite"],
+  error: DeployExecutionOptions["error"],
+  exit: DeployExecutionOptions["exit"],
+): Promise<{ khDir: string; knownHostsFile: string }> {
+  const khDir = fs.mkdtempSync(path.join(os.tmpdir(), "nemoclaw-ssh-"));
+  const knownHostsFile = path.join(khDir, "known_hosts");
+  const realHost = resolveRealHost(name, execFileSync);
+
+  stdoutWrite("  Waiting for SSH ");
+  for (let i = 0; i < 60; i++) {
+    try {
+      const hostKeys = execFileSync("ssh-keyscan", ["-T", "5", "-H", realHost], {
+        encoding: "utf-8",
+        stdio: ["ignore", "pipe", "ignore"],
+      });
+      if (hostKeys.trim()) {
+        fs.writeFileSync(knownHostsFile, hostKeys, { mode: 0o600 });
+        stdoutWrite(" ✓\n");
+        return { khDir, knownHostsFile };
+      }
+    } catch {
+      /* keyscan failed, retry */
+    }
+    if (i === 59) {
+      stdoutWrite("\n");
+      fs.rmSync(khDir, { recursive: true, force: true });
+      return fail(
+        [`  Timed out waiting for SSH to ${name} (keyscan failed after 60 attempts)`],
+        error,
+        exit,
+      );
+    }
+    stdoutWrite(".");
+    sleepSeconds(3);
+  }
+  return { khDir, knownHostsFile };
+}
+
+async function syncAndSetupVm(opts: {
+  name: string;
+  sandboxName: string;
+  skipConnect: boolean;
+  skipStartServices: boolean;
+  env: NodeJS.ProcessEnv;
+  rootDir: string;
+  provider: string;
+  credentials: DeployCredentials;
+  sshOpts: string;
+  sshArgs: string[];
+  execFileSync: DeployExecutionOptions["execFileSync"];
+  run: DeployExecutionOptions["run"];
+  runInteractive: DeployExecutionOptions["runInteractive"];
+  shellQuote: DeployExecutionOptions["shellQuote"];
+  log: DeployExecutionOptions["log"];
+}): Promise<void> {
+  const {
+    name,
+    sandboxName,
+    skipConnect,
+    skipStartServices,
+    env,
+    rootDir,
+    provider,
+    credentials,
+    sshOpts,
+    sshArgs,
+    execFileSync,
+    run,
+    runInteractive,
+    shellQuote,
+    log,
+  } = opts;
+
+  const remoteHome = execFileSync("ssh", [...sshArgs, name, "echo", "$HOME"], {
+    encoding: "utf-8",
+  }).trim();
+  const remoteDir = `${remoteHome}/nemoclaw`;
+
+  log("  Syncing NemoClaw to VM...");
+  run(["ssh", ...sshArgs, name, `mkdir -p ${shellQuote(remoteDir)}`]);
+  run([
+    "rsync",
+    "-az",
+    "--delete",
+    "--exclude",
+    "node_modules",
+    "--exclude",
+    ".git",
+    "--exclude",
+    "dist",
+    "--exclude",
+    ".venv",
+    "-e",
+    `ssh ${sshOpts}`,
+    `${rootDir}/`,
+    `${name}:${remoteDir}/`,
+  ]);
+
+  const envLines = buildDeployEnvLines({
+    env,
+    sandboxName,
+    provider,
+    credentials,
+    shellQuote,
+  });
+  const envDir = fs.mkdtempSync(path.join(os.tmpdir(), "nemoclaw-env-"));
+  const envTmp = path.join(envDir, "env");
+  fs.writeFileSync(envTmp, envLines.join("\n") + "\n", { mode: 0o600 });
+  try {
+    run(["scp", "-q", ...sshArgs, envTmp, `${name}:${remoteDir}/.env`]);
+    run(["ssh", "-q", ...sshArgs, name, `chmod 600 ${shellQuote(`${remoteDir}/.env`)}`]);
+  } finally {
+    try {
+      fs.unlinkSync(envTmp);
+    } catch {
+      /* ignored */
+    }
+    try {
+      fs.rmdirSync(envDir);
+    } catch {
+      /* ignored */
+    }
+  }
+
+  log("  Running setup...");
+  runInteractive([
+    "ssh",
+    "-t",
+    ...sshArgs,
+    name,
+    `cd ${shellQuote(remoteDir)} && set -a && . .env && set +a && bash scripts/install.sh --non-interactive --yes-i-accept-third-party-software`,
+  ]);
+
+  if (
+    !skipStartServices &&
+    (credentials.TELEGRAM_BOT_TOKEN ||
+      credentials.DISCORD_BOT_TOKEN ||
+      credentials.SLACK_BOT_TOKEN)
+  ) {
+    log("  Starting services...");
+    run([
+      "ssh",
+      ...sshArgs,
+      name,
+      `cd ${shellQuote(remoteDir)} && set -a && . .env && set +a && bash scripts/start-services.sh`,
+    ]);
+  }
+
+  if (skipStartServices) {
+    log("  Skipping service startup (NEMOCLAW_DEPLOY_NO_START_SERVICES=1).");
+  }
+
+  if (skipConnect) {
+    log("");
+    log("  Skipping interactive sandbox connect (NEMOCLAW_DEPLOY_NO_CONNECT=1).");
+    log(`  Remote sandbox: ${sandboxName}`);
+    log(`  Connect later with: ssh ${name} 'openshell sandbox connect ${sandboxName}'`);
+    return;
+  }
+
+  log("");
+  log("  Connecting to sandbox...");
+  log("");
+  runInteractive([
+    "ssh",
+    "-t",
+    ...sshArgs,
+    name,
+    `cd ${shellQuote(remoteDir)} && set -a && . .env && set +a && openshell sandbox connect ${shellQuote(sandboxName)}`,
+  ]);
+}
+
 export async function executeDeploy(opts: DeployExecutionOptions): Promise<void> {
   const {
     instanceName,
@@ -340,62 +584,17 @@ export async function executeDeploy(opts: DeployExecutionOptions): Promise<void>
   log(`  Deploying NemoClaw to Brev instance: ${name}`);
   log("");
 
-  try {
-    execFileSync("which", ["brev"], { stdio: "ignore" });
-  } catch {
-    return fail(["brev CLI not found. Install: https://brev.nvidia.com"], error, exit);
-  }
-
-  let exists = false;
-  try {
-    const out = execFileSync("brev", ["ls"], { encoding: "utf-8" });
-    exists = outputHasExactLine(out, name);
-  } catch (caught) {
-    const caughtObject = typeof caught === "object" && caught !== null ? caught : null;
-    if (outputHasExactLine(readCommandOutput(caughtObject, "stdout"), name)) exists = true;
-    if (outputHasExactLine(readCommandOutput(caughtObject, "stderr"), name)) exists = true;
-  }
-
-  if (!exists) {
-    log(`  Creating Brev instance '${name}' (${gpu}, provider=${brevProvider})...`);
-    run(["brev", "create", name, "--type", gpu, "--provider", brevProvider]);
-  } else {
-    log(`  Brev instance '${name}' already exists.`);
-  }
-
-  run(["brev", "refresh"], { ignoreError: true });
-
-  stdoutWrite("  Waiting for Brev instance readiness ");
-  for (let i = 0; i < 60; i++) {
-    const brevStatus = getBrevInstanceStatus(name, execFileSync);
-    if (isBrevInstanceFailed(brevStatus)) {
-      stdoutWrite("\n");
-      error(`  Brev instance '${name}' did not become ready.`);
-      error(
-        `  Brev status: status=${brevStatus?.status || "unknown"} build=${brevStatus?.build_status || "unknown"} shell=${brevStatus?.shell_status || "unknown"}`,
-      );
-      if (brevStatus?.id) error(`  Instance id: ${brevStatus.id}`);
-      return fail([`  Try: brev reset ${name}`], error, exit);
-    }
-    if (isBrevInstanceReady(brevStatus)) {
-      stdoutWrite(" ✓\n");
-      break;
-    }
-
-    if (i === 59) {
-      stdoutWrite("\n");
-      const finalBrevStatus = getBrevInstanceStatus(name, execFileSync);
-      if (finalBrevStatus) {
-        error(
-          `  Brev status at timeout: status=${finalBrevStatus.status || "unknown"} build=${finalBrevStatus.build_status || "unknown"} shell=${finalBrevStatus.shell_status || "unknown"}`,
-        );
-        if (finalBrevStatus.id) error(`  Instance id: ${finalBrevStatus.id}`);
-      }
-      return fail([`  Timed out waiting for Brev instance readiness for ${name}`], error, exit);
-    }
-    stdoutWrite(".");
-    sleepSeconds(3);
-  }
+  await provisionBrevInstance(
+    name,
+    gpu,
+    brevProvider,
+    execFileSync,
+    run,
+    log,
+    stdoutWrite,
+    error,
+    exit,
+  );
 
   // ── SSH trust-on-first-use (TOFU) ──────────────────────────────
   // Pin the host key on first contact via ssh-keyscan, then verify all
@@ -403,139 +602,29 @@ export async function executeDeploy(opts: DeployExecutionOptions): Promise<void>
   // StrictHostKeyChecking=no) to avoid a TOCTOU window where an attacker
   // could interpose between an unauthenticated probe and key capture.
   // Ref: https://github.com/NVIDIA/NemoClaw/issues/691
-  const khDir = fs.mkdtempSync(path.join(os.tmpdir(), "nemoclaw-ssh-"));
-  const knownHostsFile = path.join(khDir, "known_hosts");
-  const realHost = resolveRealHost(name, execFileSync);
-
-  stdoutWrite("  Waiting for SSH ");
-  for (let i = 0; i < 60; i++) {
-    try {
-      const hostKeys = execFileSync("ssh-keyscan", ["-T", "5", "-H", realHost], {
-        encoding: "utf-8",
-        stdio: ["ignore", "pipe", "ignore"],
-      });
-      if (hostKeys.trim()) {
-        fs.writeFileSync(knownHostsFile, hostKeys, { mode: 0o600 });
-        stdoutWrite(" ✓\n");
-        break;
-      }
-    } catch {
-      /* keyscan failed, retry */
-    }
-    if (i === 59) {
-      stdoutWrite("\n");
-      fs.rmSync(khDir, { recursive: true, force: true });
-      return fail(
-        [`  Timed out waiting for SSH to ${name} (keyscan failed after 60 attempts)`],
-        error,
-        exit,
-      );
-    }
-    stdoutWrite(".");
-    sleepSeconds(3);
-  }
+  const { khDir, knownHostsFile } = await ensureSshTrust(name, execFileSync, stdoutWrite, error, exit);
 
   const sshOpts = buildSshOpts(knownHostsFile, shellQuote);
   const sshArgs = buildSshArgs(knownHostsFile);
 
   try {
-    const remoteHome = execFileSync("ssh", [...sshArgs, name, "echo", "$HOME"], {
-      encoding: "utf-8",
-    }).trim();
-    const remoteDir = `${remoteHome}/nemoclaw`;
-
-    log("  Syncing NemoClaw to VM...");
-    run(["ssh", ...sshArgs, name, `mkdir -p ${shellQuote(remoteDir)}`]);
-    run([
-      "rsync",
-      "-az",
-      "--delete",
-      "--exclude",
-      "node_modules",
-      "--exclude",
-      ".git",
-      "--exclude",
-      "dist",
-      "--exclude",
-      ".venv",
-      "-e",
-      `ssh ${sshOpts}`,
-      `${rootDir}/`,
-      `${name}:${remoteDir}/`,
-    ]);
-
-    const envLines = buildDeployEnvLines({
-      env,
+    await syncAndSetupVm({
+      name,
       sandboxName,
+      skipConnect,
+      skipStartServices,
+      env,
+      rootDir,
       provider,
       credentials,
+      sshOpts,
+      sshArgs,
+      execFileSync,
+      run,
+      runInteractive,
       shellQuote,
+      log,
     });
-    const envDir = fs.mkdtempSync(path.join(os.tmpdir(), "nemoclaw-env-"));
-    const envTmp = path.join(envDir, "env");
-    fs.writeFileSync(envTmp, envLines.join("\n") + "\n", { mode: 0o600 });
-    try {
-      run(["scp", "-q", ...sshArgs, envTmp, `${name}:${remoteDir}/.env`]);
-      run(["ssh", "-q", ...sshArgs, name, `chmod 600 ${shellQuote(`${remoteDir}/.env`)}`]);
-    } finally {
-      try {
-        fs.unlinkSync(envTmp);
-      } catch {
-        /* ignored */
-      }
-      try {
-        fs.rmdirSync(envDir);
-      } catch {
-        /* ignored */
-      }
-    }
-
-    log("  Running setup...");
-    runInteractive([
-      "ssh",
-      "-t",
-      ...sshArgs,
-      name,
-      `cd ${shellQuote(remoteDir)} && set -a && . .env && set +a && bash scripts/install.sh --non-interactive --yes-i-accept-third-party-software`,
-    ]);
-
-    if (
-      !skipStartServices &&
-      (credentials.TELEGRAM_BOT_TOKEN ||
-        credentials.DISCORD_BOT_TOKEN ||
-        credentials.SLACK_BOT_TOKEN)
-    ) {
-      log("  Starting services...");
-      run([
-        "ssh",
-        ...sshArgs,
-        name,
-        `cd ${shellQuote(remoteDir)} && set -a && . .env && set +a && bash scripts/start-services.sh`,
-      ]);
-    }
-
-    if (skipStartServices) {
-      log("  Skipping service startup (NEMOCLAW_DEPLOY_NO_START_SERVICES=1).");
-    }
-
-    if (skipConnect) {
-      log("");
-      log("  Skipping interactive sandbox connect (NEMOCLAW_DEPLOY_NO_CONNECT=1).");
-      log(`  Remote sandbox: ${sandboxName}`);
-      log(`  Connect later with: ssh ${name} 'openshell sandbox connect ${sandboxName}'`);
-      return;
-    }
-
-    log("");
-    log("  Connecting to sandbox...");
-    log("");
-    runInteractive([
-      "ssh",
-      "-t",
-      ...sshArgs,
-      name,
-      `cd ${shellQuote(remoteDir)} && set -a && . .env && set +a && openshell sandbox connect ${shellQuote(sandboxName)}`,
-    ]);
   } finally {
     fs.rmSync(khDir, { recursive: true, force: true });
   }
