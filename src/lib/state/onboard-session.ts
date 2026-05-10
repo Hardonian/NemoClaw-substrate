@@ -488,6 +488,71 @@ function lockHolderStillMatches(lock: LockInfo): boolean {
 // descriptor rather than a value re-read from disk. See #1281.
 let heldLockFd: number | null = null;
 
+
+type CollisionAction = { type: "retry" } | { type: "return"; result: LockResult };
+
+function handleLockCollision(): CollisionAction {
+  // Capture both the parsed lock and the inode so we can verify the
+  // file we're about to unlink is STILL the same stale file we read.
+  // Without the inode check, two concurrent processes can both read
+  // the same stale lock, and the slower one will unlink the fresh
+  // lock the faster one just claimed, breaking mutual exclusion.
+  // See issue #1281.
+  let existing: LockInfo | null;
+  let staleInode: bigint | null;
+  try {
+    const stat = fs.statSync(LOCK_FILE, { bigint: true });
+    staleInode = stat.ino;
+    existing = parseLockFile(fs.readFileSync(LOCK_FILE, "utf8"));
+  } catch (readError) {
+    if (isErrnoException(readError) && readError.code === "ENOENT") {
+      return { type: "retry" };
+    }
+    throw readError;
+  }
+  if (!existing) {
+    // Malformed lock file. If the file is very recent (<30 s), a
+    // concurrent process may be mid-write — leave it and retry.
+    // Otherwise the file is stale debris from a crash between
+    // openSync("wx") and writeSync() — remove it so subsequent
+    // onboard runs are not permanently blocked (#2765).
+    try {
+      const lockStat = fs.statSync(LOCK_FILE);
+      const ageMs = Date.now() - lockStat.mtimeMs;
+      if (ageMs > MALFORMED_STALE_SECONDS * 1000) {
+        unlinkIfInodeMatches(LOCK_FILE, staleInode);
+      }
+    } catch (statErr) {
+      if (!(isErrnoException(statErr) && statErr.code === "ENOENT")) {
+        throw statErr;
+      }
+    }
+    return { type: "retry" };
+  }
+  if (lockHolderStillMatches(existing)) {
+    return {
+      type: "return",
+      result: {
+        acquired: false,
+        lockFile: LOCK_FILE,
+        stale: false,
+        holderPid: existing.pid,
+        holderStartedAt: existing.startedAt,
+        holderCommand: existing.command,
+      },
+    };
+  }
+
+  // Stale: unlink ONLY if the file on disk is still the same inode
+  // we just read. If a concurrent process already cleaned up and
+  // claimed the lock, the inode will have changed and we'll fall
+  // through to the next iteration where openSync(wx) will either
+  // succeed (we win) or fail EEXIST against the new holder (and we
+  // re-read it).
+  unlinkIfInodeMatches(LOCK_FILE, staleInode);
+  return { type: "retry" };
+}
+
 export function acquireOnboardLock(command: string | null = null): LockResult {
   ensureSessionDir();
   const payload = JSON.stringify(
@@ -521,61 +586,10 @@ export function acquireOnboardLock(command: string | null = null): LockResult {
         throw error;
       }
 
-      // Capture both the parsed lock and the inode so we can verify the
-      // file we're about to unlink is STILL the same stale file we read.
-      // Without the inode check, two concurrent processes can both read
-      // the same stale lock, and the slower one will unlink the fresh
-      // lock the faster one just claimed, breaking mutual exclusion.
-      // See issue #1281.
-      let existing: LockInfo | null;
-      let staleInode: bigint | null;
-      try {
-        const stat = fs.statSync(LOCK_FILE, { bigint: true });
-        staleInode = stat.ino;
-        existing = parseLockFile(fs.readFileSync(LOCK_FILE, "utf8"));
-      } catch (readError) {
-        if (isErrnoException(readError) && readError.code === "ENOENT") {
-          continue;
-        }
-        throw readError;
+      const action = handleLockCollision();
+      if (action.type === "return") {
+        return action.result;
       }
-      if (!existing) {
-        // Malformed lock file. If the file is very recent (<30 s), a
-        // concurrent process may be mid-write — leave it and retry.
-        // Otherwise the file is stale debris from a crash between
-        // openSync("wx") and writeSync() — remove it so subsequent
-        // onboard runs are not permanently blocked (#2765).
-        try {
-          const lockStat = fs.statSync(LOCK_FILE);
-          const ageMs = Date.now() - lockStat.mtimeMs;
-          if (ageMs > MALFORMED_STALE_SECONDS * 1000) {
-            unlinkIfInodeMatches(LOCK_FILE, staleInode);
-          }
-        } catch (statErr) {
-          if (!(isErrnoException(statErr) && statErr.code === "ENOENT")) {
-            throw statErr;
-          }
-        }
-        continue;
-      }
-      if (lockHolderStillMatches(existing)) {
-        return {
-          acquired: false,
-          lockFile: LOCK_FILE,
-          stale: false,
-          holderPid: existing.pid,
-          holderStartedAt: existing.startedAt,
-          holderCommand: existing.command,
-        };
-      }
-
-      // Stale: unlink ONLY if the file on disk is still the same inode
-      // we just read. If a concurrent process already cleaned up and
-      // claimed the lock, the inode will have changed and we'll fall
-      // through to the next iteration where openSync(wx) will either
-      // succeed (we win) or fail EEXIST against the new holder (and we
-      // re-read it).
-      unlinkIfInodeMatches(LOCK_FILE, staleInode);
       continue;
     }
 
