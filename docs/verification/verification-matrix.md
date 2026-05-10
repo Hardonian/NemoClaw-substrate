@@ -90,3 +90,8 @@ node scripts/verify-core.js --strict
 - Cryptographic attestation is not implemented yet in this phase.
 - Remote execution is disabled by default and requires explicit opt-in flags.
 - No orchestration/Dynamo integration is implemented in this phase.
+
+## Residual closure additions (2026-05-09)
+- Replay guardrails: explicit rejection tests cover policy drift, trust drift, candidate eligibility mismatch, and fallback mismatch when governance reason codes are absent.
+- Remote execution guardrails: transport is not invoked when disabled, denied, approval-gated, trust-denied, or stale/unhealthy under active routing context.
+- Observability guardrails: telemetry aggregates include emitted telemetry kinds only; reserved scaffold kinds are validated as non-emitted/non-aggregated for telemetry rollups.

@@ -43,3 +43,6 @@ Worker/provider adapter contracts and scheduler-to-provider dry-run bridge are i
 - Cryptographic attestation is not implemented yet in this phase.
 - Remote execution is disabled by default and requires explicit opt-in flags.
 - No orchestration/Dynamo integration is implemented in this phase.
+
+## Reserved event kinds
+`replay_metadata` and `diagnostics_snapshot` remain reserved/scaffold categories. They are intentionally excluded from telemetry aggregate summaries and are asserted in tests to avoid false emission/aggregation claims.

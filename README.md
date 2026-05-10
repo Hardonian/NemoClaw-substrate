@@ -75,3 +75,7 @@ npm run verify:release
 - `verify:release` is the primary release gate for local and CI readiness checks.
 - `verify:all` remains available as a strict-mode variant of `verify:core` that fails for both repository failures and missing required toolchain/dependencies.
 - In restricted local environments, `npm install --ignore-scripts` is a local diagnosis fallback only and must not be used for release packaging or CI baselines.
+
+
+### Residual matrix closure status (2026-05-09)
+The governed substrate closure pass is verification-focused: direct branch assertions, replay/diagnostics truth hardening, and status-document coherence. It does not add orchestration, distributed execution, GPU balancing, Dynamo integration, autonomous routing, or automatic policy/trust mutation.
