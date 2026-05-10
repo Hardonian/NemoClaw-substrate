@@ -6,7 +6,7 @@
 Status: **Implemented (primitive planning)**.
 
 Scheduler consumes request envelope, classification, policy result, registry state, and degraded signals.
-It computes deterministic candidate scores, stable tie-breaking, exclusion reasons, and explicit fallback plans.
+It computes deterministic candidate scores, stable tie-breaking, exclusion reasons, and explicit degraded state plans.
 No autonomous orchestration or distributed runtime handoff is implemented in this phase.
 
 ## 2026-05-09 adapter/dry-run update

@@ -7,6 +7,6 @@
 
 Implemented review-only proposal substrate in `src/lib/control-plane/policy-promotion.ts`.
 
-`PolicyCandidate` and `PolicyPromotionProposal` are generated deterministically from repeated deny/override/degraded/fallback patterns.
+`PolicyCandidate` and `PolicyPromotionProposal` are generated deterministically from repeated deny/override/degraded/degraded state patterns.
 
 Promotion proposals are inert artifacts for operator review. Automatic policy promotion is intentionally forbidden.

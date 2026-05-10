@@ -68,7 +68,7 @@ Target: consolidate structured events/receipts to support operator-facing observ
 
 ## Hardening and failure-mode discipline
 
-Target: fail-closed for sensitive decisions, explicit degraded-state outputs for non-sensitive partial failures, and no hidden fallbacks.
+Target: fail-closed for sensitive decisions, explicit degraded-state outputs for non-sensitive partial failures, and no hidden degraded states.
 
 ## Future Dynamo-style GPU/device orchestration adapter seam
 

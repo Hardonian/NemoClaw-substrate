@@ -53,4 +53,4 @@ Diagnostics explicitly report source (local/remote), parser confidence (observed
 
 ## Residual closure assertions (2026-05-09)
 
-Diagnostics remain explicit for trust, telemetry, replay, and fallback states. Blocked branches fail closed with visible reason-coded receipts; no hidden fallback or implicit transport retry is allowed.
+Diagnostics remain explicit for trust, telemetry, replay, and degraded state states. Blocked branches fail closed with visible reason-coded receipts; no hidden degraded state or implicit transport retry is allowed.

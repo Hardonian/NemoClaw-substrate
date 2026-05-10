@@ -182,7 +182,7 @@ describe("execution lifecycle substrate", () => {
 
     const duplicate = acquireQueueLease({ plan: queuedPlan, queueItem: leased.value!.queueItem, ownerId: "owner-1", leaseId: "lease-1b", acquiredAt: now, expiresAt: "2026-05-10T00:10:00.000Z" });
     expect(duplicate.ok).toBe(false);
-    expect(duplicate.reasonCode).toBe("invalid_transition");
+    expect(duplicate.reasonCode).toBe("duplicate_lease_attempt");
 
     const conflict = detectLeaseConflict(leased.value?.lease, "owner-2", "2026-05-10T00:01:00.000Z");
     expect(conflict).toBe("split_brain");

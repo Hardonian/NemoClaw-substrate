@@ -3,7 +3,7 @@
 
 # Control-plane contributor rules
 
-- No hidden fallbacks.
+- No hidden degraded states.
 - No prompt-defined policy enforcement.
 - Deterministic ordering is required for registry, receipts, and serialized contracts.
 - Degraded state must be explicit and truthful.

@@ -7,7 +7,7 @@
 
 Implemented scaffold in `src/lib/control-plane/operational-memory.ts`.
 
-Operational memory is append-only, supervised, inspectable, and deterministic. It records receipts, policy outcomes, fallback events, degraded-state events, scheduler outcomes, operator overrides, runtime action descriptors, diagnostics snapshots, and replay metadata.
+Operational memory is append-only, supervised, inspectable, and deterministic. It records receipts, policy outcomes, degraded state events, degraded-state events, scheduler outcomes, operator overrides, runtime action descriptors, diagnostics snapshots, and replay metadata.
 
 ## Guardrails
 

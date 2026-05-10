@@ -100,7 +100,7 @@ Adds to remote-enabled profile:
 | Property | Value |
 |----------|-------|
 | Routing decisions | Policy-evaluated, receipt-emitting |
-| Fallback paths | Explicit records with reason codes (INV-006) |
+| Degraded State paths | Explicit records with reason codes (INV-006) |
 | Candidate selection | Policy-constrained, not telemetry-driven |
 | Diagnostics | Read-only; no runtime mutation (INV-007) |
 | Operational memory | Append-only; supervised proposals only (INV-016) |

@@ -18,7 +18,7 @@ The operating problem this fork addresses: local operators need deterministic, i
 2. **Deterministic control matters**
    - Equivalent state + policy + request should produce equivalent control outcomes.
 3. **Truthful degraded-state reporting matters**
-   - Failures, fallbacks, or constrained operation must be reported explicitly and durably.
+   - Failures, degraded states, or constrained operation must be reported explicitly and durably.
 4. **Policy must not live only inside prompts**
    - Governance requires enforceable code/config artifacts and review history.
 5. **Repeated operator decisions should become supervised policy intelligence**

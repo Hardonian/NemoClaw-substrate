@@ -38,7 +38,7 @@ Contract serialization/order tests must remain deterministic.
 
 ## Non-goals
 
-No hidden fallbacks, no dynamic routing, no autonomous governance.
+No hidden degraded states, no dynamic routing, no autonomous governance.
 
 ## Open questions
 

@@ -11,14 +11,14 @@ Receipts are append-friendly and replay-oriented and emitted on governed routing
 
 ## Runtime receipt seam status (2026-05-09)
 
-Execution receipt construction includes policy rationale, tool metadata, fallback metadata, degraded states, and timing summary in a thin runtime seam adapter.
+Execution receipt construction includes policy rationale, tool metadata, degraded state metadata, degraded states, and timing summary in a thin runtime seam adapter.
 
 Replay validation fails closed on envelope integrity mismatches and explicit governance metadata requirements:
 
 - deterministic sequence continuity
 - digest integrity
 - required replay lineage
-- required reason codes for degraded/policy/fallback events
+- required reason codes for degraded/policy/degraded state events
 
 No silent replay adaptation is implemented.
 

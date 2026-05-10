@@ -11,7 +11,7 @@ Implemented summaries:
 
 - policy outcomes
 - degraded-state timelines
-- fallback frequencies
+- degraded state frequencies
 - stale-node summaries
 
 Outputs distinguish observed/unavailable states and avoid fabricated orchestration health.

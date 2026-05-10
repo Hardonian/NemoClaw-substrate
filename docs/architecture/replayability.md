@@ -21,4 +21,4 @@ Current replay is in-process and export-oriented. Future adapters can persist en
 
 ## Residual matrix closure note (2026-05-09)
 
-Replay validation now has explicit branch assertions for governance drift classes (policy drift, trust drift, candidate eligibility mismatch, fallback mismatch) by rejecting envelopes that omit required reason codes.
+Replay validation now has explicit branch assertions for governance drift classes (policy drift, trust drift, candidate eligibility mismatch, degraded state mismatch) by rejecting envelopes that omit required reason codes.

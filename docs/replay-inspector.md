@@ -11,7 +11,7 @@ The replay validation checks:
 1. **event_count_mismatch**: `eventCount` field does not match `events.length`
 2. **sequence_mismatch**: Events are not 0-indexed sequential
 3. **missing_replay_lineage**: Events missing `replayRef.lineage`
-4. **missing_replay_reason_code**: Degraded/policy/fallback events missing reason codes
+4. **missing_replay_reason_code**: Degraded/policy/degraded state events missing reason codes
 5. **digest_mismatch**: Deterministic serialization digest does not match computed digest
 
 ## ReplayViewer Component
