@@ -8,11 +8,15 @@ The guard accepts only configured schemes, strips embedded URL credentials, remo
 
 Current default transport policy:
 
-- allowed schemes: `http:` and `https:`
+- allowed schemes: `https:` only (remote execution default)
 - timeout minimum: 250 ms
 - timeout default: 2 seconds
 - timeout ceiling: 10 seconds
 - embedded URL credentials: stripped before transport
+
+Local-only transport policy additionally permits `http:` for loopback endpoints (e.g., Ollama at `http://localhost:11434`). This is safe because credentials never transit over a network boundary.
+
+The `INSECURE_HTTP_TRANSPORT_POLICY` export re-enables `http:` for both local and remote targets. Use only when the operator explicitly accepts the risk of credentials in cleartext.
 
 Unsupported schemes fail closed with `unsupported_scheme`.
 Malformed URLs fail closed with `transport_url_invalid`.
