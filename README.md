@@ -8,11 +8,13 @@ This fork of NemoClaw is being shaped into a governed heterogeneous execution su
 ## Why this fork exists
 
 The fork prioritizes deterministic and auditable control over opaque autonomy. It focuses on:
+
 - execution plane and control plane separation,
 - truthful degraded-state reporting,
 - execution receipts/provenance,
 - supervised policy promotion,
 - explainable routing/control decisions.
+
 
 ## Current state vs roadmap
 
@@ -49,6 +51,7 @@ Control-plane discipline means decisions are governed by inspectable contracts, 
 ## Contribution guidance
 
 When contributing:
+
 1. Distinguish current repository truth from target-state design.
 2. Avoid implementation claims unless backed by code and tests in the same PR.
 3. Include verification commands and observed outcomes in PR descriptions.
@@ -56,6 +59,7 @@ When contributing:
 ## Not implemented yet (explicitly not implemented in this checkpoint)
 
 Unless specifically added and verified in code:
+
 - no dedicated deterministic scheduler,
 - no dedicated device registry,
 - no dedicated policy-promotion engine,
@@ -66,10 +70,10 @@ Unless specifically added and verified in code:
 - no autonomous orchestration or autonomous recovery loops,
 - no automatic policy learning.
 
-
 ## Local bootstrap recovery path
 
 If lifecycle scripts fail in restricted environments, contributors can use `npm install --ignore-scripts` for local verification only, then run typecheck/tests manually. Production/release flows should keep normal install behavior.
+
 ## Verification
 
 Preferred contributor flow:
