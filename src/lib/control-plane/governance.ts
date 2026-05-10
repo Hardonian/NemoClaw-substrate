@@ -31,7 +31,7 @@ export interface PolicyEvaluationContext {
   request: ControlRequestEnvelope;
   nodeId?: string;
   modelId?: string;
-  actionClass: "tool" | "shell" | "file_mutation" | "remote_node" | "provider" | "fallback" | "network_sensitive" | "high_risk" | "generic";
+  actionClass: "tool" | "shell" | "file_mutation" | "remote_node" | "provider" | "fallback" | "network_sensitive" | "high_risk" | "generic" | "runtime";
 }
 
 export interface PolicyEvaluationResult {
@@ -41,6 +41,7 @@ export interface PolicyEvaluationResult {
   reasonCode: PolicyReasonCode;
   sourceRuleId: string;
   matchedRuleIds: string[];
+  matchedRuleDescription?: string;
 }
 
 export function evaluatePolicy(bundle: PolicyBundle, context: PolicyEvaluationContext): PolicyEvaluationResult {
