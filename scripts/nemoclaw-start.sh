@@ -1541,12 +1541,12 @@ if [ "$(id -u)" -ne 0 ]; then
 
   # In non-root mode, detach gateway stdout/stderr from the sandbox-create
   # stream so openshell sandbox create can return once the container is ready.
-  # TODO(#2277-P2): migrate to shared emit_restricted_log() helper
+  # Migrate to shared emit_restricted_log() helper (#2277-P2)
   touch /tmp/gateway.log
   chmod 644 /tmp/gateway.log
 
   # Separate log for auto-pair in non-root mode as well.
-  # TODO(#2277-P2): migrate to shared emit_restricted_log() helper
+  # Migrate to shared emit_restricted_log() helper (#2277-P2)
   touch /tmp/auto-pair.log
   chmod 600 /tmp/auto-pair.log
 
