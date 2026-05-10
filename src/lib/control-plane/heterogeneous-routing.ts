@@ -63,7 +63,7 @@ export async function routeHeterogeneous(input: {
     reasonCodes: ["local_default"], score: 100, status: "eligible" as const,
   };
 
-  const policyEval = evaluatePolicy(input.policyBundle, { request: { version: "1", requestId: input.requestId, receivedAt: input.nowIso, source: "heterogeneous-routing", actor: "runtime", action: "worker:execute", requestedModel: input.model, constraints: [], metadata: { provider: input.provider } }, actionClass: "runtime" });
+  const policyEval = evaluatePolicy(input.policyBundle, { request: { version: "1", requestId: input.requestId, receivedAt: input.nowIso, source: "heterogeneous-routing", actor: "runtime", action: "worker:execute", requestedModel: input.model, constraints: [], metadata: { provider: input.provider } }, actionClass: "generic" });
   const excluded: HeterogeneousCandidate[] = [];
   const all: HeterogeneousCandidate[] = [local];
   const remoteNodes = input.registry.listNodes().filter((n) => n.role === "remote");

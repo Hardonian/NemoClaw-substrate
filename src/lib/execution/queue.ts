@@ -100,7 +100,7 @@ export class ExecutionQueue {
     if (!transition.valid) {
       return QueueDecision.block(
         reason ?? QueueReasonCode.VALIDATION_FAILED,
-        transition.reason,
+        transition.reason || "",
       );
     }
 

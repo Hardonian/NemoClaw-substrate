@@ -176,6 +176,7 @@ export interface ControlDecision {
 
 export type ExecutionPhase = "received" | "policy" | "scheduling" | "execution" | "completed" | "failed";
 export interface ExecutionReceipt {
+  executionLineage?: ExecutionReceiptLineage;
   version: string;
   receiptId: string;
   requestId: string;
@@ -192,3 +193,16 @@ export interface ExecutionReceipt {
   provenance: { source: string; lineage: string[]; replayVersion: string; exportedAt?: string };
   operatorOverrides: Array<{ at: string; actor: string; reason: string }>;
 }
+
+export interface ExecutionReceiptLineage {
+  executionPlanId?: string;
+  executionApprovalId?: string;
+  authorizationLineageId?: string;
+  executionIntentHash?: string;
+  executionPolicySnapshotHash?: string;
+  authorizationSource?: string;
+  executionTrustSnapshotHash?: string;
+  replayReferenceId?: string;
+}
+
+// Add authorizationSource to ExecutionReceiptLineage
