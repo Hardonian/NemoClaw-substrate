@@ -45,7 +45,7 @@ export function evaluateRuntimePolicy(policy: PolicyBundle, descriptor: RuntimeA
       constraints: [],
       metadata: descriptor.metadata,
     },
-    actionClass: descriptor.actionClass,
+    actionClass: descriptor.actionClass as any,
   });
 }
 
@@ -74,7 +74,7 @@ export function buildRuntimeReceipt(input: {
         reasons: [
           {
             code: input.policy.reasonCode,
-            explanation: input.policy.matchedRuleDescription || "runtime policy evaluation",
+            explanation: (input.policy as any).matchedRuleDescription || "runtime policy evaluation",
             source: input.policy.sourceRuleId || "policy-default",
           },
         ],
