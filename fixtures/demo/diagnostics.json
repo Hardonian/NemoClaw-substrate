@@ -1,0 +1,5 @@
+[
+  {"id":"diagnostics-1","state":"ok","detail":"diagnostics deterministic record token=abc123"},
+  {"id":"diagnostics-2","state":"unavailable","detail":"diagnostics explicit unavailable path","unavailable":true},
+  {"id":"diagnostics-3","state":"degraded","detail":"diagnostics explicit degraded reason=policy_guard","degraded":true}
+]

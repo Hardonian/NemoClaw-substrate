@@ -1,0 +1,5 @@
+[
+  {"id":"workers-1","state":"ok","detail":"workers deterministic record token=abc123"},
+  {"id":"workers-2","state":"unavailable","detail":"workers explicit unavailable path","unavailable":true},
+  {"id":"workers-3","state":"degraded","detail":"workers explicit degraded reason=policy_guard","degraded":true}
+]

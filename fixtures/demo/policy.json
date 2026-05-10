@@ -1,0 +1,5 @@
+[
+  {"id":"policy-1","state":"ok","detail":"policy deterministic record token=abc123"},
+  {"id":"policy-2","state":"unavailable","detail":"policy explicit unavailable path","unavailable":true},
+  {"id":"policy-3","state":"degraded","detail":"policy explicit degraded reason=policy_guard","degraded":true}
+]
