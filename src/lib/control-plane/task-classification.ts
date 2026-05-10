@@ -4,7 +4,7 @@
 import type { ControlRequestEnvelope } from "./types";
 
 export interface TaskClassification {
-  taskKind: "chat" | "tooling" | "shell" | "file_mutation" | "network" | "batch";
+  taskKind: "chat" | "tooling" | "shell" | "file_mutation" | "network" | "batch" | "runtime";
   riskLevel: "low" | "medium" | "high";
   latencySensitivity: "interactive" | "standard" | "deferred";
   contextRequirement: "small" | "medium" | "large";
@@ -15,6 +15,7 @@ export interface TaskClassification {
   approvalRequirementHint: "none" | "recommended" | "required";
   actionClass: "tool" | "shell" | "file_mutation" | "remote_node" | "provider" | "fallback" | "network_sensitive" | "high_risk" | "generic" | "runtime";
   providerConstraints: string[];
+  actionClass?: string;
 }
 
 export function classifyRequest(request: ControlRequestEnvelope): TaskClassification {
