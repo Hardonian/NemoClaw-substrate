@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-import { Command, Flags } from "@oclif/core";
+import { Args, Command, Flags } from "@oclif/core";
 import fs from "node:fs";
 import path from "node:path";
 import { formatJson, formatTable } from "../operator/format";
@@ -19,7 +19,13 @@ function loadTopic(topic: OperatorTopic, rootDir: string): OperatorRecord[] {
 export default class OperatorCommand extends Command {
   static id = "operator";
   static summary = "Operator-facing governed substrate inspection surfaces";
-  static args = [{ name: "topic", required: true, options: TOPICS }];
+  static args = {
+    topic: Args.string({
+      description: "Operator substrate topic",
+      options: TOPICS,
+      required: true,
+    }),
+  };
   static flags = {
     help: Flags.help({ char: "h" }),
     json: Flags.boolean({ description: "Emit deterministic JSON output" }),

@@ -15,7 +15,6 @@ export interface TaskClassification {
   approvalRequirementHint: "none" | "recommended" | "required";
   actionClass: "tool" | "shell" | "file_mutation" | "remote_node" | "provider" | "fallback" | "network_sensitive" | "high_risk" | "generic" | "runtime";
   providerConstraints: string[];
-  actionClass?: string;
 }
 
 export function classifyRequest(request: ControlRequestEnvelope): TaskClassification {
