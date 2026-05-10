@@ -3,6 +3,8 @@
 
 # Governance Invariants
 
+> **Maturity: Alpha (v0.1.0)** — All governance state (replay, receipts, queues, leases) is in-process memory only. There is no durable storage, no crash recovery, no cryptographic signing of proofpacks, and no distributed execution. Governance contracts are tested within a single process lifetime. This document describes enforced invariants, not production-grade guarantees.
+
 This document formalizes the hard invariants that govern the NemoClaw substrate. Each invariant is derived from implemented behavior and architecture decisions. Violation of any invariant constitutes a governance failure.
 
 ## Status taxonomy

@@ -18,4 +18,4 @@
 | Dynamo integration | planned | n/a | none in runtime | none | roadmap ambiguity | explicit ADR before implementation |
 | Autonomous recovery daemons/retries | intentionally-not-implemented | degraded-state tests prove explicit failures | degraded-state path | 0005 | operator assumptions | explicit docs guardrails |
 | Policy learning | intentionally-not-implemented | n/a | none | 0007 | AI-theatre interpretation | keep policy declarative |
-| Cryptographic attestation chain | opt-in (partial) | security verification matrix | trust/capability docs + worker trust modules | 0006 | incomplete ecosystem wiring | formal signer/integrity stack |
+| Cryptographic attestation chain | scaffolded | security verification matrix | trust/capability docs + worker trust modules | 0006 | no cryptographic implementation exists; structural trust/attestation separation only | formal signer/integrity stack |

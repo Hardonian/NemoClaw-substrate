@@ -92,7 +92,7 @@ export const DEFAULT_SECURITY_POLICY: SecurityPolicy = {
     allowPublic: true,
   },
   transport: {
-    allowedSchemes: ["http:", "https:"],
+    allowedSchemes: ["https:"],
     timeoutCeilingMs: 10_000,
     defaultTimeoutMs: 2_000,
     minimumTimeoutMs: 250,
@@ -127,6 +127,14 @@ export const LOCAL_ONLY_SECURITY_POLICY: SecurityPolicy = {
     allowPrivate: false,
     allowTailscaleLan: false,
     allowPublic: false,
+  },
+};
+
+export const INSECURE_HTTP_TRANSPORT_POLICY: SecurityPolicy = {
+  ...DEFAULT_SECURITY_POLICY,
+  transport: {
+    ...DEFAULT_SECURITY_POLICY.transport,
+    allowedSchemes: ["http:", "https:"],
   },
 };
 
