@@ -68,9 +68,8 @@ Unless specifically added and verified in code:
 
 
 ## Local bootstrap recovery path
+
 If lifecycle scripts fail in restricted environments, contributors can use `npm install --ignore-scripts` for local verification only, then run typecheck/tests manually. Production/release flows should keep normal install behavior.
-
-
 ## Verification
 
 Preferred contributor flow:
@@ -86,8 +85,8 @@ npm run verify:release
 - `verify:all` remains available as a strict-mode variant of `verify:core` that fails for both repository failures and missing required toolchain/dependencies.
 - In restricted local environments, `npm install --ignore-scripts` is a local diagnosis recovery path only and must not be used for release packaging or CI baselines.
 
-
 ### Residual matrix closure status (2026-05-09)
+
 The governed substrate closure pass is verification-focused: direct branch assertions, replay/diagnostics truth hardening, and status-document coherence. It does not add orchestration, distributed execution, GPU balancing, Dynamo integration, autonomous routing, or automatic policy/trust mutation.
 
 ## Operator substrate
