@@ -626,9 +626,6 @@ export function acquireQueueLease(input: {
   expiresAt: string;
 }): ExecutionLifecycleDecision<{ queueItem: QueueItem; lease: QueueLease; receipt: ExecutionLifecycleReceipt }> {
   if (isExpired(input.queueItem.expiresAt, input.acquiredAt)) return decision(false, "queue_item_expired", "queue item is expired");
-  if (input.queueItem.state !== "queued") return decision(false, "invalid_transition", `queue item must be queued, got ${input.queueItem.state}`);
-  const replayReasons = validateReplayConsistency(input.plan, input.queueItem);
-  if (replayReasons.length) return decision(false, replayReasons[0] ?? "replay_drift", `replay validation failed: ${replayReasons.join(",")}`);
   const conflict = detectLeaseConflict(input.queueItem.lease, input.ownerId, input.acquiredAt);
   if (conflict !== "none") {
     const reason = leaseConflictReason(conflict);
@@ -646,6 +643,9 @@ export function acquireQueueLease(input: {
       diagnostic({ name: "lease_conflict", state: "conflicted", reasonCode: reason, explanation: conflict, observedAt: input.acquiredAt }),
     ]);
   }
+  if (input.queueItem.state !== "queued") return decision(false, "invalid_transition", `queue item must be queued, got ${input.queueItem.state}`);
+  const replayReasons = validateReplayConsistency(input.plan, input.queueItem);
+  if (replayReasons.length) return decision(false, replayReasons[0] ?? "replay_drift", `replay validation failed: ${replayReasons.join(",")}`);
   const lease: QueueLease = { leaseId: input.leaseId, ownerId: input.ownerId, acquiredAt: input.acquiredAt, expiresAt: input.expiresAt, renewalCount: 0 };
   const receipt = makeReceipt({
     eventType: "lease_acquired",

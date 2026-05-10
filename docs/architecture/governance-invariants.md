@@ -111,23 +111,23 @@ This document formalizes the hard invariants that govern the NemoClaw substrate.
 
 ---
 
-## INV-006: Fallback must always be explicit
+## INV-006: Degraded State must always be explicit
 
-**Statement:** Every fallback path is represented as an operator-visible planning record with origin candidate, fallback target, reason, policy status, and operator explanation. There are no hidden fallbacks.
+**Statement:** Every degraded state path is represented as an operator-visible planning record with origin candidate, degraded state target, reason, policy status, and operator explanation. There are no hidden degraded states.
 
-**Rationale:** Hidden fallbacks obscure failure modes and prevent operator understanding of routing decisions.
+**Rationale:** Hidden degraded states obscure failure modes and prevent operator understanding of routing decisions.
 
 **Violation impact:** Execution could silently route to unintended targets without operator visibility or audit trail.
 
 **Enforcement points:**
 
-- `src/lib/control-plane/types.ts` — `FallbackRecord` with explicit fields.
-- Governed routing — no-candidate paths are explicit failures, not silent fallback.
-- `src/lib/control-plane/degraded-state-chaos.test.ts` — no-hidden-fallback assertions.
+- `src/lib/control-plane/types.ts` — `DegradedStateRecord` with explicit fields.
+- Governed routing — no-candidate paths are explicit failures, not silent degraded state.
+- `src/lib/control-plane/degraded-state-chaos.test.ts` — no-hidden-degraded-state assertions.
 
 **Verification:** `npm run verify:governed-routing`, `npm run verify:chaos`.
 
-**Future distributed implications:** Distributed fallback across nodes must preserve explicit fallback records. Cross-node fallback must emit receipts at both origin and target.
+**Future distributed implications:** Distributed degraded state across nodes must preserve explicit degraded state records. Cross-node degraded state must emit receipts at both origin and target.
 
 ---
 
