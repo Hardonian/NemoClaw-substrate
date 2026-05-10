@@ -82,10 +82,10 @@ describe("Policy Engine", () => {
       timestamp: new Date().toISOString()
     };
     const pack2: PolicyPack = { packId: "p2", version: "v1", scope: "execution", rules: [], overrides: [override] };
-    
+
     const inheritance: PolicyInheritance = { activeScopes: ["global", "execution"], packs: [pack1, pack2] };
     const trace = evaluatePolicyEngine(inheritance, dummyContext);
-    
+
     expect(trace.finalEffect).toBe("allow");
     expect(trace.winningScope).toBe("execution"); // the override's scope
   });
@@ -114,13 +114,13 @@ describe("Policy Engine", () => {
   test("mutation lineage validation and drift detection", () => {
     const pack: PolicyPack = { packId: "p1", version: "v1", scope: "global", rules: [allowRule], overrides: [] };
     const initialDigest = computePolicyPackDigest(pack);
-    
+
     const { updatedPack, mutation } = mutatePolicyPack(pack, "admin", [denyRule]);
-    
+
     expect(mutation.previousDigest).toBe(initialDigest);
     expect(mutation.newDigest).toBe(computePolicyPackDigest(updatedPack));
     expect(updatedPack.rules.length).toBe(2);
-    
+
     // Changing a rule directly would alter the digest, detecting drift
     const driftPack = { ...updatedPack, rules: [allowRule] };
     expect(computePolicyPackDigest(driftPack)).not.toBe(mutation.newDigest);
@@ -129,13 +129,13 @@ describe("Policy Engine", () => {
   test("deterministic evaluation ordering", () => {
     const r1: PolicyRule = { ...allowRule, id: "r1" };
     const r2: PolicyRule = { ...allowRule, id: "r2" };
-    
+
     const pack1: PolicyPack = { packId: "p1", version: "v1", scope: "global", rules: [r1, r2], overrides: [] };
     const pack2: PolicyPack = { packId: "p1", version: "v1", scope: "global", rules: [r2, r1], overrides: [] };
-    
+
     const trace1 = evaluatePolicyEngine({ activeScopes: ["global"], packs: [pack1] }, dummyContext);
     const trace2 = evaluatePolicyEngine({ activeScopes: ["global"], packs: [pack2] }, dummyContext);
-    
+
     // Sort order should ensure deterministic graph edges and nodes
     expect(trace1.decisions.nodes.map(n => n.ruleId).sort()).toEqual(trace2.decisions.nodes.map(n => n.ruleId).sort());
   });
@@ -144,7 +144,7 @@ describe("Policy Engine", () => {
     const pack: PolicyPack = { packId: "p1", version: "v1", scope: "global", rules: [allowRule], overrides: [] };
     const trace1 = evaluatePolicyEngine({ activeScopes: ["global"], packs: [pack] }, dummyContext);
     const trace2 = evaluatePolicyEngine({ activeScopes: ["global"], packs: [pack] }, dummyContext);
-    
+
     // Exclude traceId and timestamp for equivalence check
     const { traceId: t1, evaluatedAt: e1, ...rest1 } = trace1;
     const { traceId: t2, evaluatedAt: e2, ...rest2 } = trace2;
