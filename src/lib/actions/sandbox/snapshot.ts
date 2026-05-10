@@ -4,15 +4,14 @@
 
 import fs from "node:fs";
 import path from "node:path";
-
-import { CLI_NAME } from "../../cli/branding";
 import { dockerCapture, dockerInspect } from "../../adapters/docker";
-import { parseLiveSandboxNames } from "../../runtime-recovery";
-import { ROOT, run, shellQuote, validateName } from "../../runner";
 import { captureOpenshell, getOpenshellBinary } from "../../adapters/openshell/runtime";
+import { CLI_NAME } from "../../cli/branding";
 import * as policies from "../../policies";
-import * as registry from "../../state/registry";
+import { ROOT, run, shellQuote, validateName } from "../../runner";
+import { parseLiveSandboxNames } from "../../runtime-recovery";
 import type { SandboxEntry } from "../../state/registry";
+import * as registry from "../../state/registry";
 import * as sandboxState from "../../state/sandbox";
 
 const { parseRestoreArgs } = sandboxState;
@@ -206,205 +205,412 @@ function probeGatewayRunning(): boolean {
   return result.status === 0 && String(result.stdout || "").trim() === "true";
 }
 
+
+function handleCreateSnapshot(sandboxName: string, subArgs: string[]) {
+  const opts = parseSnapshotCreateFlags(subArgs.slice(1));
+  if (!probeGatewayRunning()) {
+    console.error("  Failed to query live sandbox state from OpenShell.");
+    process.exit(1);
+  }
+  const isLive = captureOpenshell(["sandbox", "list"], { ignoreError: true });
+  const liveNames = parseLiveSandboxNames(isLive.output || "");
+  if (!liveNames.has(sandboxName)) {
+    console.error(`  Sandbox '${sandboxName}' is not running. Cannot create snapshot.`);
+    process.exit(1);
+  }
+  const label = opts.name ? ` (--name ${opts.name})` : "";
+  console.log(`  Creating snapshot of '${sandboxName}'${label}...`);
+  const result = sandboxState.backupSandboxState(sandboxName, { name: opts.name });
+  if (result.success) {
+    // Virtual snapshotVersion is only assigned by listBackups, so re-resolve
+    // the just-created snapshot by its timestamp to get a valid v<N>.
+    const manifest = result.manifest!;
+    const entry = sandboxState.findBackup(sandboxName, manifest.timestamp).match ?? manifest;
+    const v = formatSnapshotVersion(entry);
+    const nameSuffix = entry.name ? ` name=${entry.name}` : "";
+    const itemSummary = `${result.backedUpDirs.length} directories, ${result.backedUpFiles.length} files`;
+    console.log(
+      `  ${G}✓${R} Snapshot ${v}${nameSuffix} created (${itemSummary})`,
+    );
+    console.log(`    ${manifest.backupPath}`);
+  } else {
+    if (result.error) {
+      console.error(`  ${result.error}`);
+    } else {
+      console.error("  Snapshot failed.");
+      if (result.failedDirs.length > 0) {
+        console.error(`  Failed directories: ${result.failedDirs.join(", ")}`);
+      }
+      if (result.failedFiles.length > 0) {
+        console.error(`  Failed files: ${result.failedFiles.join(", ")}`);
+      }
+    }
+    process.exit(1);
+  }
+}
+
+function handleListSnapshots(sandboxName: string) {
+  const backups = sandboxState.listBackups(sandboxName);
+  if (backups.length === 0) {
+    console.log(`  No snapshots found for '${sandboxName}'.`);
+    return;
+  }
+  console.log(`  Snapshots for '${sandboxName}':`);
+  console.log("");
+  renderSnapshotTable(backups);
+  console.log("");
+  console.log(`  ${backups.length} snapshot(s). Restore with:`);
+  console.log(`    ${CLI_NAME} ${sandboxName} snapshot restore [version|name|timestamp]`);
+}
+
+async function handleRestoreSnapshot(sandboxName: string, subArgs: string[]) {
+  // `--to <dst>` restores the snapshot from sandboxName into a different
+  // sandbox. If `dst` is not yet live, it is auto-created by cloning the
+  // source sandbox's baked image. Without `--to`, restore targets
+  // sandboxName itself
+  const parsed = parseRestoreArgs(sandboxName, subArgs);
+  if (!parsed.ok) {
+    console.error(`  ${parsed.error}`);
+    process.exit(1);
+  }
+  const targetSandbox =
+    parsed.targetSandbox === sandboxName
+      ? sandboxName
+      : validateName(parsed.targetSandbox, "target sandbox name");
+  if (!probeGatewayRunning()) {
+    console.error("  Failed to query live sandbox state from OpenShell.");
+    process.exit(1);
+  }
+  const isLive = captureOpenshell(["sandbox", "list"], { ignoreError: true });
+  const liveNames = parseLiveSandboxNames(isLive.output || "");
+  if (!liveNames.has(targetSandbox)) {
+    // Self-restore: cannot auto-create, there is no source to clone from.
+    if (targetSandbox === sandboxName) {
+      console.error(`  Sandbox '${targetSandbox}' is not running. Cannot restore snapshot.`);
+      process.exit(1);
+    }
+    // Cross-sandbox restore into a sandbox that doesn't exist yet:
+    // auto-create it by cloning the source's running pod image. The
+    // source must exist so we can probe its image via kubectl; the
+    // registry entry is used to seed dst's agent/model/provider fields.
+    if (!liveNames.has(sandboxName)) {
+      console.error(
+        `  Cannot auto-create '${targetSandbox}': source '${sandboxName}' not found.`,
+      );
+      console.error(`  Create '${targetSandbox}' manually with '${CLI_NAME} onboard'.`);
+      process.exit(1);
+    }
+    const srcEntry = registry.getSandbox(sandboxName) || { name: sandboxName };
+    await autoCreateSandboxFromSource(sandboxName, targetSandbox, srcEntry);
+  }
+  const selector = parsed.selector;
+  let backupPath;
+  let resolvedSnapshot = null;
+  if (selector) {
+    const { match } = sandboxState.findBackup(sandboxName, selector);
+    if (!match) {
+      console.error(`  No snapshot matching '${selector}' found for '${sandboxName}'.`);
+      console.error("  Selector must be an exact version (v<N>), name, or timestamp.");
+      console.error(`  Run: ${CLI_NAME} ${sandboxName} snapshot list`);
+      process.exit(1);
+    }
+    backupPath = match.backupPath;
+    resolvedSnapshot = match;
+    const v = formatSnapshotVersion(match);
+    const nameSuffix = match.name ? ` name=${match.name}` : "";
+    console.log(`  Using snapshot ${v}${nameSuffix} (${match.timestamp})`);
+  } else {
+    const latest = sandboxState.getLatestBackup(sandboxName);
+    if (!latest) {
+      console.error(`  No snapshots found for '${sandboxName}'.`);
+      process.exit(1);
+    }
+    backupPath = latest.backupPath;
+    resolvedSnapshot = latest;
+    const v = formatSnapshotVersion(latest);
+    const nameSuffix = latest.name ? ` name=${latest.name}` : "";
+    console.log(`  Using latest snapshot ${v}${nameSuffix} (${latest.timestamp})`);
+  }
+  if (targetSandbox !== sandboxName) {
+    console.log(`  Restoring snapshot from '${sandboxName}' into '${targetSandbox}'...`);
+  } else {
+    console.log(`  Restoring snapshot into '${sandboxName}'...`);
+  }
+  const result = sandboxState.restoreSandboxState(targetSandbox, backupPath);
+  if (result.success) {
+    console.log(
+      `  ${G}✓${R} Restored ${result.restoredDirs.length} directories, ${result.restoredFiles.length} files`,
+    );
+  } else {
+    console.error(`  Restore failed.`);
+    if (result.restoredDirs.length > 0) {
+      console.error(`  Partial: ${result.restoredDirs.join(", ")}`);
+    }
+    if (result.failedDirs.length > 0) {
+      console.error(`  Failed: ${result.failedDirs.join(", ")}`);
+    }
+    if (result.failedFiles.length > 0) {
+      console.error(`  Failed files: ${result.failedFiles.join(", ")}`);
+    }
+    process.exit(1);
+  }
+  // Reconcile the target's policy presets to match the snapshot manifest
+  // exactly — add anything the snapshot recorded but the target is
+  // missing, and remove anything the target has that the snapshot did
+  // not. This mirrors how stateDirs are restored (full replacement, not
+  // additive) so the command's semantics are consistent.
+  //
+  // When the snapshot predates the `policyPresets` field (undefined),
+  // skip the reconcile entirely — we have no recorded state to match.
+  if (resolvedSnapshot && Array.isArray(resolvedSnapshot.policyPresets)) {
+    const snapshotPresets = resolvedSnapshot.policyPresets;
+    const currentPresets = policies.getAppliedPresets(targetSandbox);
+    const toRemove = currentPresets.filter((p: string) => !snapshotPresets.includes(p));
+    const toAdd = snapshotPresets.filter((p: string) => !currentPresets.includes(p));
+
+    if (toRemove.length > 0 || toAdd.length > 0) {
+      const summary: string[] = [];
+      if (toAdd.length > 0) summary.push(`add ${toAdd.join(", ")}`);
+      if (toRemove.length > 0) summary.push(`remove ${toRemove.join(", ")}`);
+      console.log(`  Reconciling policy presets on '${targetSandbox}': ${summary.join("; ")}`);
+
+      const failed: string[] = [];
+      for (const preset of toRemove) {
+        try {
+          if (!policies.removePreset(targetSandbox, preset)) {
+            failed.push(`${preset} (remove failed)`);
+          }
+        } catch (err) {
+          const message = err instanceof Error ? err.message : String(err);
+          failed.push(`${preset} (remove: ${message})`);
+        }
+      }
+      for (const preset of toAdd) {
+        try {
+          if (!policies.applyPreset(targetSandbox, preset)) {
+            failed.push(`${preset} (apply failed)`);
+          }
+        } catch (err) {
+          const message = err instanceof Error ? err.message : String(err);
+          failed.push(`${preset} (apply: ${message})`);
+        }
+      }
+      if (failed.length > 0) {
+        console.warn(`  Warning: could not reconcile preset(s): ${failed.join("; ")}`);
+      }
+    }
+  }
+}
+
+
+function handleCreateSnapshot(sandboxName: string, subArgs: string[]) {
+  const opts = parseSnapshotCreateFlags(subArgs.slice(1));
+  if (!probeGatewayRunning()) {
+    console.error("  Failed to query live sandbox state from OpenShell.");
+    process.exit(1);
+  }
+  const isLive = captureOpenshell(["sandbox", "list"], { ignoreError: true });
+  const liveNames = parseLiveSandboxNames(isLive.output || "");
+  if (!liveNames.has(sandboxName)) {
+    console.error(`  Sandbox '${sandboxName}' is not running. Cannot create snapshot.`);
+    process.exit(1);
+  }
+  const label = opts.name ? ` (--name ${opts.name})` : "";
+  console.log(`  Creating snapshot of '${sandboxName}'${label}...`);
+  const result = sandboxState.backupSandboxState(sandboxName, { name: opts.name });
+  if (result.success) {
+    // Virtual snapshotVersion is only assigned by listBackups, so re-resolve
+    // the just-created snapshot by its timestamp to get a valid v<N>.
+    const manifest = result.manifest!;
+    const entry = sandboxState.findBackup(sandboxName, manifest.timestamp).match ?? manifest;
+    const v = formatSnapshotVersion(entry);
+    const nameSuffix = entry.name ? ` name=${entry.name}` : "";
+    const itemSummary = `${result.backedUpDirs.length} directories, ${result.backedUpFiles.length} files`;
+    console.log(
+      `  ${G}✓${R} Snapshot ${v}${nameSuffix} created (${itemSummary})`,
+    );
+    console.log(`    ${manifest.backupPath}`);
+  } else {
+    if (result.error) {
+      console.error(`  ${result.error}`);
+    } else {
+      console.error("  Snapshot failed.");
+      if (result.failedDirs.length > 0) {
+        console.error(`  Failed directories: ${result.failedDirs.join(", ")}`);
+      }
+      if (result.failedFiles.length > 0) {
+        console.error(`  Failed files: ${result.failedFiles.join(", ")}`);
+      }
+    }
+    process.exit(1);
+  }
+}
+
+function handleListSnapshots(sandboxName: string) {
+  const backups = sandboxState.listBackups(sandboxName);
+  if (backups.length === 0) {
+    console.log(`  No snapshots found for '${sandboxName}'.`);
+    return;
+  }
+  console.log(`  Snapshots for '${sandboxName}':`);
+  console.log("");
+  renderSnapshotTable(backups);
+  console.log("");
+  console.log(`  ${backups.length} snapshot(s). Restore with:`);
+  console.log(`    ${CLI_NAME} ${sandboxName} snapshot restore [version|name|timestamp]`);
+}
+
+async function handleRestoreSnapshot(sandboxName: string, subArgs: string[]) {
+  // `--to <dst>` restores the snapshot from sandboxName into a different
+  // sandbox. If `dst` is not yet live, it is auto-created by cloning the
+  // source sandbox's baked image. Without `--to`, restore targets
+  // sandboxName itself
+  const parsed = parseRestoreArgs(sandboxName, subArgs);
+  if (!parsed.ok) {
+    console.error(`  ${parsed.error}`);
+    process.exit(1);
+  }
+  const targetSandbox =
+    parsed.targetSandbox === sandboxName
+      ? sandboxName
+      : validateName(parsed.targetSandbox, "target sandbox name");
+  if (!probeGatewayRunning()) {
+    console.error("  Failed to query live sandbox state from OpenShell.");
+    process.exit(1);
+  }
+  const isLive = captureOpenshell(["sandbox", "list"], { ignoreError: true });
+  const liveNames = parseLiveSandboxNames(isLive.output || "");
+  if (!liveNames.has(targetSandbox)) {
+    // Self-restore: cannot auto-create, there is no source to clone from.
+    if (targetSandbox === sandboxName) {
+      console.error(`  Sandbox '${targetSandbox}' is not running. Cannot restore snapshot.`);
+      process.exit(1);
+    }
+    // Cross-sandbox restore into a sandbox that doesn't exist yet:
+    // auto-create it by cloning the source's running pod image. The
+    // source must exist so we can probe its image via kubectl; the
+    // registry entry is used to seed dst's agent/model/provider fields.
+    if (!liveNames.has(sandboxName)) {
+      console.error(
+        `  Cannot auto-create '${targetSandbox}': source '${sandboxName}' not found.`,
+      );
+      console.error(`  Create '${targetSandbox}' manually with '${CLI_NAME} onboard'.`);
+      process.exit(1);
+    }
+    const srcEntry = registry.getSandbox(sandboxName) || { name: sandboxName };
+    await autoCreateSandboxFromSource(sandboxName, targetSandbox, srcEntry);
+  }
+  const selector = parsed.selector;
+  let backupPath;
+  let resolvedSnapshot = null;
+  if (selector) {
+    const { match } = sandboxState.findBackup(sandboxName, selector);
+    if (!match) {
+      console.error(`  No snapshot matching '${selector}' found for '${sandboxName}'.`);
+      console.error("  Selector must be an exact version (v<N>), name, or timestamp.");
+      console.error(`  Run: ${CLI_NAME} ${sandboxName} snapshot list`);
+      process.exit(1);
+    }
+    backupPath = match.backupPath;
+    resolvedSnapshot = match;
+    const v = formatSnapshotVersion(match);
+    const nameSuffix = match.name ? ` name=${match.name}` : "";
+    console.log(`  Using snapshot ${v}${nameSuffix} (${match.timestamp})`);
+  } else {
+    const latest = sandboxState.getLatestBackup(sandboxName);
+    if (!latest) {
+      console.error(`  No snapshots found for '${sandboxName}'.`);
+      process.exit(1);
+    }
+    backupPath = latest.backupPath;
+    resolvedSnapshot = latest;
+    const v = formatSnapshotVersion(latest);
+    const nameSuffix = latest.name ? ` name=${latest.name}` : "";
+    console.log(`  Using latest snapshot ${v}${nameSuffix} (${latest.timestamp})`);
+  }
+  if (targetSandbox !== sandboxName) {
+    console.log(`  Restoring snapshot from '${sandboxName}' into '${targetSandbox}'...`);
+  } else {
+    console.log(`  Restoring snapshot into '${sandboxName}'...`);
+  }
+  const result = sandboxState.restoreSandboxState(targetSandbox, backupPath);
+  if (result.success) {
+    console.log(
+      `  ${G}✓${R} Restored ${result.restoredDirs.length} directories, ${result.restoredFiles.length} files`,
+    );
+  } else {
+    console.error(`  Restore failed.`);
+    if (result.restoredDirs.length > 0) {
+      console.error(`  Partial: ${result.restoredDirs.join(", ")}`);
+    }
+    if (result.failedDirs.length > 0) {
+      console.error(`  Failed: ${result.failedDirs.join(", ")}`);
+    }
+    if (result.failedFiles.length > 0) {
+      console.error(`  Failed files: ${result.failedFiles.join(", ")}`);
+    }
+    process.exit(1);
+  }
+  // Reconcile the target's policy presets to match the snapshot manifest
+  // exactly — add anything the snapshot recorded but the target is
+  // missing, and remove anything the target has that the snapshot did
+  // not. This mirrors how stateDirs are restored (full replacement, not
+  // additive) so the command's semantics are consistent.
+  //
+  // When the snapshot predates the `policyPresets` field (undefined),
+  // skip the reconcile entirely — we have no recorded state to match.
+  if (resolvedSnapshot && Array.isArray(resolvedSnapshot.policyPresets)) {
+    const snapshotPresets = resolvedSnapshot.policyPresets;
+    const currentPresets = policies.getAppliedPresets(targetSandbox);
+    const toRemove = currentPresets.filter((p: string) => !snapshotPresets.includes(p));
+    const toAdd = snapshotPresets.filter((p: string) => !currentPresets.includes(p));
+
+    if (toRemove.length > 0 || toAdd.length > 0) {
+      const summary: string[] = [];
+      if (toAdd.length > 0) summary.push(`add ${toAdd.join(", ")}`);
+      if (toRemove.length > 0) summary.push(`remove ${toRemove.join(", ")}`);
+      console.log(`  Reconciling policy presets on '${targetSandbox}': ${summary.join("; ")}`);
+
+      const failed: string[] = [];
+      for (const preset of toRemove) {
+        try {
+          if (!policies.removePreset(targetSandbox, preset)) {
+            failed.push(`${preset} (remove failed)`);
+          }
+        } catch (err) {
+          const message = err instanceof Error ? err.message : String(err);
+          failed.push(`${preset} (remove: ${message})`);
+        }
+      }
+      for (const preset of toAdd) {
+        try {
+          if (!policies.applyPreset(targetSandbox, preset)) {
+            failed.push(`${preset} (apply failed)`);
+          }
+        } catch (err) {
+          const message = err instanceof Error ? err.message : String(err);
+          failed.push(`${preset} (apply: ${message})`);
+        }
+      }
+      if (failed.length > 0) {
+        console.warn(`  Warning: could not reconcile preset(s): ${failed.join("; ")}`);
+      }
+    }
+  }
+}
+
 export async function runSandboxSnapshot(sandboxName: string, subArgs: string[]) {
   const subcommand = subArgs[0] || "help";
   switch (subcommand) {
-    case "create": {
-      const opts = parseSnapshotCreateFlags(subArgs.slice(1));
-      if (!probeGatewayRunning()) {
-        console.error("  Failed to query live sandbox state from OpenShell.");
-        process.exit(1);
-      }
-      const isLive = captureOpenshell(["sandbox", "list"], { ignoreError: true });
-      const liveNames = parseLiveSandboxNames(isLive.output || "");
-      if (!liveNames.has(sandboxName)) {
-        console.error(`  Sandbox '${sandboxName}' is not running. Cannot create snapshot.`);
-        process.exit(1);
-      }
-      const label = opts.name ? ` (--name ${opts.name})` : "";
-      console.log(`  Creating snapshot of '${sandboxName}'${label}...`);
-      const result = sandboxState.backupSandboxState(sandboxName, { name: opts.name });
-      if (result.success) {
-        // Virtual snapshotVersion is only assigned by listBackups, so re-resolve
-        // the just-created snapshot by its timestamp to get a valid v<N>.
-        const manifest = result.manifest!;
-        const entry = sandboxState.findBackup(sandboxName, manifest.timestamp).match ?? manifest;
-        const v = formatSnapshotVersion(entry);
-        const nameSuffix = entry.name ? ` name=${entry.name}` : "";
-        const itemSummary = `${result.backedUpDirs.length} directories, ${result.backedUpFiles.length} files`;
-        console.log(
-          `  ${G}\u2713${R} Snapshot ${v}${nameSuffix} created (${itemSummary})`,
-        );
-        console.log(`    ${manifest.backupPath}`);
-      } else {
-        if (result.error) {
-          console.error(`  ${result.error}`);
-        } else {
-          console.error("  Snapshot failed.");
-          if (result.failedDirs.length > 0) {
-            console.error(`  Failed directories: ${result.failedDirs.join(", ")}`);
-          }
-          if (result.failedFiles.length > 0) {
-            console.error(`  Failed files: ${result.failedFiles.join(", ")}`);
-          }
-        }
-        process.exit(1);
-      }
+    case "create":
+      handleCreateSnapshot(sandboxName, subArgs);
       break;
-    }
-    case "list": {
-      const backups = sandboxState.listBackups(sandboxName);
-      if (backups.length === 0) {
-        console.log(`  No snapshots found for '${sandboxName}'.`);
-        return;
-      }
-      console.log(`  Snapshots for '${sandboxName}':`);
-      console.log("");
-      renderSnapshotTable(backups);
-      console.log("");
-      console.log(`  ${backups.length} snapshot(s). Restore with:`);
-      console.log(`    ${CLI_NAME} ${sandboxName} snapshot restore [version|name|timestamp]`);
+    case "list":
+      handleListSnapshots(sandboxName);
       break;
-    }
-    case "restore": {
-      // `--to <dst>` restores the snapshot from sandboxName into a different
-      // sandbox. If `dst` is not yet live, it is auto-created by cloning the
-      // source sandbox's baked image. Without `--to`, restore targets
-      // sandboxName itself
-      const parsed = parseRestoreArgs(sandboxName, subArgs);
-      if (!parsed.ok) {
-        console.error(`  ${parsed.error}`);
-        process.exit(1);
-      }
-      const targetSandbox =
-        parsed.targetSandbox === sandboxName
-          ? sandboxName
-          : validateName(parsed.targetSandbox, "target sandbox name");
-      if (!probeGatewayRunning()) {
-        console.error("  Failed to query live sandbox state from OpenShell.");
-        process.exit(1);
-      }
-      const isLive = captureOpenshell(["sandbox", "list"], { ignoreError: true });
-      const liveNames = parseLiveSandboxNames(isLive.output || "");
-      if (!liveNames.has(targetSandbox)) {
-        // Self-restore: cannot auto-create, there is no source to clone from.
-        if (targetSandbox === sandboxName) {
-          console.error(`  Sandbox '${targetSandbox}' is not running. Cannot restore snapshot.`);
-          process.exit(1);
-        }
-        // Cross-sandbox restore into a sandbox that doesn't exist yet:
-        // auto-create it by cloning the source's running pod image. The
-        // source must exist so we can probe its image via kubectl; the
-        // registry entry is used to seed dst's agent/model/provider fields.
-        if (!liveNames.has(sandboxName)) {
-          console.error(
-            `  Cannot auto-create '${targetSandbox}': source '${sandboxName}' not found.`,
-          );
-          console.error(`  Create '${targetSandbox}' manually with '${CLI_NAME} onboard'.`);
-          process.exit(1);
-        }
-        const srcEntry = registry.getSandbox(sandboxName) || { name: sandboxName };
-        await autoCreateSandboxFromSource(sandboxName, targetSandbox, srcEntry);
-      }
-      const selector = parsed.selector;
-      let backupPath;
-      let resolvedSnapshot = null;
-      if (selector) {
-        const { match } = sandboxState.findBackup(sandboxName, selector);
-        if (!match) {
-          console.error(`  No snapshot matching '${selector}' found for '${sandboxName}'.`);
-          console.error("  Selector must be an exact version (v<N>), name, or timestamp.");
-          console.error(`  Run: ${CLI_NAME} ${sandboxName} snapshot list`);
-          process.exit(1);
-        }
-        backupPath = match.backupPath;
-        resolvedSnapshot = match;
-        const v = formatSnapshotVersion(match);
-        const nameSuffix = match.name ? ` name=${match.name}` : "";
-        console.log(`  Using snapshot ${v}${nameSuffix} (${match.timestamp})`);
-      } else {
-        const latest = sandboxState.getLatestBackup(sandboxName);
-        if (!latest) {
-          console.error(`  No snapshots found for '${sandboxName}'.`);
-          process.exit(1);
-        }
-        backupPath = latest.backupPath;
-        resolvedSnapshot = latest;
-        const v = formatSnapshotVersion(latest);
-        const nameSuffix = latest.name ? ` name=${latest.name}` : "";
-        console.log(`  Using latest snapshot ${v}${nameSuffix} (${latest.timestamp})`);
-      }
-      if (targetSandbox !== sandboxName) {
-        console.log(`  Restoring snapshot from '${sandboxName}' into '${targetSandbox}'...`);
-      } else {
-        console.log(`  Restoring snapshot into '${sandboxName}'...`);
-      }
-      const result = sandboxState.restoreSandboxState(targetSandbox, backupPath);
-      if (result.success) {
-        console.log(
-          `  ${G}\u2713${R} Restored ${result.restoredDirs.length} directories, ${result.restoredFiles.length} files`,
-        );
-      } else {
-        console.error(`  Restore failed.`);
-        if (result.restoredDirs.length > 0) {
-          console.error(`  Partial: ${result.restoredDirs.join(", ")}`);
-        }
-        if (result.failedDirs.length > 0) {
-          console.error(`  Failed: ${result.failedDirs.join(", ")}`);
-        }
-        if (result.failedFiles.length > 0) {
-          console.error(`  Failed files: ${result.failedFiles.join(", ")}`);
-        }
-        process.exit(1);
-      }
-      // Reconcile the target's policy presets to match the snapshot manifest
-      // exactly — add anything the snapshot recorded but the target is
-      // missing, and remove anything the target has that the snapshot did
-      // not. This mirrors how stateDirs are restored (full replacement, not
-      // additive) so the command's semantics are consistent.
-      //
-      // When the snapshot predates the `policyPresets` field (undefined),
-      // skip the reconcile entirely — we have no recorded state to match.
-      if (resolvedSnapshot && Array.isArray(resolvedSnapshot.policyPresets)) {
-        const snapshotPresets = resolvedSnapshot.policyPresets;
-        const currentPresets = policies.getAppliedPresets(targetSandbox);
-        const toRemove = currentPresets.filter((p: string) => !snapshotPresets.includes(p));
-        const toAdd = snapshotPresets.filter((p: string) => !currentPresets.includes(p));
-
-        if (toRemove.length > 0 || toAdd.length > 0) {
-          const summary: string[] = [];
-          if (toAdd.length > 0) summary.push(`add ${toAdd.join(", ")}`);
-          if (toRemove.length > 0) summary.push(`remove ${toRemove.join(", ")}`);
-          console.log(`  Reconciling policy presets on '${targetSandbox}': ${summary.join("; ")}`);
-
-          const failed: string[] = [];
-          for (const preset of toRemove) {
-            try {
-              if (!policies.removePreset(targetSandbox, preset)) {
-                failed.push(`${preset} (remove failed)`);
-              }
-            } catch (err) {
-              const message = err instanceof Error ? err.message : String(err);
-              failed.push(`${preset} (remove: ${message})`);
-            }
-          }
-          for (const preset of toAdd) {
-            try {
-              if (!policies.applyPreset(targetSandbox, preset)) {
-                failed.push(`${preset} (apply failed)`);
-              }
-            } catch (err) {
-              const message = err instanceof Error ? err.message : String(err);
-              failed.push(`${preset} (apply: ${message})`);
-            }
-          }
-          if (failed.length > 0) {
-            console.warn(`  Warning: could not reconcile preset(s): ${failed.join("; ")}`);
-          }
-        }
-      }
+    case "restore":
+      await handleRestoreSnapshot(sandboxName, subArgs);
       break;
-    }
     default:
       console.log(`  Usage:`);
       console.log(`    ${CLI_NAME} ${sandboxName} snapshot create [--name <name>]`);
