@@ -28,7 +28,7 @@ Returns:
 
 ### Replay Fixtures
 
-Generate a mix of event categories including governance, diagnostics, degraded states, approvals, and fallback events.
+Generate a mix of event categories including governance, diagnostics, degraded states, approvals, and degraded states.
 
 ```typescript
 import { generateReplayFixture } from "./fixture-generators";

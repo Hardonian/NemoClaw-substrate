@@ -43,7 +43,7 @@ const ndjsonString = exportBundleAsNdjson(bundle);
 import { exportBundleAsMarkdown, exportReplayPackageAsMarkdown } from "./evidence-formats";
 
 const markdown = exportBundleAsMarkdown(bundle, {
-  title: "Evidence Bundle",
+  title: "Proofpack",
   includeArtifactDetails: true,
   includeReferences: true,
   includeDigests: true,
