@@ -9,7 +9,7 @@
 2. Avoid language implying distributed execution as current default.
 3. Avoid "autonomous recovery" wording unless explicitly bounded and operator-visible.
 4. Keep degraded-state semantics explicit (not silently masked as success).
-5. Execution lifecycle proofpacks must reject hidden fallback or automatic retry payloads.
+5. Execution lifecycle proofpacks must reject hidden recovery or automatic retry payloads.
 6. Diagnostics must report unavailable or not implemented facts directly instead of substituting inferred success.
 
 ## Wording corrections
@@ -27,8 +27,8 @@ Implemented lifecycle functions are pure and caller-invoked. They do not:
 - poll for expired leases in the background
 - reschedule failed work
 - renew leases automatically
-- execute fallback paths silently
+- execute recovery paths silently
 - enable remote execution
 - infer operator approval
 
-`verify:execution-lifecycle` covers hidden fallback detection, hidden retry detection, unavailable diagnostics, split-brain lease rejection, stale-owner rejection, replay drift rejection, and proofpack tamper rejection.
+`verify:execution-lifecycle` covers hidden recovery detection, hidden retry detection, unavailable diagnostics, split-brain lease rejection, stale-owner rejection, replay drift rejection, and proofpack tamper rejection.

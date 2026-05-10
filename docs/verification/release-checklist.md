@@ -28,6 +28,8 @@ This checklist gates the governed heterogeneous execution substrate integration 
 - [x] `npm run verify:release` passes.
 - [x] `npm run verify:changelog-hygiene` passes.
 - [x] `npm run verify:core` passes.
+- [x] `npm run verify:execution-lifecycle` passes.
+- [x] `npm run verify:chaos` passes.
 - [x] `npm run typecheck` passes.
 - [x] `npm run lint` passes.
 - [x] `git diff --check` passes.
@@ -46,3 +48,9 @@ This checklist gates the governed heterogeneous execution substrate integration 
 - [x] Remote execution remains fail-closed before transport on deny, approval-required, trust denial, and stale/unhealthy worker states.
 - [x] Telemetry registry update event branches (applied/skipped/conflict/stale) remain covered and replay-preserved.
 - [x] Reserved event kinds (`replay_metadata`, `diagnostics_snapshot`) are documented as reserved and asserted as non-telemetry aggregates.
+
+## Execution lifecycle closure (2026-05-10)
+
+- [x] Deterministic plan, queue, lease, receipt, replay, proofpack, and diagnostics contracts are implemented.
+- [x] Split-brain lease, duplicate lease, stale owner, orphaned execution, replay drift, receipt drift, governance/trust loss, cancellation-safe replay, hidden fallback, and hidden retry paths fail closed with explicit reason codes.
+- [x] No queue worker, daemon scheduler, hidden retry, speculative fanout, or remote execution enablement was added.

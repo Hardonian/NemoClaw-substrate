@@ -35,7 +35,7 @@ The execution lifecycle proofpack is implemented in `src/lib/control-plane/execu
 - execution transitions
 - evidence manifest
 
-Every artifact has a deterministic digest. `validateExecutionProofpack(...)` recomputes the manifest and package digests and fails closed on proofpack tampering, receipt mismatch, replay drift, lineage drift, missing queue or lease history, missing receipts, hidden fallback evidence, and hidden retry evidence.
+Every artifact has a deterministic digest. `validateExecutionProofpack(...)` recomputes the manifest and package digests and fails closed on proofpack tampering, receipt mismatch, replay drift, lineage drift, missing queue or lease history, missing receipts, hidden recovery evidence, and hidden retry evidence.
 
 ## Explicit unavailable truth
 
