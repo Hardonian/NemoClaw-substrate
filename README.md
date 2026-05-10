@@ -20,7 +20,7 @@ The fork prioritizes deterministic and auditable control over opaque autonomy. I
 - **Scaffolded:** remote execution and telemetry adapter seams with explicit degraded-state reporting.
 - **Opt-in:** governed routing (`NEMOCLAW_GOVERNED_ROUTING=1`) and heterogeneous bridge (`NEMOCLAW_HETEROGENEOUS_ROUTING=1`).
 - **Planned:** external orchestration adapter integrations after stable local contracts.
-- **Not implemented:** distributed execution, GPU balancing, Dynamo integration, autonomous orchestration/self-healing, automatic policy learning.
+- **Not implemented:** distributed execution, GPU balancing, Dynamo integration, autonomous orchestration/autonomous recovery, automatic policy learning.
 
 ## Architecture and planning docs
 
@@ -63,11 +63,11 @@ Unless specifically added and verified in code:
 - no Dynamo-style orchestration integration,
 - no distributed execution handoff,
 - no GPU balancing,
-- no autonomous orchestration or self-healing loops,
+- no autonomous orchestration or autonomous recovery loops,
 - no automatic policy learning.
 
 
-## Local bootstrap fallback
+## Local bootstrap recovery path
 If lifecycle scripts fail in restricted environments, contributors can use `npm install --ignore-scripts` for local verification only, then run typecheck/tests manually. Production/release flows should keep normal install behavior.
 
 
@@ -84,7 +84,7 @@ npm run verify:release
 - `verify:core` reports deterministic `PASS/WARN/FAIL` status across changelog hygiene, typecheck, lint, and targeted control-plane/probe/governed-routing suites.
 - `verify:release` is the primary release gate for local and CI readiness checks.
 - `verify:all` remains available as a strict-mode variant of `verify:core` that fails for both repository failures and missing required toolchain/dependencies.
-- In restricted local environments, `npm install --ignore-scripts` is a local diagnosis fallback only and must not be used for release packaging or CI baselines.
+- In restricted local environments, `npm install --ignore-scripts` is a local diagnosis recovery path only and must not be used for release packaging or CI baselines.
 
 
 ### Residual matrix closure status (2026-05-09)

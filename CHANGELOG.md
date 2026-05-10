@@ -8,6 +8,7 @@ All notable changes to this fork are documented in this file.
 ## [Unreleased]
 
 - governance: implement deterministic canonical policy engine with scope inheritance, overrides, fail-closed evaluation, and replay-safe evaluation traces.
+- execution lifecycle: add deterministic execution plan, queue, lease, replay, idempotency, proofpack, diagnostics, and anti-theatre validation substrate without adding workers, hidden retries, or autonomous orchestration.
 - security: add deterministic transport, network, command-safety, redaction, and proofpack/export policy guards without changing default runtime behavior.
 - hardening: close governed substrate residual matrix with direct replay drift rejection assertions, reserved-event observability guardrails, and docs/status coherence updates (no new runtime features).
 - trust: add worker identity, trust-level and attestation-status records to control-plane node descriptors; add deterministic capability attestation/trust decision helpers; enforce remote execution trust gating for revoked/expired/conflicted/insufficient trust workers; and emit explicit worker trust/attestation operational events.

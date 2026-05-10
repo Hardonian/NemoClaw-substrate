@@ -27,3 +27,9 @@ No silent replay adaptation is implemented.
 Opt-in governed provider routing is available behind `NEMOCLAW_GOVERNED_ROUTING=1` (default off). Default routing is preserved when disabled.
 
 Not implemented in this phase: orchestration, distributed execution rollout, autonomous execution, autonomous recovery behavior, queue workers/daemons, GPU balancing, Dynamo integration, automatic retries, and automatic policy learning.
+
+## 2026-05-10 execution lifecycle receipts
+
+The execution lifecycle substrate adds deterministic receipt creation for plan transitions, queueing, lease acquisition/renewal/expiration/revocation, execution start/completion/failure/cancellation/blocking, and proofpack validation. Receipt ids and digests are derived from deterministic serialized payloads, the plan id, replay reference, reason code, and timestamp supplied by the caller.
+
+Degraded states remain explicit. Blocked, degraded, failed, expired, and revoked paths carry reason codes and are preserved in queue records, plan records, diagnostics snapshots, and proofpacks. Hidden retry and hidden fallback payloads are rejected during proofpack validation.

@@ -10,7 +10,8 @@
 | Policy engine + supervised promotion | implemented | `verify:core` | `policy-engine.ts`, `policy-promotion.ts` | 0004, 0007 | operator error in promotion | richer approval workflows |
 | Worker trust + capability attestation | scaffolded | targeted unit tests | `worker-trust.ts`, `device-registry.ts`, `worker-probes.ts` | 0006 | attestation depth limited | formal attest provider integration |
 | Heterogeneous routing (local/remote) | implemented | `verify:core` | `heterogeneous-routing.ts`, `remote-execution.ts` | 0003 | provider parity gaps | broader provider matrices |
-| Queue + lease governance | implemented | unit tests in `src/lib/execution/*.test.ts` | `execution/queue.ts`, `execution/lease.ts` | 0002 | queue starvation edge cases | adaptive queue sizing |
+| Execution lifecycle substrate | implemented | `verify:execution-lifecycle`, `verify:chaos` | `control-plane/execution-lifecycle.ts` | 0002, 0005 | durable storage is caller-owned | persistence adapter |
+| Queue + lease governance | implemented | `verify:execution-lifecycle`, unit tests in `src/lib/execution/*.test.ts` | `execution/queue.ts`, `execution/lease.ts`, `control-plane/execution-lifecycle.ts` | 0002 | queue starvation edge cases | adaptive queue sizing |
 | Autonomous orchestration loops | intentionally-not-implemented | n/a | n/a | 0001 | expectation mismatch | none (by design) |
 | Distributed execution fabric | planned (bounded) | n/a | adapters only | 0002 | implied-claim confusion | governance-defined scope |
 | GPU balancing/scheduling | scaffolded | probe and scheduler tests | `scheduler.ts`, `gpu-telemetry.md` docs | 0006 | fairness assumptions | registry-backed constraints |

@@ -386,6 +386,10 @@ Transport Security <architecture/transport-security>
 Secret Redaction <architecture/secret-redaction>
 Network Policy <architecture/network-policy>
 Command Safety <architecture/command-safety>
+Execution Lifecycle Substrate <architecture/execution-lifecycle-substrate>
+Evidence Topology <architecture/evidence-topology>
+Diagnostics <architecture/diagnostics>
+Capability Status Matrix <architecture/capability-status-matrix>
 ```
 
 ```{toctree}

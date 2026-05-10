@@ -74,7 +74,7 @@ Lease renewal is still explicit and records a deterministic receipt. There is no
 
 ## Replay and idempotency doctrine
 
-Replay validation rejects lineage drift, missing governance metadata, missing trust metadata, missing degraded reasons, fallback drift, candidate mismatch, ownership mismatch, lease mismatch, and receipt mismatch. Idempotency helpers classify:
+Replay validation rejects lineage drift, missing governance metadata, missing trust metadata, missing degraded reasons, degraded state drift, candidate mismatch, ownership mismatch, lease mismatch, and receipt mismatch. Idempotency helpers classify:
 
 - `deterministic_rerun`
 - `idempotency_key_conflict`
@@ -84,7 +84,7 @@ No silent reconciliation is implemented. A failed validation result is evidence,
 
 ## Proofpack architecture
 
-`buildExecutionProofpack(...)` builds a deterministic execution proofpack from real plan, receipt, queue, lease, diagnostics, telemetry, governance, trust, replay, and degraded-state inputs. `validateExecutionProofpack(...)` recomputes manifest and package digests and rejects tampering, missing receipts, missing queue or lease history, replay drift, lineage drift, receipt mismatch, hidden fallback attempts, and hidden retry attempts.
+`buildExecutionProofpack(...)` builds a deterministic execution proofpack from real plan, receipt, queue, lease, diagnostics, telemetry, governance, trust, replay, and degraded-state inputs. `validateExecutionProofpack(...)` recomputes manifest and package digests and rejects tampering, missing receipts, missing queue or lease history, replay drift, lineage drift, receipt mismatch, hidden degraded state attempts, and hidden retry attempts.
 
 Proofpacks preserve explicit unavailable truth, for example telemetry can be present as `{ state: "unavailable", reasonCode: "telemetry_unavailable" }`.
 
@@ -111,7 +111,7 @@ Operators, callers, or tests must explicitly call the next transition. The subst
 | UI rendering of lifecycle proofpacks | deferred | Contracts are ready for operator surfaces |
 | Autonomous orchestration | intentionally not implemented | Non-goal |
 | Daemon schedulers / polling loops | intentionally not implemented | Non-goal |
-| Hidden retries / self-healing | intentionally not implemented | Non-goal |
+| Hidden retries / autonomous recovery | intentionally not implemented | Non-goal |
 | Speculative fanout / distributed execution fabric | intentionally not implemented | Non-goal |
 | GPU balancing / Dynamo integration | intentionally not implemented | Non-goal |
 
@@ -132,4 +132,4 @@ Operators, callers, or tests must explicitly call the next transition. The subst
 - `npm run verify:chaos`
 - `npm run verify:core`
 
-`src/lib/control-plane/execution-lifecycle.test.ts` validates transition legality, governance metadata loss, degraded-state propagation, queue/lease conflict handling, split-brain ownership, stale owners, replay drift, receipt drift, trust invalidation, cancellation-safe replay, proofpack mismatch, hidden fallback detection, hidden retry detection, diagnostics truth states, and lifecycle event aggregation.
+`src/lib/control-plane/execution-lifecycle.test.ts` validates transition legality, governance metadata loss, degraded-state propagation, queue/lease conflict handling, split-brain ownership, stale owners, replay drift, receipt drift, trust invalidation, cancellation-safe replay, proofpack mismatch, hidden recovery detection, hidden retry detection, diagnostics truth states, and lifecycle event aggregation.
