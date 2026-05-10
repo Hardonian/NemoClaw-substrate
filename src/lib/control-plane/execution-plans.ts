@@ -466,4 +466,3 @@ export function executionLineageFromPlan(plan: ExecutionPlan, approval?: Executi
     replayReferenceId: plan.replayReference.replayReferenceId,
   };
 }
-
