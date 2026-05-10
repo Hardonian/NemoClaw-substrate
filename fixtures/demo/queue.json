@@ -1,0 +1,5 @@
+[
+  {"id":"queue-1","state":"ok","detail":"queue deterministic record token=abc123"},
+  {"id":"queue-2","state":"unavailable","detail":"queue explicit unavailable path","unavailable":true},
+  {"id":"queue-3","state":"degraded","detail":"queue explicit degraded reason=policy_guard","degraded":true}
+]
