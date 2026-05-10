@@ -642,7 +642,7 @@ export function acquireQueueLease(input: {
       reasonCode: reason,
       payload: { conflict, existingOwnerId: input.queueItem.lease?.ownerId },
     });
-    return decision(false, reason, `lease acquisition rejected: ${conflict}`, undefined, [], [event], [
+    return decision<{ queueItem: QueueItem; lease: QueueLease; receipt: ExecutionLifecycleReceipt }>(false, reason, `lease acquisition rejected: ${conflict}`, undefined, [], [event], [
       diagnostic({ name: "lease_conflict", state: "conflicted", reasonCode: reason, explanation: conflict, observedAt: input.acquiredAt }),
     ]);
   }

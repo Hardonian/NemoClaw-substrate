@@ -39,6 +39,7 @@ function main(): void {
       cwd: REPO_ROOT,
       encoding: "utf-8",
       stdio: "inherit",
+      shell: process.platform === "win32",
     });
     if (result.status !== 0) {
       console.error(`Check failed: ${check.name}`);
