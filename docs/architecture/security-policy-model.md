@@ -28,7 +28,7 @@ Each gate emits a deterministic reason code on rejection. No silent fallthrough.
 
 ### NetworkPolicy
 
-**Status:** Implemented (sandbox egress)  
+**Status:** Implemented (sandbox egress)
 **Scope:** Controls which external endpoints the sandbox can reach.
 
 Defined in `nemoclaw-blueprint/policies/` as YAML presets. Each preset specifies allowed egress domains. The operator selects which presets apply during onboarding. Unlisted endpoints are denied (deny-by-default).
@@ -37,7 +37,7 @@ SSRF protection (`nemoclaw/src/blueprint/ssrf.ts`) supplements the network polic
 
 ### CommandExecutionPolicy
 
-**Status:** Implemented  
+**Status:** Implemented
 **Scope:** Governs how subprocess commands are executed.
 
 Hard constraints (not configurable — always enforced):
@@ -49,7 +49,7 @@ These constraints are structural (enforced in `src/lib/runner.ts`) and cannot be
 
 ### RemoteExecutionPolicy
 
-**Status:** Scaffolded (opt-in via `NEMOCLAW_REMOTE_EXECUTION=1`)  
+**Status:** Scaffolded (opt-in via `NEMOCLAW_REMOTE_EXECUTION=1`)
 **Scope:** Controls whether execution may cross trust boundaries to remote workers.
 
 Policy evaluation chain (implemented in `src/lib/control-plane/remote-execution.ts`):
@@ -62,7 +62,7 @@ Policy evaluation chain (implemented in `src/lib/control-plane/remote-execution.
 
 ### CredentialPolicy
 
-**Status:** Implemented  
+**Status:** Implemented
 **Scope:** Controls credential handling across persistence boundaries.
 
 Rules (enforced in `src/lib/security/credential-filter.ts`):
@@ -74,7 +74,7 @@ Rules (enforced in `src/lib/security/credential-filter.ts`):
 
 ### SecretRedactionPolicy
 
-**Status:** Implemented  
+**Status:** Implemented
 **Scope:** Controls how secrets appear in operator-visible outputs.
 
 Three redaction tiers (implemented in `src/lib/security/redact.ts`):
@@ -89,7 +89,7 @@ All tiers source patterns from `src/lib/security/secret-patterns.ts`.
 
 ### MemoryWritePolicy
 
-**Status:** Implemented  
+**Status:** Implemented
 **Scope:** Controls what content may be written to persistent workspace memory.
 
 Rules (enforced in `nemoclaw/src/security/secret-scanner.ts`):
