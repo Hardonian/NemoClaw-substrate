@@ -34,7 +34,7 @@ files.forEach((file) => {
     console.log(`Skipping excluded file: ${file}`);
     return;
   }
-  
+
   let content = fs.readFileSync(file, "utf8");
   let changed = false;
 
