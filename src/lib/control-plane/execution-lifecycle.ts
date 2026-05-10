@@ -482,10 +482,13 @@ export function validateReplayConsistency(plan: ExecutionPlan, queue: QueueItem,
   if (context.ownerId && queue.ownership?.ownerId !== context.ownerId) reasons.push("ownership_mismatch");
   if (queue.lease && queue.ownership && queue.lease.ownerId !== queue.ownership.ownerId) reasons.push("ownership_mismatch");
   if (context.leaseId && queue.lease?.leaseId !== context.leaseId) reasons.push("lease_mismatch");
-  const queueReceiptIds = new Set(queue.receiptReferences.map((ref) => ref.receiptId));
-  const planReceiptIds = new Set((context.receiptReferences ?? plan.receiptReferences).map((ref) => ref.receiptId));
-  if ([...planReceiptIds].some((receiptId) => !queueReceiptIds.has(receiptId))) reasons.push("receipt_mismatch");
-  if ([...queueReceiptIds].some((receiptId) => !planReceiptIds.has(receiptId))) reasons.push("receipt_mismatch");
+  const receiptReferences = context.receiptReferences ?? (plan.receiptReferences.length ? plan.receiptReferences : undefined);
+  if (receiptReferences) {
+    const queueReceiptIds = new Set(queue.receiptReferences.map((ref) => ref.receiptId));
+    const planReceiptIds = new Set(receiptReferences.map((ref) => ref.receiptId));
+    if ([...planReceiptIds].some((receiptId) => !queueReceiptIds.has(receiptId))) reasons.push("receipt_mismatch");
+    if (context.receiptReferences && [...queueReceiptIds].some((receiptId) => !planReceiptIds.has(receiptId))) reasons.push("receipt_mismatch");
+  }
   return [...new Set(reasons)] as ExecutionLifecycleReasonCode[];
 }
 

@@ -18,20 +18,15 @@ module.exports = {
       "trust decision"
     ];
 
-    params.tokens.filter(function filterToken(token) {
-      return token.type === "inline" || token.type === "paragraph_open" || token.type === "heading_open";
-    }).forEach(function forToken(inline) {
-      const text = inline.content;
-      if (!text) return;
-
-      forbiddenTerms.forEach(function forTerm(term) {
+    params.lines.forEach((line, lineIndex) => {
+      forbiddenTerms.forEach(term => {
         const regex = new RegExp("\\b" + term + "\\b", "i");
-        const match = text.match(regex);
+        const match = line.match(regex);
         if (match) {
           onError({
-            lineNumber: inline.lineNumber,
+            lineNumber: lineIndex + 1,
             detail: `Forbidden term found: "${match[0]}". Use canonical terms (e.g., "Degraded State", "Proofpack", "Authorization").`,
-            context: inline.line
+            context: line
           });
         }
       });
