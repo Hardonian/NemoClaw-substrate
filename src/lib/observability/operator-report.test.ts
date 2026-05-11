@@ -88,7 +88,7 @@ describe("reportToHtml", () => {
       { title: "Complex", content: { nested: { a: 1 } } },
     ]);
     const html = reportToHtml(report);
-    expect(html).toContain('{"a":');
+    expect(html).toContain("&quot;a&quot;");
   });
 
   it("handles null/undefined values as empty strings", () => {
