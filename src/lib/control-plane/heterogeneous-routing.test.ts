@@ -22,34 +22,34 @@ describe("heterogeneous routing", () => {
   });
 
   it("preserves local default when disabled", async () => {
-    const out = await routeHeterogeneous({ requestId: "r1", nowIso: "2026-05-09T00:00:00.000Z", provider: "openai-api", model: "gpt-5.4", registry: registryWithRemote(), policyBundle: allowPolicy, governedEnabled: true, allowFallback: false, routingConfig: { enabled: false, source: "default" }, remoteConfig: { enabled: true, source: "env" } });
+    const out = await routeHeterogeneous({ requestId: "r1", nowIso: "2026-05-09T00:00:00.000Z", provider: "openai-api", model: "gpt-5.4", registry: registryWithRemote(), policyBundle: allowPolicy, governedEnabled: true, allowDegradedStateTrigger: false, routingConfig: { enabled: false, source: "default" }, remoteConfig: { enabled: true, source: "env" } });
     expect(out.provider).toBe("openai-api");
     expect(out.selectedCandidate?.kind).toBe("local_provider");
   });
 
   it("ignores remote when remote execution disabled", async () => {
-    const out = await routeHeterogeneous({ requestId: "r2", nowIso: "2026-05-09T00:00:00.000Z", provider: "openai-api", model: "gpt-5.4", registry: registryWithRemote(), policyBundle: allowPolicy, governedEnabled: true, allowFallback: false, routingConfig: { enabled: true, source: "env" }, remoteConfig: { enabled: false, source: "default" } });
+    const out = await routeHeterogeneous({ requestId: "r2", nowIso: "2026-05-09T00:00:00.000Z", provider: "openai-api", model: "gpt-5.4", registry: registryWithRemote(), policyBundle: allowPolicy, governedEnabled: true, allowDegradedStateTrigger: false, routingConfig: { enabled: true, source: "env" }, remoteConfig: { enabled: false, source: "default" } });
     expect(out.excludedCandidates.some((c) => c.kind === "remote_worker")).toBe(true);
     expect(out.selectedCandidate?.kind).toBe("local_provider");
   });
 
   it("blocks policy denied and approval required remote", async () => {
-    const denied = await routeHeterogeneous({ requestId: "r3", nowIso: "2026-05-09T00:00:00.000Z", provider: "openai-api", model: "gpt-5.4", registry: registryWithRemote(), policyBundle: denyPolicy, governedEnabled: true, allowFallback: false, routingConfig: { enabled: true, source: "env" }, remoteConfig: { enabled: true, source: "env" } });
+    const denied = await routeHeterogeneous({ requestId: "r3", nowIso: "2026-05-09T00:00:00.000Z", provider: "openai-api", model: "gpt-5.4", registry: registryWithRemote(), policyBundle: denyPolicy, governedEnabled: true, allowDegradedStateTrigger: false, routingConfig: { enabled: true, source: "env" }, remoteConfig: { enabled: true, source: "env" } });
     expect(denied.excludedCandidates.find((c) => c.kind === "remote_worker")?.policyEligibility).toBe("deny");
 
-    const approval = await routeHeterogeneous({ requestId: "r4", nowIso: "2026-05-09T00:00:00.000Z", provider: "openai-api", model: "gpt-5.4", registry: registryWithRemote(), policyBundle: approvalPolicy, governedEnabled: true, allowFallback: false, routingConfig: { enabled: true, source: "env" }, remoteConfig: { enabled: true, source: "env" } });
+    const approval = await routeHeterogeneous({ requestId: "r4", nowIso: "2026-05-09T00:00:00.000Z", provider: "openai-api", model: "gpt-5.4", registry: registryWithRemote(), policyBundle: approvalPolicy, governedEnabled: true, allowDegradedStateTrigger: false, routingConfig: { enabled: true, source: "env" }, remoteConfig: { enabled: true, source: "env" } });
     expect(approval.excludedCandidates.find((c) => c.kind === "remote_worker")?.policyEligibility).toBe("approval_required");
   });
 
-  it("selects remote when eligible and explicit fallback recorded", async () => {
+  it("selects remote when eligible and explicit degraded state trigger recorded", async () => {
     const transport = { execute: vi.fn(async () => ({ status: 503, body: "{}" })) };
-    const out = await routeHeterogeneous({ requestId: "r5", nowIso: "2026-05-09T00:00:00.000Z", provider: "openai-api", model: "gpt-5.4", registry: registryWithRemote(), policyBundle: allowPolicy, governedEnabled: true, allowFallback: true, routingConfig: { enabled: true, source: "env" }, remoteConfig: { enabled: true, source: "env" }, remoteTransport: transport, approved: true });
+    const out = await routeHeterogeneous({ requestId: "r5", nowIso: "2026-05-09T00:00:00.000Z", provider: "openai-api", model: "gpt-5.4", registry: registryWithRemote(), policyBundle: allowPolicy, governedEnabled: true, allowDegradedStateTrigger: true, routingConfig: { enabled: true, source: "env" }, remoteConfig: { enabled: true, source: "env" }, remoteTransport: transport, approved: true });
     expect(out.selectedCandidate?.kind).toBe("remote_worker");
-    expect(out.receipt.fallbackAttempts.length).toBe(1);
+    expect(out.receipt.degradedStateTriggers.length).toBe(1);
   });
 
   it("diagnostics include selected/excluded", async () => {
-    const out = await routeHeterogeneous({ requestId: "r6", nowIso: "2026-05-09T00:00:00.000Z", provider: "openai-api", model: "gpt-5.4", registry: registryWithRemote("stale"), policyBundle: allowPolicy, governedEnabled: true, allowFallback: false, routingConfig: { enabled: true, source: "env" }, remoteConfig: { enabled: true, source: "env" } });
+    const out = await routeHeterogeneous({ requestId: "r6", nowIso: "2026-05-09T00:00:00.000Z", provider: "openai-api", model: "gpt-5.4", registry: registryWithRemote("stale"), policyBundle: allowPolicy, governedEnabled: true, allowDegradedStateTrigger: false, routingConfig: { enabled: true, source: "env" }, remoteConfig: { enabled: true, source: "env" } });
     const lines = summarizeHeterogeneousDiagnostics({ routing: { enabled: true, source: "env" }, governedEnabled: true, remote: { enabled: true, source: "env" }, result: out });
     expect(lines.join("\n")).toContain("Excluded candidates");
   });
