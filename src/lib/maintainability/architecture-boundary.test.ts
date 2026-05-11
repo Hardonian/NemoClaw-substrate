@@ -30,7 +30,7 @@ describe("lib/maintainability/architecture-boundary", () => {
       const files = new Map<string, string>([
         [
           "src/lib/core/utils.ts",
-          `import { config } from "@nemoclaw/config";`,
+          `import { config } from "nemoclaw-config";`,
         ],
       ]);
       const report = checkArchitectureBoundaries(files);
@@ -76,11 +76,11 @@ import { Command } from "@oclif/core";`,
       const files = new Map<string, string>([
         [
           "src/lib/core/a.ts",
-          `import { config } from "@nemoclaw/config";`,
+          `import { config } from "nemoclaw-config";`,
         ],
         [
           "src/lib/core/b.ts",
-          `import { state } from "@nemoclaw/state";`,
+          `import { state } from "nemoclaw-state";`,
         ],
       ]);
       const report = checkArchitectureBoundaries(files);
@@ -101,7 +101,7 @@ import { Command } from "@oclif/core";`,
       const files = new Map<string, string>([
         [
           "src/lib/core/utils.ts",
-          `import { config } from "@nemoclaw/config";`,
+          `import { config } from "nemoclaw-config";`,
         ],
       ]);
       expect(checkArchitectureBoundariesStrict(files)).toBe(false);

@@ -109,7 +109,7 @@ export function scanNamingConventions(
             rule: "camelCase-expected",
             suggestion: `Use "${toCamelCase(name)}" instead of "${name}"`,
           });
-          snakeCaseViolations++;
+          camelCaseViolations++;
         }
       }
     }

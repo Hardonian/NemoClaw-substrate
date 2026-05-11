@@ -75,12 +75,13 @@ export function unusedFn() { return 2; }`,
       ).toBe(report.summary.total);
     });
 
-    it("returns empty report for single file with no cross-references", () => {
+    it("flags export as unused when no other file references it", () => {
       const files = new Map<string, string>([
         ["src/single.ts", `export function hello() { return "world"; }`],
       ]);
       const report = scanDeadCode(files);
-      expect(report.entries.length).toBe(0);
+      expect(report.entries.length).toBe(1);
+      expect(report.entries[0].identifier).toBe("hello");
     });
   });
 
