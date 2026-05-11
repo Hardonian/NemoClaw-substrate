@@ -166,7 +166,7 @@ What NemoClaw is: capabilities, benefits, and typical uses.
 :link: about/ecosystem
 :link-type: doc
 
-How OpenClaw, OpenShell, and NemoClaw form a stack and when to use NemoClaw versus OpenShell alone.
+How OpenClaw, OpenShell, and NemoClaw form a stack.
 
 +++
 {bdg-secondary}`Concept`
@@ -176,87 +176,67 @@ How OpenClaw, OpenShell, and NemoClaw form a stack and when to use NemoClaw vers
 :link: get-started/quickstart
 :link-type: doc
 
-Install the CLI, configure inference, and launch your first sandboxed agent.
+Install the CLI, configure inference, and launch your first sandbox.
 
 +++
 {bdg-secondary}`Tutorial`
 :::
 
-:::{grid-item-card} NemoClaw Quickstart for Hermes
-:link: get-started/quickstart-hermes
+:::{grid-item-card} Architecture & Governance
+:link: architecture/index
 :link-type: doc
 
-Launch Hermes in an OpenShell sandbox with the `nemohermes` alias.
+Substrate architecture, governance invariants, and trust boundaries.
 
 +++
-{bdg-secondary}`Tutorial`
+{bdg-secondary}`Reference`
+:::
+
+:::{grid-item-card} ADR Index
+:link: adr/index
+:link-type: doc
+
+Architectural Decision Records (ADRs) for the NemoClaw substrate.
+
++++
+{bdg-secondary}`Reference`
+:::
+
+:::{grid-item-card} Verification Matrix
+:link: verification/index
+:link-type: doc
+
+Release readiness, security hardening, and core verification gates.
+
++++
+{bdg-secondary}`Reference`
+:::
+
+:::{grid-item-card} Operator Guide
+:link: operator/index
+:link-type: doc
+
+Substrate operation, configuration profiles, and recovery paths.
+
++++
+{bdg-secondary}`Reference`
 :::
 
 :::{grid-item-card} Commands
 :link: reference/commands
 :link-type: doc
 
-CLI commands for launching, connecting, monitoring, and managing sandboxes.
+CLI commands for launching and managing sandboxes.
 
 +++
 {bdg-secondary}`Reference`
-:::
-
-:::{grid-item-card} Inference Options
-:link: inference/inference-options
-:link-type: doc
-
-Providers available during onboarding and how inference routing works.
-
-+++
-{bdg-secondary}`Concept`
-:::
-
-:::{grid-item-card} How It Works
-:link: about/how-it-works
-:link-type: doc
-
-How NemoClaw runs: plugin, blueprint, OpenShell orchestration, routing, and policy layers.
-
-+++
-{bdg-secondary}`Concept`
-:::
-
-:::{grid-item-card} Architecture
-:link: reference/architecture
-:link-type: doc
-
-Plugin structure, blueprint system, and sandbox lifecycle.
-
-+++
-{bdg-secondary}`Reference`
-:::
-
-:::{grid-item-card} Network Policies
-:link: reference/network-policies
-:link-type: doc
-
-Egress control, operator approval flow, and policy configuration.
-
-+++
-{bdg-secondary}`Reference`
-:::
-
-:::{grid-item-card} Workspace Files
-:link: manage-sandboxes/workspace-files
-:link-type: doc
-
-Understand `SOUL.md`, `USER.md`, and other workspace files, plus backup and restore.
-
-+++
-{bdg-secondary}`Concept`
 :::
 
 :::{grid-item-card} Security Best Practices
 :link: security/best-practices
 :link-type: doc
 
-Controls reference, risk framework, and posture profiles for sandbox security.
+Controls reference and posture profiles for sandbox security.
 
 +++
 {bdg-secondary}`Concept`
@@ -266,7 +246,7 @@ Controls reference, risk framework, and posture profiles for sandbox security.
 :link: inference/switch-inference-providers
 :link-type: doc
 
-Task-oriented guides for inference, deployment, and policy management.
+Task-oriented guides for inference and deployment.
 
 +++
 {bdg-secondary}`How-To`
@@ -276,10 +256,20 @@ Task-oriented guides for inference, deployment, and policy management.
 :link: resources/agent-skills
 :link-type: doc
 
-Use AI coding assistants with NemoClaw's built-in agent skills for guided setup and operation.
+Use AI coding assistants with NemoClaw's built-in agent skills.
 
 +++
 {bdg-secondary}`Resource`
+:::
+
+:::{grid-item-card} Network Policies
+:link: reference/network-policies
+:link-type: doc
+
+Egress control and operator approval flow.
+
++++
+{bdg-secondary}`Reference`
 :::
 
 ::::
@@ -309,6 +299,36 @@ Release Notes <about/release-notes>
 Prerequisites <get-started/prerequisites>
 Quickstart with OpenClaw <get-started/quickstart>
 Quickstart with Hermes <get-started/quickstart-hermes>
+```
+
+```{toctree}
+:caption: Governance & Architecture
+:hidden:
+
+Substrate Architecture <architecture/index>
+ADR Index <adr/index>
+Capability Matrix <architecture/capability-status-matrix>
+Governance Invariants <architecture/governance-invariants>
+Execution Lifecycle <architecture/execution-lifecycle-substrate>
+```
+
+```{toctree}
+:caption: Verification & Release
+:hidden:
+
+Verification Index <verification/index>
+Verification Matrix <verification/verification-matrix>
+Release Checklist <verification/release-checklist>
+Release Readiness <verification/release-readiness>
+```
+
+```{toctree}
+:caption: Operator Guide
+:hidden:
+
+Operator Index <operator/index>
+Local Bootstrap <contributing/local-bootstrap>
+Troubleshooting <reference/troubleshooting>
 ```
 
 ```{toctree}
@@ -351,16 +371,10 @@ Sandbox Hardening <deployment/sandbox-hardening>
 ```
 
 ```{toctree}
-:caption: Monitoring
+:caption: Monitoring & Security
 :hidden:
 
 Monitor Sandbox Activity <monitoring/monitor-sandbox-activity>
-```
-
-```{toctree}
-:caption: Security
-:hidden:
-
 Security Best Practices <security/best-practices>
 Credential Storage <security/credential-storage>
 OpenClaw Controls <security/openclaw-controls>
@@ -370,36 +384,9 @@ OpenClaw Controls <security/openclaw-controls>
 :caption: Reference
 :hidden:
 
-Architecture <reference/architecture>
 CLI Commands Reference <reference/commands>
 CLI Selection Guide <reference/cli-selection-guide>
 Network Policies <reference/network-policies>
-Troubleshooting <reference/troubleshooting>
-```
-
-```{toctree}
-:caption: Architecture
-:hidden:
-
-Security Policy <architecture/security-policy>
-Transport Security <architecture/transport-security>
-Secret Redaction <architecture/secret-redaction>
-Network Policy <architecture/network-policy>
-Command Safety <architecture/command-safety>
-Execution Lifecycle Substrate <architecture/execution-lifecycle-substrate>
-Evidence Topology <architecture/evidence-topology>
-Diagnostics <architecture/diagnostics>
-Capability Status Matrix <architecture/capability-status-matrix>
-```
-
-```{toctree}
-:caption: Verification
-:hidden:
-
-Verification Matrix <verification/verification-matrix>
-Security Hardening <verification/security-hardening>
-Release Checklist <verification/release-checklist>
-Release Readiness <verification/release-readiness>
 ```
 
 ```{toctree}

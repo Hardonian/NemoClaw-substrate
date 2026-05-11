@@ -23,25 +23,24 @@ The fork prioritizes deterministic and auditable control over opaque autonomy. I
 - **Planned:** external orchestration adapter integrations after stable local contracts.
 - **Not implemented:** distributed execution, GPU balancing, Dynamo integration, autonomous orchestration/autonomous recovery, automatic policy learning.
 
-## Architecture and planning docs
+## Documentation
 
-- Fork rationale: [docs/fork-rationale.md](docs/fork-rationale.md)
-- Current-state architecture audit: [docs/architecture/current-state.md](docs/architecture/current-state.md)
-- Target-state architecture: [docs/architecture/target-state.md](docs/architecture/target-state.md)
-- Roadmap and dependencies: [docs/roadmap.md](docs/roadmap.md)
-- Verification matrix: [docs/verification/verification-matrix.md](docs/verification/verification-matrix.md)
-- PR verification/reporting guide: [docs/contributing/pr-template-guide.md](docs/contributing/pr-template-guide.md)
-- Branch strategy: [docs/contributing/branch-strategy.md](docs/contributing/branch-strategy.md)
+- **[NemoClaw Developer Guide](docs/index.md):** Main documentation portal.
+- **[Architecture & Governance Index](docs/architecture/index.md):** Substrate architecture, trust boundaries, and invariants.
+- **[ADR Index](docs/adr/index.md):** Architectural Decision Records (ADRs).
+- **[Verification Matrix](docs/verification/index.md):** Release readiness and security hardening gates.
+- **[Operator Guide](docs/operator/index.md):** Substrate operation and configuration.
+- **[Roadmap & Dependencies](docs/roadmap.md):** Planned features and implemented truth.
 
-## Security hardening doctrine
+## Security Hardening Doctrine
 
-- Security threat model: [docs/architecture/security-threat-model.md](docs/architecture/security-threat-model.md)
-- Security policy model: [docs/architecture/security-policy-model.md](docs/architecture/security-policy-model.md)
-- Transport security: [docs/architecture/transport-security.md](docs/architecture/transport-security.md)
-- Secret redaction doctrine: [docs/architecture/secret-redaction-doctrine.md](docs/architecture/secret-redaction-doctrine.md)
-- Command execution safety: [docs/architecture/command-execution-safety.md](docs/architecture/command-execution-safety.md)
-- Local-stack security profiles: [docs/architecture/local-stack-security-profiles.md](docs/architecture/local-stack-security-profiles.md)
-- Security verification matrix: [docs/verification/security-verification-matrix.md](docs/verification/security-verification-matrix.md)
+- **[Security Threat Model](docs/architecture/security-threat-model.md)**
+- **[Security Policy Model](docs/architecture/security-policy-model.md)**
+- **[Transport Security](docs/architecture/transport-security.md)**
+- **[Secret Redaction Doctrine](docs/architecture/secret-redaction-doctrine.md)**
+- **[Command Execution Safety](docs/architecture/command-execution-safety.md)**
+- **[Local-Stack Security Profiles](docs/architecture/local-stack-security-profiles.md)**
+- **[Security Verification Matrix](docs/verification/security-verification-matrix.md)**
 
 ## Control-plane discipline
 
@@ -73,9 +72,9 @@ Unless specifically added and verified in code:
 
 If lifecycle scripts fail in restricted environments, contributors can use `npm install --ignore-scripts` for local verification only, then run typecheck/tests manually. Production/release flows should keep normal install behavior.
 
-## Verification
+## Verification & Release Readiness
 
-Preferred contributor flow:
+The substrate enforces a deterministic verification chain before release. See the **[Verification Index](docs/verification/index.md)** for detailed gates.
 
 ```bash
 npm run verify:changelog-hygiene
@@ -83,10 +82,10 @@ npm run verify:core
 npm run verify:release
 ```
 
-- `verify:core` reports deterministic `PASS/WARN/FAIL` status across changelog hygiene, typecheck, lint, and targeted control-plane/probe/governed-routing suites.
+- `verify:core` reports deterministic `PASS/WARN/FAIL` status across changelog hygiene, typecheck, lint, and targeted control-plane suites.
 - `verify:release` is the primary release gate for local and CI readiness checks.
-- `verify:all` remains available as a strict-mode variant of `verify:core` that fails for both repository failures and missing required toolchain/dependencies.
-- In restricted local environments, `npm install --ignore-scripts` is a local diagnosis recovery path only and must not be used for release packaging or CI baselines.
+- `verify:all` is a strict-mode variant that fails if any required toolchain or dependency is missing.
+- In restricted environments, `npm install --ignore-scripts` is a local diagnosis recovery path only.
 
 ### Residual matrix closure status (2026-05-09)
 

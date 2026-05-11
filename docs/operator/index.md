@@ -7,9 +7,9 @@ NemoClaw is designed for **operators** who require high levels of control and au
 
 ## Getting Started
 
-1.  **[Quickstart](../get-started/quickstart.md):** Get a basic sandbox running.
-2.  **[CLI Reference](../reference/commands.md):** Explore all `nemoclaw` commands.
-3.  **[Operator CLI](operator-cli.md):** Using the deterministic substrate management commands.
+1. **[Quickstart](../get-started/quickstart.md):** Get a basic sandbox running.
+2. **[CLI Reference](../reference/commands.md):** Explore all `nemoclaw` commands.
+3. **[Operator CLI](operator-cli.md):** Using the deterministic substrate management commands.
 
 ## Configuration & Profiles
 
