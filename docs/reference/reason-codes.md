@@ -46,6 +46,7 @@ Reason codes provide fine-grained, machine-readable explanations for decisions a
 | `plan_expired` | The plan's absolute time-to-live (TTL) has been exceeded. |
 | `plan_cancelled` | The plan was explicitly cancelled by an operator. |
 | `missing_expiration_semantics` | A plan is missing its TTL or expiration handling logic. |
+| `missing_cancellation_reason` | A plan in cancelled state is missing an explicit reason for cancellation. |
 | `cancellation_safe_replay_blocked` | Replay was blocked because the original was not cancellation-safe. |
 
 ## Queue & Lease Codes
