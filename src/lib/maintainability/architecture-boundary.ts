@@ -4,6 +4,7 @@
 export interface ModuleBoundary {
   name: string;
   pathPrefix: string;
+  packageName?: string;
   allowedDependencies: string[];
 }
 
@@ -27,41 +28,49 @@ const DEFAULT_BOUNDARIES: ModuleBoundary[] = [
   {
     name: "core",
     pathPrefix: "src/lib/core",
+    packageName: "nemoclaw-core",
     allowedDependencies: [],
   },
   {
     name: "config",
     pathPrefix: "src/lib/config",
+    packageName: "nemoclaw-config",
     allowedDependencies: ["core"],
   },
   {
     name: "state",
     pathPrefix: "src/lib/state",
+    packageName: "nemoclaw-state",
     allowedDependencies: ["core", "config"],
   },
   {
     name: "security",
     pathPrefix: "src/lib/security",
+    packageName: "nemoclaw-security",
     allowedDependencies: ["core", "config"],
   },
   {
     name: "inference",
     pathPrefix: "src/lib/inference",
+    packageName: "nemoclaw-inference",
     allowedDependencies: ["core", "config", "security"],
   },
   {
     name: "control-plane",
     pathPrefix: "src/lib/control-plane",
+    packageName: "nemoclaw-control-plane",
     allowedDependencies: ["core", "config", "state", "security", "inference"],
   },
   {
     name: "execution",
     pathPrefix: "src/lib/execution",
+    packageName: "nemoclaw-execution",
     allowedDependencies: ["core", "config", "state", "control-plane"],
   },
   {
     name: "maintainability",
     pathPrefix: "src/lib/maintainability",
+    packageName: "nemoclaw-maintainability",
     allowedDependencies: ["core"],
   },
 ];
