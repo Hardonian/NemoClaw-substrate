@@ -80,6 +80,9 @@ function resolveModule(filePath: string, boundaries: ModuleBoundary[]): string |
     if (filePath.includes(boundary.pathPrefix)) {
       return boundary.name;
     }
+    if (boundary.packageName && filePath === boundary.packageName) {
+      return boundary.name;
+    }
   }
   return null;
 }

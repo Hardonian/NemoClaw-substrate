@@ -48,7 +48,7 @@ describe("runtime dispatch integration", () => {
       selectedCandidate: undefined,
       excludedCandidates: [],
       allCandidates: [],
-      receipt: { receiptId: "receipt-none", fallbackAttempts: [], degradedEvents: [], phases: [], provenance: { source: "test", lineage: [], replayVersion: "1" }, operatorOverrides: [], requestId: "r-none", version: "1", createdAt: "2026-05-09T00:00:00.000Z", toolInvocations: [], timing: { totalMs: 0 } },
+      receipt: { receiptId: "receipt-none", degradedStateTriggers: [], degradedEvents: [], phases: [], provenance: { source: "test", lineage: [], replayVersion: "1" }, operatorOverrides: [], requestId: "r-none", version: "1", createdAt: "2026-05-09T00:00:00.000Z", toolInvocations: [], timing: { totalMs: 0 } },
       events: [],
     });
     const local = vi.fn().mockResolvedValue("x");
@@ -80,7 +80,7 @@ describe("runtime dispatch integration", () => {
     vi.spyOn(routing, "routeHeterogeneous").mockResolvedValue({
       provider: "openai-api", model: "gpt-5.4", remoteStatus: "succeeded", events: [], excludedCandidates: [], allCandidates: [],
       selectedCandidate: { candidateId: "remote:worker-1:gpt-5.4", kind: "remote_worker", identity: "worker-1", capabilitySnapshotRef: "worker-1@2026-05-09T00:00:00.000Z", policyEligibility: "allow", degradedStates: [], telemetryConfidence: "high", executionMode: "remote", reasonCodes: ["eligible"], score: 120, status: "eligible" },
-      receipt: { receiptId: "receipt-remote", fallbackAttempts: [], degradedEvents: [], phases: [], provenance: { source: "test", lineage: [], replayVersion: "1" }, operatorOverrides: [], requestId: "r5", version: "1", createdAt: "2026-05-09T00:00:00.000Z", toolInvocations: [], timing: { totalMs: 0 } },
+      receipt: { receiptId: "receipt-remote", degradedStateTriggers: [], degradedEvents: [], phases: [], provenance: { source: "test", lineage: [], replayVersion: "1" }, operatorOverrides: [], requestId: "r5", version: "1", createdAt: "2026-05-09T00:00:00.000Z", toolInvocations: [], timing: { totalMs: 0 } },
     });
     const local = vi.fn().mockResolvedValue("x");
     const out = await dispatchWithHeterogeneousRouting({ requestId: "r5", nowIso: "2026-05-09T00:00:00.000Z", provider: "openai-api", model: "gpt-5.4", policyBundle: allowPolicy, registry: seededRegistry(), config: { hetero: { enabled: true, source: "env" }, governedEnabled: true, allowFallback: false, remote: { enabled: false, source: "default" } }, localDispatch: local });

@@ -109,13 +109,14 @@ export function profileOperation(
   const instrumentedMean = instrumentedStats.meanMs;
   const overheadPercent =
     baselineMean > 0 ? ((instrumentedMean - baselineMean) / baselineMean) * 100 : 0;
+  const clampedOverheadPercent = Math.max(0, overheadPercent);
 
   return {
     operationName,
     baselineMeanMs: Math.round(baselineMean * 1000) / 1000,
     instrumentedMeanMs: Math.round(instrumentedMean * 1000) / 1000,
-    overheadPercent: Math.round(overheadPercent * 100) / 100,
-    withinBudget: overheadPercent <= config.maxOverheadPercent,
+    overheadPercent: Math.round(clampedOverheadPercent * 100) / 100,
+    withinBudget: clampedOverheadPercent <= config.maxOverheadPercent,
     maxOverheadPercent: config.maxOverheadPercent,
     stats: {
       baseline: {

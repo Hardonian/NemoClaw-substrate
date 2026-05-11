@@ -71,7 +71,14 @@ export function parseConventionalCommit(
   message: string,
   hash: string = "",
 ): ConventionalCommit | null {
-  const match = message.trim().match(COMMIT_PATTERN);
+  const trimmed = message.trim();
+  const firstLineEnd = trimmed.indexOf("\n");
+  const firstLine = firstLineEnd >= 0 ? trimmed.substring(0, firstLineEnd) : trimmed;
+  const body = firstLineEnd >= 0
+    ? trimmed.substring(firstLineEnd + 1).trim()
+    : undefined;
+
+  const match = firstLine.match(COMMIT_PATTERN);
   if (!match) {
     return null;
   }
@@ -80,9 +87,6 @@ export function parseConventionalCommit(
   const scope = match.groups?.scope;
   const breaking = match.groups?.breaking === "!";
   const subject = match.groups?.subject ?? "";
-  const body = message.includes("\n")
-    ? message.substring(message.indexOf("\n") + 1).trim()
-    : undefined;
 
   const breakingInBody = /\bBREAKING CHANGE\b/.test(body ?? "");
 

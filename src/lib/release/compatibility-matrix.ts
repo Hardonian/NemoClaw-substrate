@@ -27,7 +27,6 @@ export interface CompatibilityCheck {
 export function compareSemver(a: string, b: string): number {
   const parse = (v: string) =>
     v
-      .split(".")[0]
       .split("-")[0]
       .split("+")[0]
       .split(".")
