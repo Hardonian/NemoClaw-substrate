@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 /**
- * Automated changelog generation from conventional commit messages.
+ * Automated changelog generation from conventional commits.
  *
  * Pure functions — no I/O. Parses conventional commit messages into
  * structured changelog entries grouped by type.
@@ -38,50 +38,119 @@ export interface Changelog {
   breakingChanges: ChangelogEntry[];
 }
 
-const TYPE_TITLES: Record<string, string> = {
+const COMMIT_PATTERN =
+  /^(?<type>[a-z]+)(?:\((?<scope>[^)]+)\))?(?<breaking>!)?: (?<subject>.+)$/;
+
+const TYPE_SECTION_MAP: Record<string, string> = {
   feat: "Features",
   fix: "Bug Fixes",
   perf: "Performance Improvements",
   refactor: "Code Refactoring",
   docs: "Documentation",
-  style: "Styles",
   test: "Tests",
-  ci: "Continuous Integration",
-  chore: "Miscellaneous Chores",
-  build: "Build System",
-  revert: "Reverts",
-  merge: "Merges",
+  chore: "Chores",
+  ci: "CI",
+  build: "Build",
+  style: "Style",
 };
 
-const COMMIT_PATTERN = /^((\w+)(?:\(([^)]+)\))?!?):\s*(.+)$/;
+const SECTION_ORDER = [
+  "feat",
+  "fix",
+  "perf",
+  "refactor",
+  "docs",
+  "test",
+  "ci",
+  "build",
+  "style",
+  "chore",
+];
 
 export function parseConventionalCommit(
   message: string,
   hash: string = "",
-): ConventionalCommit {
-  const normalized = message.trim();
-  const match = normalized.match(COMMIT_PATTERN);
-
+): ConventionalCommit | null {
+  const match = message.trim().match(COMMIT_PATTERN);
   if (!match) {
-    return {
-      type: "chore",
-      subject: normalized,
-      breaking: false,
-      hash,
-    };
+    return null;
   }
 
-  const fullHeader = match[1];
-  const type = match[2].toLowerCase();
-  const scope = match[3];
-  const subject = match[4];
-  const breaking = fullHeader.endsWith("!") || normalized.includes("BREAKING CHANGE");
+  const type = match.groups?.type ?? "";
+  const scope = match.groups?.scope;
+  const breaking = match.groups?.breaking === "!";
+  const subject = match.groups?.subject ?? "";
+  const body = message.includes("\n")
+    ? message.substring(message.indexOf("\n") + 1).trim()
+    : undefined;
 
-  return { type, scope, subject, breaking, hash };
+  const breakingInBody = /\bBREAKING CHANGE\b/.test(body ?? "");
+
+  return {
+    type,
+    scope,
+    subject,
+    body: breakingInBody ? body : undefined,
+    breaking: breaking || breakingInBody,
+    hash,
+  };
 }
 
-export function commitsToEntries(commits: ConventionalCommit[]): ChangelogEntry[] {
-  return commits.map((commit) => ({
+export function parseCommits(
+  messages: Array<{ message: string; hash: string }>,
+): ConventionalCommit[] {
+  return messages
+    .map(({ message, hash }) => parseConventionalCommit(message, hash))
+    .filter((c): c is ConventionalCommit => c !== null);
+}
+
+export function groupByType(
+  entries: ChangelogEntry[],
+): ChangelogSection[] {
+  const grouped: Map<string, ChangelogEntry[]> = new Map();
+
+  for (const entry of entries) {
+    const existing = grouped.get(entry.type) ?? [];
+    existing.push(entry);
+    grouped.set(entry.type, existing);
+  }
+
+  return SECTION_ORDER.map((type) => ({
+    type,
+    title: TYPE_SECTION_MAP[type] ?? type,
+    entries: grouped.get(type) ?? [],
+  })).filter((section) => section.entries.length > 0);
+}
+
+export function extractBreakingChanges(
+  entries: ChangelogEntry[],
+): ChangelogEntry[] {
+  return entries.filter((entry) => entry.breaking);
+}
+
+export function entriesToChangelog(
+  version: string,
+  date: string,
+  entries: ChangelogEntry[],
+): Changelog {
+  const sections = groupByType(entries);
+  const breakingChanges = extractBreakingChanges(entries);
+
+  return {
+    version,
+    date,
+    sections,
+    breakingChanges,
+  };
+}
+
+export function generateChangelog(
+  version: string,
+  date: string,
+  messages: Array<{ message: string; hash: string }>,
+): Changelog {
+  const commits = parseCommits(messages);
+  const entries: ChangelogEntry[] = commits.map((commit) => ({
     type: commit.type,
     scope: commit.scope,
     description: commit.scope
@@ -90,54 +159,8 @@ export function commitsToEntries(commits: ConventionalCommit[]): ChangelogEntry[
     breaking: commit.breaking,
     hash: commit.hash,
   }));
-}
 
-export function groupEntriesByType(entries: ChangelogEntry[]): ChangelogSection[] {
-  const grouped = new Map<string, ChangelogEntry[]>();
-
-  for (const entry of entries) {
-    const type = entry.type;
-    if (!grouped.has(type)) {
-      grouped.set(type, []);
-    }
-    grouped.get(type)!.push(entry);
-  }
-
-  const sections: ChangelogSection[] = [];
-  for (const [type, typeEntries] of grouped) {
-    const title = TYPE_TITLES[type] ?? type.charAt(0).toUpperCase() + type.slice(1);
-    sections.push({ type, title, entries: typeEntries });
-  }
-
-  return sections.sort((a, b) => {
-    const order = ["feat", "fix", "perf", "refactor", "docs", "test", "ci", "build", "chore", "revert", "merge"];
-    const aIndex = order.indexOf(a.type);
-    const bIndex = order.indexOf(b.type);
-    if (aIndex === -1 && bIndex === -1) return a.type.localeCompare(b.type);
-    if (aIndex === -1) return 1;
-    if (bIndex === -1) return -1;
-    return aIndex - bIndex;
-  });
-}
-
-export function extractBreakingChanges(entries: ChangelogEntry[]): ChangelogEntry[] {
-  return entries.filter((entry) => entry.breaking);
-}
-
-export function generateChangelog(
-  version: string,
-  date: string,
-  commitMessages: string[],
-  hashes: string[] = [],
-): Changelog {
-  const commits = commitMessages.map((msg, i) =>
-    parseConventionalCommit(msg, hashes[i] ?? ""),
-  );
-  const entries = commitsToEntries(commits);
-  const sections = groupEntriesByType(entries);
-  const breakingChanges = extractBreakingChanges(entries);
-
-  return { version, date, sections, breakingChanges };
+  return entriesToChangelog(version, date, entries);
 }
 
 export function changelogToMarkdown(changelog: Changelog): string {
@@ -147,11 +170,12 @@ export function changelogToMarkdown(changelog: Changelog): string {
   lines.push("");
 
   if (changelog.breakingChanges.length > 0) {
-    lines.push("### ⚠ BREAKING CHANGES");
+    lines.push("### BREAKING CHANGES");
     lines.push("");
     for (const entry of changelog.breakingChanges) {
-      const ref = entry.hash ? ` (${entry.hash.slice(0, 7)})` : "";
-      lines.push(`- ${entry.description}${ref}`);
+      const hashRef = entry.hash ? ` (${entry.hash.substring(0, 7)})` : "";
+      const prefix = entry.scope ? `${entry.scope}: ` : "";
+      lines.push(`- ${prefix}${entry.subject || entry.description}${hashRef}`);
     }
     lines.push("");
   }
@@ -160,9 +184,8 @@ export function changelogToMarkdown(changelog: Changelog): string {
     lines.push(`### ${section.title}`);
     lines.push("");
     for (const entry of section.entries) {
-      if (entry.breaking) continue;
-      const ref = entry.hash ? ` (${entry.hash.slice(0, 7)})` : "";
-      lines.push(`- ${entry.description}${ref}`);
+      const hashRef = entry.hash ? ` (${entry.hash.substring(0, 7)})` : "";
+      lines.push(`- ${entry.description}${hashRef}`);
     }
     lines.push("");
   }

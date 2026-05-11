@@ -6,49 +6,51 @@ import { computeBundleHash, verifyArtifact, verifyBundle, isIntegrityValid, inte
 import { createManifest, createArtifact } from "./release-manifest";
 
 describe("computeBundleHash", () => {
-  it("computes SHA-256 hash for content", () => {
-    const hash = computeBundleHash("bundle content");
+  it("computes SHA-256 hash of string content", () => {
+    const hash = computeBundleHash("test content");
     expect(hash).toHaveLength(64);
+    expect(typeof hash).toBe("string");
   });
 
-  it("produces deterministic output", () => {
-    const h1 = computeBundleHash("same");
-    const h2 = computeBundleHash("same");
+  it("returns same hash for same input", () => {
+    const h1 = computeBundleHash("hello");
+    const h2 = computeBundleHash("hello");
     expect(h1).toBe(h2);
   });
 });
 
 describe("verifyArtifact", () => {
-  it("returns valid when content hash matches manifest", () => {
-    const artifact = createArtifact("cli.tar.gz", "content", {
-      source: "repo",
+  it("returns valid when content matches manifest", () => {
+    const artifact = createArtifact("app.tar.gz", "bundle content", {
+      source: "main",
       buildTool: "tsc",
-      buildCommand: "build",
+      buildCommand: "npm run build:cli",
     });
     const manifest = createManifest({
       version: "0.1.0",
       commit: "abc123",
-      buildId: "build-42",
+      buildId: "build-1",
       artifacts: [artifact],
     });
-    const result = verifyArtifact("cli.tar.gz", "content", manifest);
+    const result = verifyArtifact("app.tar.gz", "bundle content", manifest);
     expect(result.valid).toBe(true);
-    expect(result.artifactName).toBe("cli.tar.gz");
+    expect(result.artifactName).toBe("app.tar.gz");
+    expect(result.expected).toBe(result.actual);
   });
 
-  it("returns invalid when content hash does not match", () => {
-    const artifact = createArtifact("cli.tar.gz", "original", {
-      source: "repo",
+  it("returns invalid when content does not match", () => {
+    const artifact = createArtifact("app.tar.gz", "original", {
+      source: "main",
       buildTool: "tsc",
-      buildCommand: "build",
+      buildCommand: "npm run build:cli",
     });
     const manifest = createManifest({
       version: "0.1.0",
       commit: "abc123",
-      buildId: "build-42",
+      buildId: "build-1",
       artifacts: [artifact],
     });
-    const result = verifyArtifact("cli.tar.gz", "tampered", manifest);
+    const result = verifyArtifact("app.tar.gz", "tampered", manifest);
     expect(result.valid).toBe(false);
     expect(result.expected).not.toBe(result.actual);
   });
@@ -57,7 +59,7 @@ describe("verifyArtifact", () => {
     const manifest = createManifest({
       version: "0.1.0",
       commit: "abc123",
-      buildId: "build-42",
+      buildId: "build-1",
       artifacts: [],
     });
     const result = verifyArtifact("missing.tar.gz", "content", manifest);
@@ -67,26 +69,26 @@ describe("verifyArtifact", () => {
 });
 
 describe("verifyBundle", () => {
-  it("verifies multiple artifacts", () => {
-    const a1 = createArtifact("cli.tar.gz", "cli content", {
-      source: "repo",
+  it("verifies all artifacts in bundle", () => {
+    const a1 = createArtifact("cli.tar.gz", "cli-data", {
+      source: "main",
       buildTool: "tsc",
-      buildCommand: "build",
+      buildCommand: "npm run build:cli",
     });
-    const a2 = createArtifact("plugin.tar.gz", "plugin content", {
-      source: "repo",
+    const a2 = createArtifact("plugin.tar.gz", "plugin-data", {
+      source: "main",
       buildTool: "tsc",
-      buildCommand: "build",
+      buildCommand: "npm run build:cli",
     });
     const manifest = createManifest({
       version: "0.1.0",
       commit: "abc123",
-      buildId: "build-42",
+      buildId: "build-1",
       artifacts: [a1, a2],
     });
     const bundles = new Map<string, string | Buffer>([
-      ["cli.tar.gz", "cli content"],
-      ["plugin.tar.gz", "plugin content"],
+      ["cli.tar.gz", "cli-data"],
+      ["plugin.tar.gz", "plugin-data"],
     ]);
     const report = verifyBundle(bundles, manifest);
     expect(report.passed).toHaveLength(2);
@@ -94,33 +96,35 @@ describe("verifyBundle", () => {
     expect(report.missing).toHaveLength(0);
   });
 
-  it("reports missing artifacts", () => {
-    const artifact = createArtifact("cli.tar.gz", "content", {
-      source: "repo",
+  it("detects missing artifacts", () => {
+    const artifact = createArtifact("cli.tar.gz", "cli-data", {
+      source: "main",
       buildTool: "tsc",
-      buildCommand: "build",
+      buildCommand: "npm run build:cli",
     });
     const manifest = createManifest({
       version: "0.1.0",
       commit: "abc123",
-      buildId: "build-42",
+      buildId: "build-1",
       artifacts: [artifact],
     });
     const bundles = new Map<string, string | Buffer>();
     const report = verifyBundle(bundles, manifest);
     expect(report.missing).toContain("cli.tar.gz");
+    expect(report.passed).toHaveLength(0);
+    expect(report.failed).toHaveLength(0);
   });
 
-  it("reports hash mismatches", () => {
+  it("detects hash mismatches", () => {
     const artifact = createArtifact("cli.tar.gz", "original", {
-      source: "repo",
+      source: "main",
       buildTool: "tsc",
-      buildCommand: "build",
+      buildCommand: "npm run build:cli",
     });
     const manifest = createManifest({
       version: "0.1.0",
       commit: "abc123",
-      buildId: "build-42",
+      buildId: "build-1",
       artifacts: [artifact],
     });
     const bundles = new Map<string, string | Buffer>([
@@ -129,35 +133,27 @@ describe("verifyBundle", () => {
     const report = verifyBundle(bundles, manifest);
     expect(report.failed).toHaveLength(1);
     expect(report.passed).toHaveLength(0);
+    expect(report.missing).toHaveLength(0);
   });
 });
 
 describe("isIntegrityValid", () => {
-  it("returns true when all artifacts pass", () => {
-    const report = {
-      passed: [{ valid: true, artifactName: "test.tar.gz", expected: "abc", actual: "abc" }],
-      failed: [],
-      missing: [],
-    };
-    expect(isIntegrityValid(report)).toBe(true);
+  it("returns true when no failures or missing", () => {
+    expect(
+      isIntegrityValid({ passed: [{ valid: true, artifactName: "a", expected: "x", actual: "x" }], failed: [], missing: [] }),
+    ).toBe(true);
   });
 
-  it("returns false when any artifact fails", () => {
-    const report = {
-      passed: [],
-      failed: [{ valid: false, artifactName: "test.tar.gz", expected: "abc", actual: "def" }],
-      missing: [],
-    };
-    expect(isIntegrityValid(report)).toBe(false);
+  it("returns false when there are failures", () => {
+    expect(
+      isIntegrityValid({ passed: [], failed: [{ valid: false, artifactName: "a", expected: "x", actual: "y" }], missing: [] }),
+    ).toBe(false);
   });
 
-  it("returns false when any artifact is missing", () => {
-    const report = {
-      passed: [],
-      failed: [],
-      missing: ["test.tar.gz"],
-    };
-    expect(isIntegrityValid(report)).toBe(false);
+  it("returns false when there are missing artifacts", () => {
+    expect(
+      isIntegrityValid({ passed: [], failed: [], missing: ["a.tar.gz"] }),
+    ).toBe(false);
   });
 });
 
@@ -165,8 +161,8 @@ describe("integrityReportSummary", () => {
   it("returns success message when all valid", () => {
     const report = {
       passed: [
-        { valid: true, artifactName: "a.tar.gz", expected: "abc", actual: "abc" },
-        { valid: true, artifactName: "b.tar.gz", expected: "def", actual: "def" },
+        { valid: true, artifactName: "a", expected: "x", actual: "x" },
+        { valid: true, artifactName: "b", expected: "y", actual: "y" },
       ],
       failed: [],
       missing: [],
@@ -174,15 +170,15 @@ describe("integrityReportSummary", () => {
     expect(integrityReportSummary(report)).toBe("All 2 artifact(s) verified successfully.");
   });
 
-  it("reports failures and missing", () => {
+  it("reports mismatches and missing", () => {
     const report = {
-      passed: [{ valid: true, artifactName: "a.tar.gz", expected: "abc", actual: "abc" }],
-      failed: [{ valid: false, artifactName: "b.tar.gz", expected: "def", actual: "ghi" }],
-      missing: ["c.tar.gz"],
+      passed: [{ valid: true, artifactName: "a", expected: "x", actual: "x" }],
+      failed: [{ valid: false, artifactName: "b", expected: "y", actual: "z" }],
+      missing: ["c"],
     };
     const summary = integrityReportSummary(report);
     expect(summary).toContain("1/3 artifact(s) valid");
-    expect(summary).toContain("1 hash mismatch");
-    expect(summary).toContain("1 missing artifact");
+    expect(summary).toContain("1 hash mismatch(es)");
+    expect(summary).toContain("1 missing artifact(s)");
   });
 });
