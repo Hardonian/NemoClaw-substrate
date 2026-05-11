@@ -11,7 +11,7 @@ Every `Diagnostic Fact` in an `ExecutionDiagnosticSnapshot` is assigned one of t
 | `observed` | Info | The fact was successfully observed and verified against source-of-truth. |
 | `inferred` | Info | The fact was derived from other observations (e.g., node health inferred from lease renewal). |
 | `unavailable` | Warning | The data source for this fact is unreachable. |
-| `degraded` | Warning | The fact indicates a sub-optimal or non-canonical state (e.g., using fallback providers). |
+| `degraded` | Warning | The fact indicates a sub-optimal or non-canonical state (e.g., using Degraded State providers). |
 | `stale` | Warning | The observation is older than the allowed threshold but still present. |
 | `conflicted` | Error | Multiple conflicting observations were made for the same fact. |
 | `blocked` | Error | The fact indicates a state that prevents further execution (e.g., policy violation). |
@@ -58,13 +58,13 @@ These occur when safety invariants or operator approvals are violated.
 
 A "Degraded State" in NemoClaw is NOT a failure, but a sub-optimal mode of operation that still allows for safe (if less efficient) execution.
 
-*   **Triggered**: Must have a valid `reasonCode` and `explanation`.
-*   **Permitted**: Degraded states must be explicitly permitted in the `ExecutionPlan`.
-*   **Auditable**: Every transition to a degraded state emits a `degraded_state_trigger` event.
-*   **Non-Silent**: The UI and CLI must clearly indicate when the substrate is operating in a degraded mode.
+* **Triggered**: Must have a valid `reasonCode` and `explanation`.
+* **Permitted**: Degraded states must be explicitly permitted in the `ExecutionPlan`.
+* **Auditable**: Every transition to a degraded state emits a `degraded_state_trigger` event.
+* **Non-Silent**: The UI and CLI must clearly indicate when the substrate is operating in a degraded mode.
 
 ### Common Degraded Triggers
 
-*   `gpu_telemetry_unavailable`: Using static device capabilities because the live probe failed.
-*   `scoring_degraded`: Scheduler using approximate priority because some telemetry is stale.
-*   `hidden_retry_detected`: A previous execution phase succeeded after an unrecorded internal retry.
+* `gpu_telemetry_unavailable`: Using static device capabilities because the live probe failed.
+* `scoring_degraded`: Scheduler using approximate priority because some telemetry is stale.
+* `hidden_retry_detected`: A previous execution phase succeeded after an unrecorded internal retry.

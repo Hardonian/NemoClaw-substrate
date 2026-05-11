@@ -69,7 +69,7 @@ describe("verify-proofpack script", () => {
       const pack: ProofPackSchema = {
         version: "1.0.0",
         id: "test",
-        entries: [{ type: "test" }],
+        entries: [{ type: "test" }] as any,
       };
       const result = validateSchema(pack);
       expect(result.passed).toBe(false);
@@ -80,7 +80,7 @@ describe("verify-proofpack script", () => {
       const pack: ProofPackSchema = {
         version: "1.0.0",
         id: "test",
-        entries: [{ id: "entry-1" }],
+        entries: [{ id: "entry-1" }] as any,
       };
       const result = validateSchema(pack);
       expect(result.passed).toBe(false);
