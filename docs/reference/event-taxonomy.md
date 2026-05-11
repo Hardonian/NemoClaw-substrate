@@ -80,5 +80,5 @@ Diagnostics and operational events capture snapshots for debugging and verificat
 | `proofpack_generated` | A Proofpack has been successfully exported. |
 | `proofpack_validation_failed` | Integrity check failed on an exported Proofpack. |
 | `degraded_state` | The system has entered a Degraded State of operation. |
-| `fallback` | A Degraded State mechanism was triggered. |
+| `degraded_state_trigger` | A Degraded State mechanism was triggered. |
 | `operator_override` | An operator manually bypassed a policy gate. |

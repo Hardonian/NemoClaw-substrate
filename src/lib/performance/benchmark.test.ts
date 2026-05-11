@@ -10,7 +10,7 @@ import {
   passesBaseline,
   formatResult,
   formatSuite,
-} from "../../dist/lib/performance/benchmark";
+} from "./benchmark";
 
 describe("percentile", () => {
   it("returns 0 for empty array", () => {

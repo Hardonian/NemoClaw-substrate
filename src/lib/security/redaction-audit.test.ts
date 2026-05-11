@@ -26,9 +26,9 @@ describe("auditRedaction", () => {
 
   it("detects redacted secret tokens", () => {
     const result = auditRedaction("key: nvapi-**** (redacted)");
-    const tokenFindings = result.findings.filter((f) => f.type === "secret_token");
+    const tokenFindings = result.findings.filter((f) => f.type === "secret_token_redacted");
     expect(tokenFindings.length).toBeGreaterThan(0);
-    expect(tokenFindings.some((f) => f.isRedacted)).toBe(true);
+    expect(tokenFindings[0].isRedacted).toBe(true);
   });
 
   it("detects exposed email addresses", () => {
