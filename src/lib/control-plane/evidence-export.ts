@@ -12,7 +12,7 @@
  * - JSON and NDJSON export formats
  * - secret redaction before export via security-policy preflight
  *
- * No autonomous retries, no daemons, no hidden fallback behavior.
+ * No autonomous retries, no daemons, no hidden degradedStateTrigger behavior.
  * All ordering is deterministic. All failures are explicit.
  */
 

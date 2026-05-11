@@ -41,6 +41,7 @@ function plan(overrides: Partial<ExecutionPlan> = {}): ExecutionPlan {
   const governanceMetadata = {
     policyVersion: "policy-v1",
     fallbackPermitted: "false",
+    degradedStateTriggerPermitted: "false",
     approvalMode: "operator",
   };
   const trustMetadata = {
@@ -69,7 +70,7 @@ function plan(overrides: Partial<ExecutionPlan> = {}): ExecutionPlan {
     approvals: [{ approvalId: "approval-1", actor: "operator", decidedAt: now, decision: "approved", reasonCode: "operator_approved" }],
     receiptReferences: [],
     replayReference: { replayReferenceId: "replay-1", lineage: ["plan-1", "governance", "queue"], replayDigest: "replay-digest", replayVersion: "1" },
-    fallbackMetadata: { permitted: false, reasonCode: "fallback_not_permitted" },
+    degradedStateTriggerMetadata: { permitted: false, reasonCode: "degraded_state_trigger_not_permitted" },
     transitionHistory: [],
     ...overrides,
   };
@@ -157,7 +158,7 @@ describe("execution lifecycle substrate", () => {
       {
         currentTrustMetadata: { trustLevel: "revoked" },
         candidatePlanId: "plan-other",
-        fallbackPermitted: true,
+        degradedStateTriggerPermitted: true,
         ownerId: "owner-x",
         leaseId: "lease-x",
         receiptReferences: [{ receiptId: "expected", receiptDigest: "digest" }],
@@ -166,7 +167,7 @@ describe("execution lifecycle substrate", () => {
     expect(drift).toContain("missing_governance_metadata");
     expect(drift).toContain("replay_drift");
     expect(drift).toContain("trust_drift");
-    expect(drift).toContain("fallback_drift");
+    expect(drift).toContain("degraded_state_trigger_drift");
     expect(drift).toContain("candidate_mismatch");
     expect(drift).toContain("ownership_mismatch");
     expect(drift).toContain("lease_mismatch");
@@ -265,8 +266,8 @@ describe("execution lifecycle substrate", () => {
       eventType: "execution_failed",
       plan: queuedPlan,
       occurredAt: "2026-05-10T00:08:00.000Z",
-      reasonCode: "fallback_missing_reason",
-      payload: { fallback: { hidden: true } },
+      reasonCode: "degraded_state_trigger_missing_reason",
+      payload: { degradedStateTrigger: { hidden: true } },
     });
     const unsafe = buildExecutionProofpack({
       generatedAt: "2026-05-10T00:09:00.000Z",
@@ -275,7 +276,7 @@ describe("execution lifecycle substrate", () => {
       queueHistory: [queueItem],
       leaseHistory: [queueItem.lease!],
     });
-    expect(validateExecutionProofpack(unsafe, "2026-05-10T00:09:00.000Z").reasons).toContain("hidden_fallback_detected");
+    expect(validateExecutionProofpack(unsafe, "2026-05-10T00:09:00.000Z").reasons).toContain("hidden_degraded_state_trigger_detected");
   });
 
   it("distinguishes observed, unavailable, stale, conflicted, degraded, and blocked diagnostics", () => {
