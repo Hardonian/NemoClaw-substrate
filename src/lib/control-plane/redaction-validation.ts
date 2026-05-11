@@ -213,7 +213,7 @@ export function validateReplayPackageRedaction(pkg: ReplayEvidencePackage, polic
   for (const event of pkg.diagnosticsSnapshots) {
     eventPayloads.push(event.payload);
   }
-  for (const event of pkg.fallbackEvidence) {
+  for (const event of pkg.degradedStateTriggerEvidence) {
     eventPayloads.push(event.payload);
   }
   for (const event of pkg.approvalLineage) {
