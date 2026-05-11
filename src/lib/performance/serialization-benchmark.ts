@@ -175,6 +175,13 @@ export function deserializeBinary(buf: Buffer): TestPayload {
 }
 
 /**
+ * Align offset to 8-byte boundary for Float64Array compatibility.
+ */
+function alignTo8(offset: number): number {
+  return (offset + 7) & ~7;
+}
+
+/**
  * Zero-copy serialization: returns a view over an existing ArrayBuffer.
  * No allocation of intermediate buffers.
  */
@@ -187,6 +194,8 @@ export function serializeZeroCopy(payload: TestPayload): ArrayBuffer {
   for (const [k, v] of metaEntries) {
     totalSize += 2 + new TextEncoder().encode(k).length + new TextEncoder().encode(v).length;
   }
+  // Add padding for Float64 alignment (up to 7 bytes after id, up to 7 after dataLength)
+  totalSize += 7 + 7;
 
   const ab = new ArrayBuffer(totalSize);
   const view = new DataView(ab);
@@ -197,11 +206,13 @@ export function serializeZeroCopy(payload: TestPayload): ArrayBuffer {
   new Uint8Array(ab, offset, idBytes.length).set(idBytes);
   offset += idBytes.length;
 
+  offset = alignTo8(offset);
   view.setFloat64(offset, payload.timestamp, false);
   offset += 8;
 
   view.setUint32(offset, payload.data.length, false);
   offset += 4;
+  offset = alignTo8(offset);
   for (let i = 0; i < payload.data.length; i++) {
     view.setFloat64(offset, payload.data[i], false);
     offset += 8;
