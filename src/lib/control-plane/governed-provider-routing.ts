@@ -11,7 +11,7 @@ import type { DegradedState, ExecutionReceipt } from "./types";
 export interface GovernedRoutingConfig {
   enabled: boolean;
   source: "env" | "default";
-  allowFallback: boolean;
+  allowDegradedStateTrigger: boolean;
 }
 
 export function parseGovernedRoutingConfig(env: NodeJS.ProcessEnv): GovernedRoutingConfig {
@@ -62,7 +62,7 @@ export function routeProviderWithGovernance(input: ProviderRouteInput): { provid
 
   const routedProvider = selected ? selected.nodeId.replace(/^provider:/, "").split(":")[0] : input.provider;
   const routedModel = selected?.modelId ?? input.model;
-  const fallbackUsed = !selected;
+  const degradedStateTriggerUsed = !selected;
 
   const receipt: ExecutionReceipt = {
     version: "1",
