@@ -8,8 +8,8 @@ import {
   scanNetworkPolicies,
   walkDir,
   ALLOWED_EGRESS,
-} from "../../scripts/verify-export.ts";
-import type { ScanTarget } from "../../scripts/verify-export.ts";
+} from "../scripts/verify-export.ts";
+import type { ScanTarget } from "../scripts/verify-export.ts";
 
 describe("verify-export script", () => {
   describe("ALLOWED_EGRESS", () => {

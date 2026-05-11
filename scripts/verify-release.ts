@@ -140,7 +140,7 @@ function checkPackageVersion(manifest: ManifestSchema): CheckResult {
     return {
       name: "package_version",
       passed: false,
-      detail: `Manifest version ${manifest.version} != package.json ${pkg.version}`,
+      detail: `Version mismatch: Manifest version ${manifest.version} != package.json ${pkg.version}`,
     };
   }
   return { name: "package_version", passed: true, detail: `Version ${pkg.version} consistent` };
@@ -156,7 +156,7 @@ function checkBlueprintVersion(manifest: ManifestSchema): CheckResult {
     return {
       name: "blueprint_version",
       passed: false,
-      detail: `Manifest version ${manifest.version} != blueprint ${blueprint.version}`,
+      detail: `Version mismatch: Manifest version ${manifest.version} != blueprint ${blueprint.version}`,
     };
   }
   return { name: "blueprint_version", passed: true, detail: `Blueprint version ${blueprint.version ?? "unknown"} consistent` };

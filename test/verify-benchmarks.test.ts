@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
-import { loadBaseline, checkAgainstBaselines } from "../../scripts/verify-benchmarks.ts";
-import type { BaselineManifest, BenchmarkMetric } from "../../scripts/verify-benchmarks.ts";
+import { loadBaseline, checkAgainstBaselines } from "../scripts/verify-benchmarks.ts";
+import type { BaselineManifest, BenchmarkMetric } from "../scripts/verify-benchmarks.ts";
 
 describe("verify-benchmarks script", () => {
   describe("loadBaseline", () => {

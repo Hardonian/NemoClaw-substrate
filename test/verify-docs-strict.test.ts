@@ -7,8 +7,8 @@ import {
   checkBrokenLinks,
   checkDocsFrontmatter,
   checkSpdxHeaders,
-} from "../../scripts/verify-docs-strict.ts";
-import type { DocsCheck } from "../../scripts/verify-docs-strict.ts";
+} from "../scripts/verify-docs-strict.ts";
+import type { DocsCheck } from "../scripts/verify-docs-strict.ts";
 
 describe("verify-docs-strict script", () => {
   describe("checkDocsOutputExists", () => {
