@@ -39,4 +39,5 @@ NemoClaw-substrate uses environment variables to control orchestration behavior,
 ---
 
 ## Anti-Theatre Note
+
 Flags marked as `(Planned)` represent interfaces that are defined in the configuration schema but not yet fully implemented in the runtime. Enabling these will currently result in a `STEP_SKIPPED` or `INTERNAL_ERROR` with a `reasonCode` of `orchestration_disabled` or `internal_error`.
