@@ -337,9 +337,19 @@ export class PolicyLearningManager {
   }
 
   getAllProposals(): PolicyCandidateProposal[] {
-    return Array.from(this.store.getProposals)
-      .map((policyId) => this.store.getProposals(policyId))
-      .flat();
+    const allProposals: PolicyCandidateProposal[] = [];
+    const policyIds = new Set<string>();
+
+    const allStored = this.store.getProposals("");
+    for (const p of allStored) {
+      policyIds.add(p.policyId);
+    }
+
+    for (const policyId of policyIds) {
+      allProposals.push(...this.store.getProposals(policyId));
+    }
+
+    return allProposals;
   }
 
   getProposalsForPolicy(policyId: string): PolicyCandidateProposal[] {
