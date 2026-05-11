@@ -41,7 +41,7 @@ const DEFAULT_BENCHMARK_OPTIONS: BenchmarkEventStreamOptions = {
     execution_plan_approved: 0.1,
     execution_authorization_granted: 0.1,
     degraded_state: 0.1,
-    fallback: 0.05,
+    degraded_state_trigger: 0.05,
     diagnostics_snapshot: 0.05,
     replay_metadata: 0.05,
     scheduler_outcome: 0.05,

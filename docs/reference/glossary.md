@@ -40,7 +40,7 @@ A cryptographic proof of identity or state, typically signed by a trusted hardwa
 
 The declarative definition of a sandbox's lifecycle, resource limits, and network policies.
 
-### Fanout
+### Farouk
 
 The simultaneous execution of a task across multiple candidates (providers or regions) to select the best result or ensure availability.
 
