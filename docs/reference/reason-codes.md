@@ -2,79 +2,67 @@
 
 Reason codes provide fine-grained, machine-readable explanations for decisions and state transitions within the NemoClaw substrate. These codes are embedded in receipts and events to ensure every action is auditable.
 
-## Plan Lifecycle Codes
+## Standard Success & Control Codes
 
 | Code | Meaning |
 |:---|:---|
-| `plan_created` | The orchestration plan has been synthesized and validated. |
-| `plan_started` | Execution of the first step in the plan has commenced. |
-| `plan_completed` | All mandatory steps in the plan finished successfully. |
-| `plan_failed` | One or more mandatory steps failed, and retries are exhausted. |
-| `plan_cancelled` | The plan was terminated by an operator or external signal. |
-| `plan_timed_out` | Total plan execution time exceeded `maxPlanDurationMs`. |
+| `ok` | The operation or transition completed successfully. |
+| `deterministic_rerun` | A replay or retry was identified as a deterministic match. |
+| `idempotency_key_conflict` | A plan with the same idempotency key already exists. |
 
-## Step Lifecycle Codes
+## Structural & Lineage Codes
 
 | Code | Meaning |
 |:---|:---|
-| `step_created` | An individual execution step was added to the run state. |
-| `step_started` | The specific step payload was dispatched to a runner. |
-| `step_completed` | The step payload executed successfully and returned results. |
-| `step_failed` | The step execution encountered an error. |
-| `step_skipped` | The step was bypassed due to satisfied dependencies or policy. |
-| `step_cancelled` | The step was stopped before completion. |
-| `step_timed_out` | Individual step duration exceeded `maxStepDurationMs`. |
+| `invalid_transition` | The requested state transition is not allowed by the state machine. |
+| `missing_idempotency_key` | An idempotency key was required but not provided. |
+| `missing_lineage` | Replay or transition history is missing for a task. |
+| `orphaned_execution_state` | An execution record exists without a corresponding plan or queue item. |
+| `missing_execution_receipts` | Required evidence artifacts are missing from the plan. |
 
-## Policy & Trust Codes
+## Drift & Integrity Codes
 
 | Code | Meaning |
 |:---|:---|
-| `orchestration_disabled` | Orchestration was skipped because `NEMOCLAW_ORCHESTRATION != 1`. |
-| `policy_denied` | The active policy forbids the requested action. |
-| `policy_expired` | The policy version used for planning is no longer valid. |
-| `policy_missing` | No valid policy could be found for the requested scope. |
-| `trust_insufficient` | The attestation/trust level is below the required threshold. |
-| `trust_revoked` | The credentials or attestation used were previously invalidated. |
-| `approval_required` | The step is marked as requiring explicit operator approval. |
-| `approval_denied` | An operator or gatekeeper explicitly rejected the request. |
+| `lineage_drift` | The sequence of events in the queue diverged from the plan. |
+| `replay_drift` | Replay execution diverged from the recorded history. |
+| `governance_drift` | Governance metadata (e.g., policy version) changed unexpectedly. |
+| `trust_drift` | Trust/attestation metadata changed during execution. |
+| `degraded_state_trigger_drift` | The trigger for a degraded state changed during replay. |
+| `candidate_mismatch` | A worker or resource candidate does not match the plan. |
+| `ownership_mismatch` | The current worker does not match the recorded owner. |
+| `lease_mismatch` | The active lease does not match the execution context. |
+| `receipt_mismatch` | A receipt's digest does not match its recorded value. |
+| `proofpack_integrity_mismatch` | The overall digest of a Proofpack failed verification. |
 
-## GPU & Resource Codes
-
-| Code | Meaning |
-|:---|:---|
-| `gpu_available` | Sufficient GPU resources were found and reserved. |
-| `gpu_unavailable` | No matching GPU devices were found on the target host. |
-| `gpu_vram_insufficient` | Available VRAM is below the `minVramMb` threshold. |
-| `gpu_thermal_throttled` | Device is throttled; execution deferred to prevent damage. |
-| `gpu_queue_full` | All target GPU compute slots are currently occupied. |
-| `gpu_telemetry_unavailable` | Real-time GPU metrics are missing; falling back to static info. |
-| `gpu_scoring_degraded` | Scheduling scoring is less accurate due to missing data. |
-
-## Daemon & Lease Codes
+## Policy & Invariant Codes
 
 | Code | Meaning |
 |:---|:---|
-| `daemon_not_started` | The background scheduler process is not running. |
-| `daemon_shutdown` | The scheduler process is terminating. |
-| `lease_stale` | The task lease was not renewed within the required interval. |
-| `lease_expired` | The task lease has exceeded its absolute TTL. |
-| `lease_conflict` | Another worker has already claimed the lease for this task. |
-| `heartbeat_missed` | The runner failed to signal health within the deadline. |
+| `missing_governance_metadata` | Required governance fields (e.g., `userId`) are missing. |
+| `missing_trust_metadata` | Required trust/attestation fields are missing. |
+| `missing_invariants` | The plan defines no safety invariants for enforcement. |
+| `unenforced_invariant` | A mandatory safety invariant was bypassed or failed. |
+| `plan_expired` | The plan's absolute time-to-live (TTL) has been exceeded. |
+| `plan_cancelled` | The plan was explicitly cancelled by an operator. |
+| `missing_expiration_semantics` | A plan is missing its TTL or expiration handling logic. |
+| `cancellation_safe_replay_blocked` | Replay was blocked because the original was not cancellation-safe. |
 
-## Replay & Verification Codes
-
-| Code | Meaning |
-|:---|:---|
-| `replay_drift_detected` | Replay execution diverged from the recorded history. |
-| `replay_consistent` | Replay execution exactly matched the recorded history. |
-| `validation_failed` | Structure or signature verification failed for an artifact. |
-
-## External Integration Codes
+## Queue & Lease Codes
 
 | Code | Meaning |
 |:---|:---|
-| `dynamo_connected` | Successfully connected to the DynamoDB adapter. |
-| `dynamo_unavailable` | The DynamoDB endpoint is unreachable. |
-| `remote_enabled` | Remote execution was successfully authorized. |
-| `remote_blocked_no_trust` | Remote execution denied due to insufficient trust. |
-| `policy_proposal_created` | A new policy rule has been proposed based on learning. |
+| `duplicate_lease_attempt` | A worker attempted to lease a task it already owns. |
+| `conflicting_ownership` | Multiple workers claim ownership of the same task. |
+| `stale_queue_ownership` | A worker's ownership record has not been refreshed. |
+| `queue_item_expired` | A task spent too long in the queue without being claimed. |
+| `missing_queue_history` | The transition history for a queue item is incomplete. |
+| `missing_lease_history` | The lease renewal/expiration history is missing. |
+
+## Degraded State Codes
+
+| Code | Meaning |
+|:---|:---|
+| `missing_degraded_reason` | A transition to degraded state is missing an explanation. |
+| `hidden_degraded_state_trigger_detected` | An undocumented trigger caused a degraded state. |
+| `hidden_retry_detected` | An unrecorded retry attempt was discovered during replay. |
