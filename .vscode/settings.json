@@ -37,6 +37,7 @@
         "kubeconfig",
         "landlock",
         "litellm",
+        "llamacpp",
         "lockdown",
         "makedirs",
         "metacharacters",

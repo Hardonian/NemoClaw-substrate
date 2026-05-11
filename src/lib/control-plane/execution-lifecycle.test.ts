@@ -40,7 +40,6 @@ const later = "2026-05-10T00:05:00.000Z";
 function plan(overrides: Partial<ExecutionPlan> = {}): ExecutionPlan {
   const governanceMetadata = {
     policyVersion: "policy-v1",
-    fallbackPermitted: "false",
     degradedStateTriggerPermitted: "false",
     approvalMode: "operator",
   };
@@ -262,7 +261,7 @@ describe("execution lifecycle substrate", () => {
     const tampered = { ...proofpack, digest: "tampered" };
     expect(validateExecutionProofpack(tampered, "2026-05-10T00:07:00.000Z").reasons).toContain("proofpack_integrity_mismatch");
 
-    const hiddenFallbackReceipt = createLifecycleReceipt({
+    const hiddenDegradedStateTriggerReceipt = createLifecycleReceipt({
       eventType: "execution_failed",
       plan: queuedPlan,
       occurredAt: "2026-05-10T00:08:00.000Z",
@@ -272,7 +271,7 @@ describe("execution lifecycle substrate", () => {
     const unsafe = buildExecutionProofpack({
       generatedAt: "2026-05-10T00:09:00.000Z",
       executionPlan: queuedPlan,
-      executionReceipts: [...allReceipts, hiddenFallbackReceipt],
+      executionReceipts: [...allReceipts, hiddenDegradedStateTriggerReceipt],
       queueHistory: [queueItem],
       leaseHistory: [queueItem.lease!],
     });

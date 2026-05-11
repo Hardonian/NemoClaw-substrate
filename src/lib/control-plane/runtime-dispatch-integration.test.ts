@@ -97,15 +97,15 @@ describe("runtime dispatch integration", () => {
     expect(remoteExecute).toHaveBeenCalledTimes(1);
   });
 
-  it("fallback receipt is recorded only when fallback is configured and policy allows", async () => {
+  it("degraded state trigger receipt is recorded only when trigger is configured and policy allows", async () => {
     const transport = { execute: vi.fn(async () => ({ status: 503, body: "{}" })) };
-    const yesFallback = await dispatchWithHeterogeneousRouting({ requestId: "r7", nowIso: "2026-05-09T00:00:00.000Z", provider: "openai-api", model: "gpt-5.4", policyBundle: allowPolicy, registry: seededRegistry(), config: { hetero: { enabled: true, source: "env" }, governedEnabled: true, allowDegradedStateTrigger: true, remote: { enabled: true, source: "env" } }, localDispatch: async () => "local", remoteTransport: transport });
-    expect(yesFallback.status).toBe("degraded");
-    expect(yesFallback.events.length).toBeGreaterThanOrEqual(0);
-    expect(yesFallback.diagnostics.join("\n")).toContain("Degraded state trigger");
+    const yesTrigger = await dispatchWithHeterogeneousRouting({ requestId: "r7", nowIso: "2026-05-09T00:00:00.000Z", provider: "openai-api", model: "gpt-5.4", policyBundle: allowPolicy, registry: seededRegistry(), config: { hetero: { enabled: true, source: "env" }, governedEnabled: true, allowDegradedStateTrigger: true, remote: { enabled: true, source: "env" } }, localDispatch: async () => "local", remoteTransport: transport });
+    expect(yesTrigger.status).toBe("degraded");
+    expect(yesTrigger.events.length).toBeGreaterThanOrEqual(0);
+    expect(yesTrigger.diagnostics.join("\n")).toContain("Degraded state trigger");
 
-    const noFallback = await dispatchWithHeterogeneousRouting({ requestId: "r8", nowIso: "2026-05-09T00:00:00.000Z", provider: "openai-api", model: "gpt-5.4", policyBundle: allowPolicy, registry: seededRegistry(), config: { hetero: { enabled: true, source: "env" }, governedEnabled: true, allowDegradedStateTrigger: false, remote: { enabled: true, source: "env" } }, localDispatch: async () => "local", remoteTransport: transport });
-    expect(noFallback.status).toBe("degraded");
+    const noTrigger = await dispatchWithHeterogeneousRouting({ requestId: "r8", nowIso: "2026-05-09T00:00:00.000Z", provider: "openai-api", model: "gpt-5.4", policyBundle: allowPolicy, registry: seededRegistry(), config: { hetero: { enabled: true, source: "env" }, governedEnabled: true, allowDegradedStateTrigger: false, remote: { enabled: true, source: "env" } }, localDispatch: async () => "local", remoteTransport: transport });
+    expect(noTrigger.status).toBe("degraded");
   });
 
   it("diagnostics exposes complete dispatch states", async () => {

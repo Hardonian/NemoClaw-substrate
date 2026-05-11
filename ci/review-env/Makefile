@@ -3,7 +3,7 @@
 
 # Makefile - Reproducible local review environment
 
-.PHONY: all build up down shell clean lint test
+.PHONY: all build up down shell clean lint test hardening-check
 
 IMAGE_NAME := nemoclaw-review
 IMAGE_TAG := latest

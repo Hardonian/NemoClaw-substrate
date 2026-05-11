@@ -122,10 +122,10 @@ function buildPayload(index: number, category: string, size: "small" | "medium" 
     };
   }
 
-  if (category === "fallback") {
-    payload.fallback = {
+  if (category === "degraded_state_trigger") {
+    payload.degradedStateTrigger = {
       attempt: index,
-      reason: `benchmark-fallback-${index}`,
+      reason: `benchmark-degraded-state-trigger-${index}`,
       target: `node-benchmark-${index % 5}`,
     };
   }
