@@ -59,7 +59,7 @@ function deterministicTimestamp(base: string, offsetSeconds: number): string {
 const CATEGORIES: OperationalEventCategory[] = [
   "receipt",
   "policy_outcome",
-  "fallback",
+  "degraded_state_trigger",
   "degraded_state",
   "scheduler_outcome",
   "operator_override",
@@ -114,7 +114,7 @@ export interface ReplayFixtureOptions {
   includeDiagnostics: boolean;
   includeDegraded: boolean;
   includeApprovals: boolean;
-  includeFallback: boolean;
+  includeDegradedStateTrigger: boolean;
 }
 
 const DEFAULT_REPLAY_OPTIONS: ReplayFixtureOptions = {
@@ -124,7 +124,7 @@ const DEFAULT_REPLAY_OPTIONS: ReplayFixtureOptions = {
   includeDiagnostics: true,
   includeDegraded: true,
   includeApprovals: true,
-  includeFallback: true,
+  includeDegradedStateTrigger: true,
 };
 
 export interface ReplayFixtureResult {
@@ -134,7 +134,7 @@ export interface ReplayFixtureResult {
   diagnosticsCount: number;
   degradedCount: number;
   approvalCount: number;
-  fallbackCount: number;
+  degradedStateTriggerCount: number;
 }
 
 export function generateReplayFixture(input: Partial<ReplayFixtureOptions> = {}): ReplayFixtureResult {
@@ -160,7 +160,7 @@ export function generateReplayFixture(input: Partial<ReplayFixtureOptions> = {})
     "execution_plan_approved",
     "execution_plan_rejected",
   ];
-  const fallbackCategories: OperationalEventCategory[] = ["fallback"];
+  const degradedStateTriggerCategories: OperationalEventCategory[] = ["degraded_state_trigger"];
 
   let seq = 0;
   for (let i = 0; i < opts.eventCount; i++) {
@@ -175,8 +175,8 @@ export function generateReplayFixture(input: Partial<ReplayFixtureOptions> = {})
       category = degradedCategories[0];
     } else if (opts.includeApprovals && r < 0.7) {
       category = approvalCategories[Math.floor(seededRandom(seed, i * 7 + 3) * approvalCategories.length)];
-    } else if (opts.includeFallback && r < 0.8) {
-      category = fallbackCategories[0];
+    } else if (opts.includeDegradedStateTrigger && r < 0.8) {
+      category = degradedStateTriggerCategories[0];
     } else {
       category = CATEGORIES[Math.floor(seededRandom(seed, i * 7 + 4) * CATEGORIES.length)];
     }
@@ -188,8 +188,8 @@ export function generateReplayFixture(input: Partial<ReplayFixtureOptions> = {})
     if (category === "degraded_state") {
       payload.degraded = generateDegradedState(i, opts.baseTimestamp);
     }
-    if (category === "fallback") {
-      payload.fallback = { attempt: i, reason: `fixture-fallback-${i}`, target: `node-fixture-${i}` };
+    if (category === "degraded_state_trigger") {
+      payload.degraded_state_trigger = { attempt: i, reason: `fixture-degraded_state_trigger-${i}`, target: `node-fixture-${i}` };
     }
     if (category.includes("approval")) {
       payload.approvalId = `approval-fixture-${i}`;
@@ -215,9 +215,9 @@ export function generateReplayFixture(input: Partial<ReplayFixtureOptions> = {})
   const diagnosticsCount = events.filter((e) => diagnosticsCategories.includes(e.category)).length;
   const degradedCount = events.filter((e) => e.category === "degraded_state").length;
   const approvalCount = events.filter((e) => approvalCategories.includes(e.category)).length;
-  const fallbackCount = events.filter((e) => e.category === "fallback").length;
+  const degradedStateTriggerCount = events.filter((e) => e.category === "degraded_state_trigger").length;
 
-  return { events, envelope, governanceCount, diagnosticsCount, degradedCount, approvalCount, fallbackCount };
+  return { events, envelope, governanceCount, diagnosticsCount, degradedCount, approvalCount, degradedStateTriggerCount };
 }
 
 export interface DegradedFixtureOptions {
