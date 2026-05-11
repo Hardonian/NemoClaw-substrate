@@ -16,6 +16,10 @@ This matrix maps governed substrate claims to implemented verification commands.
 | diagnostics truth states | implemented | `npm run verify:execution-lifecycle`, `npm run verify:chaos` | observed/unavailable/degraded/stale/conflicted/blocked assertions |
 | operational event taxonomy | implemented | `npm run verify:execution-lifecycle` | lifecycle event aggregation tests |
 | hidden recovery/retry detection | implemented | `npm run verify:execution-lifecycle`, `npm run verify:chaos` | anti-theatre proofpack assertions |
+| network policy enforcement | implemented | `npm run verify:core` | egress blocking, operator approval flows |
+| secret redaction integrity | implemented | `npm run verify:core` | credential sanitization, mask leakage tests |
+| transport security (HTTPS/TLS) | implemented | `npm run verify:core` | secure transport enforcement |
+| remote execution adapters | scaffolded | `npm run verify:remote-probes` | remote capability probes, degraded state reporting |
 | durable queue storage | deferred | n/a | callers must persist returned records |
 | operator UI for lifecycle proofpacks | deferred | n/a | contracts only |
 | autonomous orchestration, daemon polling, automatic retries | intentionally not implemented | n/a | non-goal docs and tests assert explicit failures |

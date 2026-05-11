@@ -11,7 +11,7 @@ This guide describes the architecture of the NemoClaw governed execution substra
 - **[Governance Map](governance-map.md):** Policy and decision flow.
 - **[Trust Boundaries](security-boundaries.md):** Where we draw the line between high-trust and untrusted code.
 - **[Operator Truth Model](operator-truth-model.md):** How trust is established and maintained.
-- **[Anti-Theatre Doctrine](../../README.md):** Our core philosophy on AI autonomy.
+- **[Anti-Theatre Doctrine](anti-theatre-doctrine.md):** Our core philosophy on AI autonomy.
 
 ## Execution Substrate
 
