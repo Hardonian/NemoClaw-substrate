@@ -130,17 +130,26 @@ describe("checkEnvironmentSafety", () => {
 
     const filePath = join(tmpDir, "bad.txt");
     writeFileSync(filePath, "{}");
-    if (!isWindows) {
-      chmodSync(filePath, 0o777);
-    }
 
-    const failReport = checkEnvironmentSafety({
-      checkPaths: [filePath],
-      maxAllowedPermission: isWindows ? 0o777 : 0o600,
-      checkUmask: false,
-      checkNetwork: false,
-    });
-    expect(failReport.passed).toBe(!isWindows);
+    if (isWindows) {
+      // On Windows, chmodSync doesn't work reliably, so just verify pass with permissive max
+      const winReport = checkEnvironmentSafety({
+        checkPaths: [filePath],
+        maxAllowedPermission: 0o777,
+        checkUmask: false,
+        checkNetwork: false,
+      });
+      expect(winReport.passed).toBe(true);
+    } else {
+      chmodSync(filePath, 0o777);
+      const failReport = checkEnvironmentSafety({
+        checkPaths: [filePath],
+        maxAllowedPermission: 0o600,
+        checkUmask: false,
+        checkNetwork: false,
+      });
+      expect(failReport.passed).toBe(false);
+    }
   });
 });
 

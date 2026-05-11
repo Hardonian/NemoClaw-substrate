@@ -249,11 +249,13 @@ export function deserializeZeroCopy(ab: ArrayBuffer): TestPayload {
   const id = new TextDecoder().decode(idBytes);
   offset += idLength;
 
+  offset = alignTo8(offset);
   const timestamp = view.getFloat64(offset, false);
   offset += 8;
 
   const dataLength = view.getUint32(offset, false);
   offset += 4;
+  offset = alignTo8(offset);
   const dataFloats = new Float64Array(ab, offset, dataLength);
   const data = Array.from(dataFloats);
   offset += dataLength * 8;
