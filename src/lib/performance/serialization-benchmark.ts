@@ -256,9 +256,11 @@ export function deserializeZeroCopy(ab: ArrayBuffer): TestPayload {
   const dataLength = view.getUint32(offset, false);
   offset += 4;
   offset = alignTo8(offset);
-  const dataFloats = new Float64Array(ab, offset, dataLength);
-  const data = Array.from(dataFloats);
-  offset += dataLength * 8;
+  const data: number[] = [];
+  for (let i = 0; i < dataLength; i++) {
+    data.push(view.getFloat64(offset, false));
+    offset += 8;
+  }
 
   const metaCount = view.getUint32(offset, false);
   offset += 4;
