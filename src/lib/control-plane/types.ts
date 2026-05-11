@@ -21,6 +21,7 @@ export type DegradedReasonCode =
   | "policy_blocked"
   | "approval_required"
   | "constraint_unsatisfied"
+  | "telemetry_unavailable"
   | "unknown_error";
 
 export interface DegradedState {
