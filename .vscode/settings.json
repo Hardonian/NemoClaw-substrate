@@ -29,6 +29,7 @@
         "hardlinks",
         "healthcheck",
         "idempotently",
+        "inspectable",
         "isinstance",
         "keyout",
         "kubeconfig",
