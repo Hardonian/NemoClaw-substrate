@@ -9,7 +9,7 @@ import {
   profileOperations,
   summarizeProfile,
   DEFAULT_PROFILE_CONFIG,
-} from "../../dist/lib/performance/profile-report";
+} from "./profile-report";
 
 describe("createNoopCollector", () => {
   it("returns a collector with no-op methods", () => {
