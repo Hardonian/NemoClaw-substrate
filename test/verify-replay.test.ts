@@ -9,8 +9,8 @@ import {
   checkDeterminism,
   hashTraceEvent,
   findTraces,
-} from "../../scripts/verify-replay.ts";
-import type { ExecutionTrace } from "../../scripts/verify-replay.ts";
+} from "../scripts/verify-replay.ts";
+import type { ExecutionTrace } from "../scripts/verify-replay.ts";
 
 describe("verify-replay script", () => {
   describe("findTraces", () => {

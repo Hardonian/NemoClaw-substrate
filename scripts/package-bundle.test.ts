@@ -289,14 +289,27 @@ describe("package-bundle logic", () => {
 	});
 
 	describe("bundle structure validation", () => {
-		it("should have all directories accounted for in expected files", () => {
-			const dirs = expectedDirectoryStructure();
+		it("should have generated artifacts in key directories", () => {
 			const files = expectedBundleFiles();
 
-			for (const dir of dirs) {
-				const hasFileInDir = files.some((f) => f.startsWith(`${dir}/`));
-				expect(hasFileInDir).toBe(true);
-			}
+			expect(files.some((f) => f.startsWith("bin/"))).toBe(true);
+			expect(files.some((f) => f.startsWith("config/"))).toBe(true);
+			expect(files.some((f) => f.startsWith("health/"))).toBe(true);
+		});
+
+		it("should have all core directories", () => {
+			const dirs = expectedDirectoryStructure();
+			expect(dirs).toContain("bin");
+			expect(dirs).toContain("config");
+			expect(dirs).toContain("data");
+			expect(dirs).toContain("logs");
+			expect(dirs).toContain("health");
+		});
+
+		it("data and logs are runtime directories created empty", () => {
+			const files = expectedBundleFiles();
+			expect(files.some((f) => f.startsWith("data/"))).toBe(false);
+			expect(files.some((f) => f.startsWith("logs/"))).toBe(false);
 		});
 	});
 });
