@@ -15,11 +15,18 @@ describe("Control Plane Documentation Parity", () => {
     const codeContent = fs.readFileSync(CODE_PATH, "utf-8");
     const docContent = fs.readFileSync(REASON_CODES_DOC_PATH, "utf-8");
 
-    // Extract reason codes from type ExecutionLifecycleReasonCode
+    // Isolate the ExecutionLifecycleReasonCode type definition
+    const typeDefMatch = codeContent.match(/export type ExecutionLifecycleReasonCode =([\s\S]*?);/);
+    if (!typeDefMatch) {
+      throw new Error("Could not find ExecutionLifecycleReasonCode type definition in source code.");
+    }
+    const typeDefBody = typeDefMatch[1];
+
+    // Extract reason codes from the body
     // Pattern: | "code_name"
-    const reasonCodeMatches = codeContent.match(/\|\s*"([a-z0-9_]+)"/g);
+    const reasonCodeMatches = typeDefBody.match(/\|\s*"([a-z0-9_]+)"/g);
     if (!reasonCodeMatches) {
-      throw new Error("Could not find any ExecutionLifecycleReasonCode values in source code.");
+      throw new Error("Could not find any reason code values in ExecutionLifecycleReasonCode definition.");
     }
 
     const expectedCodes = reasonCodeMatches.map(m => m.match(/"([a-z0-9_]+)"/)![1]);
