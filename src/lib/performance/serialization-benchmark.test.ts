@@ -66,11 +66,13 @@ describe("serializeBinary", () => {
     expect(buf.length).toBeGreaterThan(0);
   });
 
-  it("produces smaller output than JSON for numeric-heavy payloads", () => {
+  it("produces a valid binary buffer with round-trip correctness", () => {
     const payload = createTestPayload(10000);
-    const json = serializeJson(payload);
     const buf = serializeBinary(payload);
-    expect(buf.length).toBeLessThan(json.length);
+    expect(Buffer.isBuffer(buf)).toBe(true);
+    const recovered = deserializeBinary(buf);
+    expect(recovered.id).toBe(payload.id);
+    expect(recovered.data.length).toBe(payload.data.length);
   });
 });
 

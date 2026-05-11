@@ -107,7 +107,8 @@ export function profileOperation(
 
   const baselineMean = baselineStats.meanMs || 1;
   const instrumentedMean = instrumentedStats.meanMs;
-  const overheadPercent = ((instrumentedMean - baselineMean) / baselineMean) * 100;
+  const overheadPercent =
+    baselineMean > 0 ? ((instrumentedMean - baselineMean) / baselineMean) * 100 : 0;
 
   return {
     operationName,
