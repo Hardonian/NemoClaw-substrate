@@ -4,10 +4,11 @@
 import { describe, expect, it, vi } from "vitest";
 import { createDeviceRegistry } from "./device-registry";
 import { parseHeterogeneousRoutingConfig, routeHeterogeneous, summarizeHeterogeneousDiagnostics } from "./heterogeneous-routing";
+import type { PolicyBundle } from "./governance";
 
-const allowPolicy = { id: "allow", version: "1", defaultEffect: "allow", rules: [] } as const;
-const denyPolicy = { id: "deny", version: "1", defaultEffect: "deny", rules: [] } as const;
-const approvalPolicy = { id: "approval", version: "1", defaultEffect: "deny", rules: [{ id: "needs-approval", order: 1, description: "approval", effect: "approval_required", matches: () => true, reasonCode: "policy_rule_approval_required" }] } as const;
+const allowPolicy: PolicyBundle = { id: "allow", version: "1", defaultEffect: "allow", rules: [] };
+const denyPolicy: PolicyBundle = { id: "deny", version: "1", defaultEffect: "deny", rules: [] };
+const approvalPolicy: PolicyBundle = { id: "approval", version: "1", defaultEffect: "deny", rules: [{ id: "needs-approval", order: 1, description: "approval", effect: "approval_required", matches: () => true, reasonCode: "policy_rule_approval_required" }] };
 
 function registryWithRemote(health: "healthy" | "stale" = "healthy") {
   const registry = createDeviceRegistry();
