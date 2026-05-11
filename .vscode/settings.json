@@ -46,6 +46,8 @@
         "unauditable",
         "unparseable",
         "unredacted",
+        "upserted",
+        "upserts",
         "userinfo",
         "venv",
         "vllm",
