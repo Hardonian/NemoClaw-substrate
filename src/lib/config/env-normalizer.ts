@@ -88,6 +88,9 @@ export function parseBooleanEnvValue(value: string): boolean | undefined {
  */
 export function parseNumberEnvValue(value: string): number | undefined {
   const trimmed = value.trim();
+  if (trimmed === "") {
+    return undefined;
+  }
   const num = Number(trimmed);
   if (!Number.isFinite(num)) {
     return undefined;

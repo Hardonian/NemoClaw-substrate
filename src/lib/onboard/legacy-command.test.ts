@@ -46,7 +46,7 @@ describe("onboard command", () => {
       controlUiPort: null,
       gpu: false,
       noGpu: false,
-      autoYes: false,
+      programmaticYes: false,
     });
   });
 
@@ -54,7 +54,7 @@ describe("onboard command", () => {
     { flags: ["--yes"] },
     { flags: ["-y"] },
     { flags: ["--yes", "-y"] },
-  ])("sets autoYes when invoked with $flags", ({ flags }) => {
+  ])("sets programmaticYes when invoked with $flags", ({ flags }) => {
     const result = parseOnboardArgs(
       flags,
       "--yes-i-accept-third-party-software",
@@ -65,7 +65,7 @@ describe("onboard command", () => {
         exit: exitWithCode,
       },
     );
-    expect(result.autoYes).toBe(true);
+    expect(result.programmaticYes).toBe(true);
   });
 
   it("accepts the env-based third-party notice acknowledgement", () => {
@@ -92,7 +92,7 @@ describe("onboard command", () => {
       controlUiPort: null,
       gpu: false,
       noGpu: false,
-      autoYes: false,
+      programmaticYes: false,
     });
   });
 
@@ -119,7 +119,7 @@ describe("onboard command", () => {
       controlUiPort: null,
       gpu: false,
       noGpu: false,
-      autoYes: false,
+      programmaticYes: false,
     });
   });
 
@@ -175,7 +175,7 @@ describe("onboard command", () => {
       controlUiPort: null,
       gpu: false,
       noGpu: false,
-      autoYes: false,
+      programmaticYes: false,
     });
   });
 
@@ -203,7 +203,7 @@ describe("onboard command", () => {
       controlUiPort: null,
       gpu: false,
       noGpu: false,
-      autoYes: false,
+      programmaticYes: false,
     });
   });
 
@@ -252,7 +252,7 @@ describe("onboard command", () => {
       controlUiPort: null,
       gpu: false,
       noGpu: false,
-      autoYes: false,
+      programmaticYes: false,
     });
   });
 
@@ -390,7 +390,7 @@ describe("onboard command", () => {
       controlUiPort: null,
       gpu: false,
       noGpu: false,
-      autoYes: false,
+      programmaticYes: false,
     });
   });
 
@@ -527,7 +527,7 @@ describe("onboard command", () => {
       controlUiPort: null,
       gpu: false,
       noGpu: false,
-      autoYes: false,
+      programmaticYes: false,
     });
   });
 

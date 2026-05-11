@@ -201,7 +201,7 @@ function formatIssueYaml(issue: ValidationIssue): string {
 
 function yamlString(value: string): string {
   // Quote strings that contain special characters
-  if (/[{}[\],&*#?|->!%@`]/.test(value) || value.includes(":") || value === "") {
+  if (/[{}[\],&*#?|\->!%@`]/.test(value) || value.includes(":") || value === "") {
     return `"${value.replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"`;
   }
   return value;

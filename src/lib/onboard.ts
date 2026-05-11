@@ -431,13 +431,13 @@ type OnboardOptions = {
   controlUiPort?: number | null;
   gpu?: boolean;
   noGpu?: boolean;
-  autoYes?: boolean;
+  programmaticYes?: boolean;
 };
 // Non-interactive mode: set by --non-interactive flag or env var.
 // When active, all prompts use env var overrides or sensible defaults.
 let NON_INTERACTIVE = false;
 let RECREATE_SANDBOX = false;
-let AUTO_YES = false;
+let PROGRAMMATIC_YES = false;
 // Set by onboard() before preflight() when --control-ui-port is specified.
 // null means "use auto-allocation" (skip dashboard port check in preflight).
 let _preflightDashboardPort: number | null = null;
@@ -462,8 +462,8 @@ function isRecreateSandbox(): boolean {
   return RECREATE_SANDBOX || process.env.NEMOCLAW_RECREATE_SANDBOX === "1";
 }
 
-function isAutoYes(): boolean {
-  return AUTO_YES || process.env.NEMOCLAW_YES === "1";
+function isProgrammaticYes(): boolean {
+  return PROGRAMMATIC_YES || process.env.NEMOCLAW_YES === "1";
 }
 
 function note(message: string): void {
@@ -3701,7 +3701,7 @@ async function preflight(
           bridgeNote = `     (detected your docker bridge gateway at ${detectedBridgeIp})`;
         } else if (!detectedBridgeIp) {
           bridgeNote =
-            "     (could not auto-detect bridge IP; using docker's default — verify with:\n" +
+            "     (could not discover bridge IP; using docker's default — verify with:\n" +
             "      docker network inspect bridge --format '{{range .IPAM.Config}}{{.Gateway}}{{end}}')";
         }
         console.error("  1. Make systemd-resolved reachable from containers (recommended):");
@@ -3754,7 +3754,7 @@ async function preflight(
         console.error(
           "  2. If you run docker natively inside WSL (not Docker Desktop), apply the Linux fix:",
         );
-        // Reuse the same bridge-IP detection the Linux branch uses — a
+        // Reuse the same bridge-IP discovery the Linux branch uses — a
         // native-docker-in-WSL install can have a custom bridge subnet
         // just like any other Linux host, so a hardcoded 172.17.0.1
         // would break those users' copy-paste.
@@ -6003,7 +6003,7 @@ async function selectAndValidateOllamaModel(
     if (!installedModels.includes(selectedModel)) {
       const lookup = ollamaModelSize.getOllamaModelSize(selectedModel);
       const sizeLabel = ollamaModelSize.formatModelSize(lookup);
-      if (isAutoYes()) {
+      if (isProgrammaticYes()) {
         note(`  Pulling Ollama model '${selectedModel}' (${sizeLabel}).`);
       } else if (isNonInteractive()) {
         console.error(
@@ -9484,7 +9484,7 @@ async function onboard(opts: OnboardOptions = {}): Promise<void> {
   setOnboardBrandingAgent(opts.agent || process.env.NEMOCLAW_AGENT || null);
   NON_INTERACTIVE = opts.nonInteractive || process.env.NEMOCLAW_NON_INTERACTIVE === "1";
   RECREATE_SANDBOX = opts.recreateSandbox || process.env.NEMOCLAW_RECREATE_SANDBOX === "1";
-  AUTO_YES = opts.autoYes === true || process.env.NEMOCLAW_YES === "1";
+  PROGRAMMATIC_YES = opts.programmaticYes === true || process.env.NEMOCLAW_YES === "1";
   _preflightDashboardPort = opts.controlUiPort || null;
   delete process.env.OPENSHELL_GATEWAY;
   const resume = opts.resume === true;
@@ -10509,6 +10509,7 @@ module.exports = {
   isInferenceRouteReady,
   shouldRunCompatibleEndpointSandboxSmoke,
   isNonInteractive,
+  isProgrammaticYes,
   isOpenclawReady,
   arePolicyPresetsApplied,
   getSuggestedPolicyPresets,

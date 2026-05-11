@@ -10,6 +10,8 @@ This index provides a thematic cross-reference for discovering architecture docu
 - [Governance Invariants](governance-invariants.md)
 - [Governance Glossary](governance-glossary.md)
 - [Canonical Terminology Index](canonical-terminology-index.md)
+- [Architecture Cartography](architecture-cartography.md)
+- [Governance Map](governance-map.md)
 - [Subsystem Ownership Map](subsystem-ownership-map.md)
 - [Status Matrix](capability-status-matrix.md)
 
