@@ -163,7 +163,7 @@ export function decryptAtRest(
   authTag: string,
   key: Buffer,
 ): Buffer {
-  const decipher = crypto.createDecipheriv("aes-256-gcm", Buffer.from(iv, "hex"), key);
+  const decipher = crypto.createDecipheriv("aes-256-gcm", key, Buffer.from(iv, "hex"));
   decipher.setAuthTag(Buffer.from(authTag, "hex"));
 
   const decrypted = decipher.update(Buffer.from(ciphertext, "hex"));

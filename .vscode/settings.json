@@ -29,6 +29,7 @@
         "hardlink",
         "hardlinks",
         "healthcheck",
+        "idemp",
         "idempotently",
         "inspectable",
         "isinstance",
