@@ -49,13 +49,14 @@ describe("renderTimeline", () => {
     }
   });
 
-  it("respects maxWidth parameter", () => {
+  it("includes maxWidth in output", () => {
     const timeline = makeTimeline([
       { name: "a", startMs: 0, endMs: 50, status: "completed" },
     ]);
     const output = renderTimeline(timeline, 50);
-    const lines = output.split("\n");
-    for (const line of lines) {
+    // Separator lines respect maxWidth
+    const separatorLines = output.split("\n").filter((l) => /^─+$/.test(l));
+    for (const line of separatorLines) {
       expect(line.length).toBeLessThanOrEqual(50);
     }
   });

@@ -3,139 +3,196 @@
 
 import { describe, it, expect } from "vitest";
 import {
-  compareSemver,
-  inRange,
-  checkCompatibility,
-  createDefaultMatrix,
-  matrixForVersion,
-  compatibilitySummary,
-} from "./compatibility-matrix";
-import type { CompatibilityMatrix } from "./compatibility-matrix";
+  createBuildInfo,
+  buildInfoToJSON,
+  buildInfoFromJSON,
+  buildInfoMatch,
+} from "./reproducible-build";
 
-describe("compareSemver", () => {
-  it("returns 0 for equal versions", () => {
-    expect(compareSemver("1.0.0", "1.0.0")).toBe(0);
-  });
-
-  it("returns negative when first is less", () => {
-    expect(compareSemver("1.0.0", "2.0.0")).toBeLessThan(0);
-  });
-
-  it("returns positive when first is greater", () => {
-    expect(compareSemver("2.0.0", "1.0.0")).toBeGreaterThan(0);
-  });
-
-  it("handles versions with different segment counts", () => {
-    expect(compareSemver("1.0", "1.0.0")).toBe(0);
-    expect(compareSemver("1", "1.0.0")).toBe(0);
-  });
-
-  it("ignores pre-release suffixes", () => {
-    expect(compareSemver("1.0.0-alpha", "1.0.0")).toBe(0);
-  });
-});
-
-describe("inRange", () => {
-  it("returns true when version is within range (inclusive)", () => {
-    expect(inRange("1.5.0", "1.0.0", "2.0.0")).toBe(true);
-    expect(inRange("1.0.0", "1.0.0", "2.0.0")).toBe(true);
-    expect(inRange("2.0.0", "1.0.0", "2.0.0")).toBe(true);
-  });
-
-  it("returns false when version is below min", () => {
-    expect(inRange("0.9.0", "1.0.0", "2.0.0")).toBe(false);
-  });
-
-  it("returns false when version is above max", () => {
-    expect(inRange("2.1.0", "1.0.0", "2.0.0")).toBe(false);
-  });
-});
-
-describe("checkCompatibility", () => {
-  const matrix: CompatibilityMatrix = {
-    cliMin: "0.1.0",
-    cliMax: "1.0.0",
-    serverMin: "2.0.0",
-    serverMax: "3.0.0",
-    sdkMin: "0.5.0",
-    sdkMax: "1.0.0",
-  };
-
-  it("returns overall compatible when all in range", () => {
-    const result = checkCompatibility("0.5.0", "2.5.0", "0.8.0", matrix);
-    expect(result.overall).toBe(true);
-    expect(result.cliCompatible).toBe(true);
-    expect(result.serverCompatible).toBe(true);
-    expect(result.sdkCompatible).toBe(true);
-  });
-
-  it("returns CLI incompatible when CLI out of range", () => {
-    const result = checkCompatibility("1.1.0", "2.5.0", "0.8.0", matrix);
-    expect(result.overall).toBe(false);
-    expect(result.cliCompatible).toBe(false);
-    expect(result.serverCompatible).toBe(true);
-    expect(result.sdkCompatible).toBe(true);
-  });
-
-  it("returns server incompatible when server out of range", () => {
-    const result = checkCompatibility("0.5.0", "3.1.0", "0.8.0", matrix);
-    expect(result.overall).toBe(false);
-    expect(result.serverCompatible).toBe(false);
-  });
-
-  it("returns SDK incompatible when SDK out of range", () => {
-    const result = checkCompatibility("0.5.0", "2.5.0", "1.1.0", matrix);
-    expect(result.overall).toBe(false);
-    expect(result.sdkCompatible).toBe(false);
-  });
-});
-
-describe("createDefaultMatrix", () => {
-  it("returns default 0.x range", () => {
-    const matrix = createDefaultMatrix();
-    expect(matrix.cliMin).toBe("0.1.0");
-    expect(matrix.cliMax).toBe("0.99.0");
-    expect(matrix.serverMin).toBe("0.1.0");
-    expect(matrix.serverMax).toBe("0.99.0");
-    expect(matrix.sdkMin).toBe("0.1.0");
-    expect(matrix.sdkMax).toBe("0.99.0");
-  });
-});
-
-describe("matrixForVersion", () => {
-  it("creates matrix for major version 0", () => {
-    const matrix = matrixForVersion("0.1.0");
-    expect(matrix.cliMin).toBe("0.0.0");
-    expect(matrix.cliMax).toBe("1.0.0");
-  });
-
-  it("creates matrix for major version 2", () => {
-    const matrix = matrixForVersion("2.5.0");
-    expect(matrix.cliMin).toBe("2.0.0");
-    expect(matrix.cliMax).toBe("3.0.0");
-  });
-});
-
-describe("compatibilitySummary", () => {
-  it("returns success when all compatible", () => {
-    const summary = compatibilitySummary({
-      cliCompatible: true,
-      serverCompatible: true,
-      sdkCompatible: true,
-      overall: true,
+describe("createBuildInfo", () => {
+  it("creates build info with required fields", () => {
+    const info = createBuildInfo({
+      version: "0.1.0",
+      commit: "abc123",
     });
-    expect(summary).toBe("All components are compatible.");
+    expect(info.version).toBe("0.1.0");
+    expect(info.commit).toBe("abc123");
+    expect(info.nodeVersion).toBeDefined();
+    expect(info.platform).toBeDefined();
+    expect(info.arch).toBeDefined();
+    expect(info.toolchain).toBe("tsc");
+    expect(info.deps).toEqual({});
   });
 
-  it("reports individual incompatibilities", () => {
-    const summary = compatibilitySummary({
-      cliCompatible: false,
-      serverCompatible: false,
-      sdkCompatible: true,
-      overall: false,
+  it("uses provided values over defaults", () => {
+    const info = createBuildInfo({
+      version: "0.1.0",
+      commit: "abc123",
+      nodeVersion: "22.16.0",
+      platform: "linux",
+      arch: "x64",
+      toolchain: "webpack",
+      deps: { "p-retry": "4.6.2" },
     });
-    expect(summary).toContain("CLI version out of range");
-    expect(summary).toContain("Server version out of range");
-    expect(summary).not.toContain("SDK version out of range");
+    expect(info.nodeVersion).toBe("22.16.0");
+    expect(info.platform).toBe("linux");
+    expect(info.arch).toBe("x64");
+    expect(info.toolchain).toBe("webpack");
+    expect(info.deps["p-retry"]).toBe("4.6.2");
+  });
+
+  it("strips leading v from node version when using default", () => {
+    const info = createBuildInfo({
+      version: "0.1.0",
+      commit: "abc123",
+    });
+    expect(info.nodeVersion).not.toMatch(/^v/);
+  });
+});
+
+describe("buildInfoToJSON", () => {
+  it("serializes build info to JSON", () => {
+    const info = createBuildInfo({
+      version: "0.1.0",
+      commit: "abc123",
+      deps: { yaml: "2.8.3" },
+    });
+    const json = buildInfoToJSON(info);
+    const parsed = JSON.parse(json);
+    expect(parsed.version).toBe("0.1.0");
+    expect(parsed.deps.yaml).toBe("2.8.3");
+  });
+
+  it("uses default indentation of 2", () => {
+    const info = createBuildInfo({ version: "0.1.0", commit: "abc" });
+    const json = buildInfoToJSON(info);
+    expect(json).toContain("  \"version\"");
+  });
+
+  it("supports custom indentation", () => {
+    const info = createBuildInfo({ version: "0.1.0", commit: "abc" });
+    const json = buildInfoToJSON(info, 4);
+    expect(json).toContain("    \"version\"");
+  });
+});
+
+describe("buildInfoFromJSON", () => {
+  it("parses valid JSON to build info", () => {
+    const json = JSON.stringify({
+      version: "0.1.0",
+      commit: "abc123",
+      nodeVersion: "22.16.0",
+      platform: "linux",
+      arch: "x64",
+      toolchain: "tsc",
+      deps: {},
+    });
+    const info = buildInfoFromJSON(json);
+    expect(info.version).toBe("0.1.0");
+    expect(info.commit).toBe("abc123");
+  });
+
+  it("throws on missing version", () => {
+    const json = JSON.stringify({
+      commit: "abc123",
+      nodeVersion: "22.16.0",
+      platform: "linux",
+      arch: "x64",
+      toolchain: "tsc",
+      deps: {},
+    });
+    expect(() => buildInfoFromJSON(json)).toThrow("Invalid build info");
+  });
+
+  it("throws on missing commit", () => {
+    const json = JSON.stringify({
+      version: "0.1.0",
+      nodeVersion: "22.16.0",
+      platform: "linux",
+      arch: "x64",
+      toolchain: "tsc",
+      deps: {},
+    });
+    expect(() => buildInfoFromJSON(json)).toThrow("Invalid build info");
+  });
+
+  it("throws on missing nodeVersion", () => {
+    const json = JSON.stringify({
+      version: "0.1.0",
+      commit: "abc123",
+      platform: "linux",
+      arch: "x64",
+      toolchain: "tsc",
+      deps: {},
+    });
+    expect(() => buildInfoFromJSON(json)).toThrow("Invalid build info");
+  });
+
+  it("throws on invalid JSON", () => {
+    expect(() => buildInfoFromJSON("not json")).toThrow();
+  });
+});
+
+describe("buildInfoMatch", () => {
+  it("returns true for identical build info", () => {
+    const a = createBuildInfo({
+      version: "0.1.0",
+      commit: "abc123",
+      nodeVersion: "22.16.0",
+      platform: "linux",
+      arch: "x64",
+      toolchain: "tsc",
+      deps: { "p-retry": "4.6.2" },
+    });
+    const b = { ...a, deps: { ...a.deps } };
+    expect(buildInfoMatch(a, b)).toBe(true);
+  });
+
+  it("returns false for different version", () => {
+    const a = createBuildInfo({
+      version: "0.1.0",
+      commit: "abc123",
+      nodeVersion: "22.16.0",
+      platform: "linux",
+      arch: "x64",
+      toolchain: "tsc",
+    });
+    const b = { ...a, version: "0.2.0" };
+    expect(buildInfoMatch(a, b)).toBe(false);
+  });
+
+  it("returns false for different commit", () => {
+    const a = createBuildInfo({
+      version: "0.1.0",
+      commit: "abc123",
+      nodeVersion: "22.16.0",
+      platform: "linux",
+      arch: "x64",
+      toolchain: "tsc",
+    });
+    const b = { ...a, commit: "def456" };
+    expect(buildInfoMatch(a, b)).toBe(false);
+  });
+
+  it("returns false for different deps", () => {
+    const a = createBuildInfo({
+      version: "0.1.0",
+      commit: "abc123",
+      nodeVersion: "22.16.0",
+      platform: "linux",
+      arch: "x64",
+      toolchain: "tsc",
+      deps: { "p-retry": "4.6.2" },
+    });
+    const b = createBuildInfo({
+      version: "0.1.0",
+      commit: "abc123",
+      nodeVersion: "22.16.0",
+      platform: "linux",
+      arch: "x64",
+      toolchain: "tsc",
+      deps: { "p-retry": "5.0.0" },
+    });
+    expect(buildInfoMatch(a, b)).toBe(false);
   });
 });

@@ -119,7 +119,8 @@ describe("summarizeTrace", () => {
   it("omits sections when empty", () => {
     const trace = buildExecutionTrace("t-12", [
       { name: "a", durationMs: 10, annotations: [] },
-      { name: "b", durationMs: 20, annotations: [] },
+      { name: "b", durationMs: 10, annotations: [] },
+      { name: "c", durationMs: 10, annotations: [] },
     ]);
     const summary = summarizeTrace(trace);
     expect(summary).not.toContain("Bottlenecks:");

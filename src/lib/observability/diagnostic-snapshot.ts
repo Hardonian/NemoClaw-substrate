@@ -78,7 +78,15 @@ export function formatDiagnosticSnapshot(snapshot: DiagnosticSnapshot): string {
     lines.push(`  ${key}: ${value}`);
   }
 
-  lines.push(`Config keys: ${Object.keys(snapshot.config).join(", ") || "(none)"}`);
+  const configEntries = Object.entries(snapshot.config);
+  if (configEntries.length > 0) {
+    lines.push("Config:");
+    for (const [key, value] of configEntries) {
+      lines.push(`  ${key}: ${String(value)}`);
+    }
+  } else {
+    lines.push("Config: (none)");
+  }
 
   if (snapshot.logs.length > 0) {
     lines.push(`Logs (${snapshot.logs.length}):`);
