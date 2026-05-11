@@ -9,7 +9,7 @@ import {
   checkPackageVersion,
   loadManifest,
   hashFile,
-} from "../../scripts/verify-release.ts";
+} from "../scripts/verify-release.ts";
 
 describe("verify-release script", () => {
   describe("checkManifestExists", () => {
