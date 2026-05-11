@@ -191,8 +191,8 @@ export interface ReplayValidationContext {
   ownerId?: string;
   leaseId?: string;
   receiptReferences?: ExecutionPlanReceiptReference[];
-  fallbackPermitted?: boolean;
-  expectedFallbackPermitted?: boolean;
+  degradedStateTriggerPermitted?: boolean;
+  expectedDegradedStateTriggerPermitted?: boolean;
 }
 
 export interface ExecutionDiagnosticFact {
