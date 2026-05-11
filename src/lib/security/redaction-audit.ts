@@ -34,11 +34,34 @@ export interface RedactionAuditResult {
 
 const REDACTED_MARKERS = ["<REDACTED>", "****", "[STRIPPED_BY_MIGRATION]", "[MASKED]", "REDACTED"];
 
+const PARTIAL_TOKEN_PATTERNS = [
+  /nvapi-\*{4,}/g,
+  /nvcf-\*{4,}/g,
+  /ghp_\*{4,}/g,
+  /sk-proj-\*{4,}/g,
+  /sk-ant-\*{4,}/g,
+  /sk-\*{4,}/g,
+  /xox[bpsa]-\*{4,}/g,
+  /AKIA\*{4,}/g,
+  /hf_\*{4,}/g,
+  /glpat-\*{4,}/g,
+  /gsk_\*{4,}/g,
+  /pypi-\*{4,}/g,
+  /bot\d{8,10}:\*{4,}/g,
+];
+
 function isLikelyRedacted(match: string, fullText: string, index: number): boolean {
   const contextStart = Math.max(0, index - 20);
   const contextEnd = Math.min(fullText.length, index + match.length + 20);
   const context = fullText.slice(contextStart, contextEnd);
-  return REDACTED_MARKERS.some((marker) => context.includes(marker));
+  if (REDACTED_MARKERS.some((marker) => context.includes(marker))) return true;
+
+  for (const pat of PARTIAL_TOKEN_PATTERNS) {
+    pat.lastIndex = 0;
+    if (pat.test(match)) return true;
+  }
+
+  return false;
 }
 
 function scanPattern(
