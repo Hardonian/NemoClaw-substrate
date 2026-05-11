@@ -128,15 +128,15 @@ export function generateDemoWalkthrough(events: OperationalEvent[]): DemoWalkthr
     });
   }
 
-  const fallbackEvents = events.filter((e) => e.category === "fallback");
-  if (fallbackEvents.length > 0) {
+  const degradedStateTriggerEvents = events.filter((e) => e.category === "degraded_state_trigger");
+  if (degradedStateTriggerEvents.length > 0) {
     steps.push({
       step: stepNum++,
-      title: "Fallback Execution",
-      description: `Fallback was triggered (${fallbackEvents.length} events).`,
-      eventId: fallbackEvents[0].eventId,
-      eventType: "fallback",
-      details: { count: fallbackEvents.length },
+      title: "Degraded State Trigger",
+      description: `Degraded state trigger was activated (${degradedStateTriggerEvents.length} events).`,
+      eventId: degradedStateTriggerEvents[0].eventId,
+      eventType: "degraded_state_trigger",
+      details: { count: degradedStateTriggerEvents.length },
     });
   }
 
@@ -178,7 +178,7 @@ export function generateDemoPack(input: Partial<DemoPackOptions> = {}): DemoPack
     includeDiagnostics: opts.includeDiagnostics,
     includeDegraded: opts.includeDegraded,
     includeApprovals: true,
-    includeFallback: true,
+    includeDegradedStateTrigger: true,
   });
 
   const generatedAt = opts.baseTimestamp;
