@@ -17,6 +17,12 @@
 /nemoclaw-blueprint/                @NVIDIA/nemoclaw-maintainer
 /nemoclaw-blueprint/policies/       @NVIDIA/nemoclaw-security
 
+# ── Core CLI (src/) ──
+/src/                               @NVIDIA/nemoclaw-maintainer
+/src/lib/control-plane/             @NVIDIA/nemoclaw-engineer
+/src/lib/security/                  @NVIDIA/nemoclaw-security @NVIDIA/nemoclaw-engineer
+/src/lib/maintainability/           @NVIDIA/nemoclaw-engineer
+
 # ── Shell scripts & installers ──
 /bin/                               @NVIDIA/nemoclaw-maintainer
 /scripts/                           @NVIDIA/nemoclaw-maintainer
@@ -36,3 +42,10 @@
 # ── CI / GitHub config ──
 /.github/                           @NVIDIA/nemoclaw-maintainer
 /ci/                                @NVIDIA/nemoclaw-maintainer
+
+# ── Responsibility Matrix ──
+#
+# Team                                  Focus Area
+# @NVIDIA/nemoclaw-maintainer           Overall project health, releases, CI, infrastructure
+# @NVIDIA/nemoclaw-engineer             CLI features, user-facing behavior, docs, tests
+# @NVIDIA/nemoclaw-security             Sandboxing policies, credential handling, SSRF, Docker security
