@@ -147,12 +147,11 @@ function checkPackageVersion(manifest: ManifestSchema): CheckResult {
 }
 
 function checkBlueprintVersion(manifest: ManifestSchema): CheckResult {
-  const YAML = await import("yaml");
   const blueprintPath = join(REPO_ROOT, "nemoclaw-blueprint/blueprint.yaml");
   if (!existsSync(blueprintPath)) {
     return { name: "blueprint_version", passed: true, detail: "Blueprint YAML not found — skipping" };
   }
-  const blueprint = YAML.default.parse(readFileSync(blueprintPath, "utf-8")) as { version?: string };
+  const blueprint = YAML.parse(readFileSync(blueprintPath, "utf-8")) as { version?: string };
   if (manifest.version && blueprint.version && manifest.version !== blueprint.version) {
     return {
       name: "blueprint_version",
@@ -185,7 +184,7 @@ async function main(): Promise<ReleaseResult> {
 
   // 2. Check version consistency
   checks.push(checkPackageVersion(manifest));
-  checks.push(await checkBlueprintVersion(manifest));
+  checks.push(checkBlueprintVersion(manifest));
 
   // 3. Check artifact hashes
   checks.push(...checkArtifactHashes(manifest));

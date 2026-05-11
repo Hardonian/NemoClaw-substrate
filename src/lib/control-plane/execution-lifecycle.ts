@@ -32,7 +32,7 @@ export type ExecutionLifecycleReasonCode =
   | "replay_drift"
   | "governance_drift"
   | "trust_drift"
-  | "fallback_drift"
+  | "degraded_state_trigger_drift"
   | "candidate_mismatch"
   | "ownership_mismatch"
   | "lease_mismatch"
@@ -41,7 +41,7 @@ export type ExecutionLifecycleReasonCode =
   | "missing_execution_receipts"
   | "missing_queue_history"
   | "missing_lease_history"
-  | "hidden_fallback_detected"
+  | "hidden_degraded_state_trigger_detected"
   | "hidden_retry_detected"
   | "idempotency_key_conflict"
   | "deterministic_rerun"
@@ -116,7 +116,7 @@ export interface ExecutionPlan {
   blockedReasonCode?: string;
   cancellationReasonCode?: string;
   authorizationMetadata?: Record<string, string>;
-  fallbackMetadata?: { permitted: boolean; reasonCode?: string };
+  degradedStateTriggerMetadata?: { permitted: boolean; reasonCode?: string };
   candidateMetadata?: Record<string, string>;
   transitionHistory?: ExecutionLifecycleTransition[];
 }
@@ -477,8 +477,8 @@ export function validateReplayConsistency(plan: ExecutionPlan, queue: QueueItem,
   if (queue.governanceMetadata && metadataDigest(queue.governanceMetadata) !== metadataDigest(plan.governanceMetadata)) reasons.push("governance_drift");
   if (context.currentTrustMetadata && metadataDigest(context.currentTrustMetadata) !== metadataDigest(plan.trustMetadata)) reasons.push("trust_drift");
   if (queue.trustMetadata && metadataDigest(queue.trustMetadata) !== metadataDigest(plan.trustMetadata)) reasons.push("trust_drift");
-  const expectedFallback = context.expectedFallbackPermitted ?? (plan.fallbackMetadata ? plan.fallbackMetadata.permitted : undefined);
-  if (expectedFallback !== undefined && context.fallbackPermitted !== undefined && expectedFallback !== context.fallbackPermitted) reasons.push("fallback_drift");
+  const expectedDegradedStateTrigger = context.expectedDegradedStateTriggerPermitted ?? (plan.degradedStateTriggerMetadata ? plan.degradedStateTriggerMetadata.permitted : undefined);
+  if (expectedDegradedStateTrigger !== undefined && context.degradedStateTriggerPermitted !== undefined && expectedDegradedStateTrigger !== context.degradedStateTriggerPermitted) reasons.push("degraded_state_trigger_drift");
   if (context.ownerId && queue.ownership?.ownerId !== context.ownerId) reasons.push("ownership_mismatch");
   if (queue.lease && queue.ownership && queue.lease.ownerId !== queue.ownership.ownerId) reasons.push("ownership_mismatch");
   if (context.leaseId && queue.lease?.leaseId !== context.leaseId) reasons.push("lease_mismatch");
@@ -1032,9 +1032,9 @@ export function buildExecutionProofpack(input: {
 function detectForbiddenAutomation(receipts: ExecutionLifecycleReceipt[]): ExecutionLifecycleReasonCode[] {
   const reasons: ExecutionLifecycleReasonCode[] = [];
   for (const receipt of receipts) {
-    const fallback = receipt.payload["fallback"] as { reason?: string; hidden?: boolean } | undefined;
+    const degradedStateTrigger = receipt.payload["degradedStateTrigger"] as { reason?: string; hidden?: boolean } | undefined;
     const retry = receipt.payload["retry"] as { automatic?: boolean; hidden?: boolean } | undefined;
-    if (fallback && (fallback.hidden || !String(fallback.reason ?? "").trim())) reasons.push("hidden_fallback_detected");
+    if (degradedStateTrigger && (degradedStateTrigger.hidden || !String(degradedStateTrigger.reason ?? "").trim())) reasons.push("hidden_degraded_state_trigger_detected");
     if (retry && (retry.automatic || retry.hidden)) reasons.push("hidden_retry_detected");
   }
   return reasons;
