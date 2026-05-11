@@ -32,22 +32,25 @@ export interface RedactionAuditResult {
   summary: Record<string, number>;
 }
 
-const REDACTED_MARKERS = ["<REDACTED>", "****", "[STRIPPED_BY_MIGRATION]", "[MASKED]", "REDACTED"];
+const REDACTED_MARKERS = ["<REDACTED>", "[STRIPPED_BY_MIGRATION]", "[MASKED]", "REDACTED"];
 
-const PARTIAL_TOKEN_PATTERNS = [
-  /nvapi-\*{4,}/g,
-  /nvcf-\*{4,}/g,
-  /ghp_\*{4,}/g,
-  /sk-proj-\*{4,}/g,
-  /sk-ant-\*{4,}/g,
-  /sk-\*{4,}/g,
-  /xox[bpsa]-\*{4,}/g,
-  /AKIA\*{4,}/g,
-  /hf_\*{4,}/g,
-  /glpat-\*{4,}/g,
-  /gsk_\*{4,}/g,
-  /pypi-\*{4,}/g,
-  /bot\d{8,10}:\*{4,}/g,
+/**
+ * Patterns that detect partially-redacted tokens (e.g., nvapi-****, sk-****).
+ * These are used to identify secrets that have been masked but still retain
+ * their prefix structure.
+ */
+const REDACTED_TOKEN_PATTERNS: [RegExp, string][] = [
+  [/nvapi-[*]{4,}/g, "secret_token_redacted"],
+  [/nvcf-[*]{4,}/g, "secret_token_redacted"],
+  [/ghp_[*]{4,}/g, "secret_token_redacted"],
+  [/sk-proj-[*]{4,}/g, "secret_token_redacted"],
+  [/sk-ant-[*]{4,}/g, "secret_token_redacted"],
+  [/sk-[*]{4,}/g, "secret_token_redacted"],
+  [/xox[bpsa]-[*]{4,}/g, "secret_token_redacted"],
+  [/hf_[*]{4,}/g, "secret_token_redacted"],
+  [/glpat-[*]{4,}/g, "secret_token_redacted"],
+  [/gsk_[*]{4,}/g, "secret_token_redacted"],
+  [/pypi-[*]{4,}/g, "secret_token_redacted"],
 ];
 
 function isLikelyRedacted(match: string, fullText: string, index: number): boolean {
@@ -55,12 +58,7 @@ function isLikelyRedacted(match: string, fullText: string, index: number): boole
   const contextEnd = Math.min(fullText.length, index + match.length + 20);
   const context = fullText.slice(contextStart, contextEnd);
   if (REDACTED_MARKERS.some((marker) => context.includes(marker))) return true;
-
-  for (const pat of PARTIAL_TOKEN_PATTERNS) {
-    pat.lastIndex = 0;
-    if (pat.test(match)) return true;
-  }
-
+  if (/\*{4,}/.test(match)) return true;
   return false;
 }
 
@@ -93,6 +91,7 @@ export function auditRedaction(text: string): RedactionAuditResult {
 
   const allPatterns: [RegExp, string][] = [
     ...SECRET_PATTERNS.map((p) => [p, "secret_token"] as [RegExp, string]),
+    ...REDACTED_TOKEN_PATTERNS,
     [EMAIL_PATTERN, "email"],
     [IPV4_PATTERN, "ipv4"],
     [IPV6_PATTERN, "ipv6"],
