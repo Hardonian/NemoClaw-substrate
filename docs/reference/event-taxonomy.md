@@ -3,6 +3,7 @@
 This document defines the canonical taxonomy of events emitted by the NemoClaw governed substrate. Events are categorized by their role in the governance and execution lifecycle.
 
 ## Governance Events
+
 Governance events represent high-level lifecycle transitions and authorization decisions.
 
 | Event Category | Description |
@@ -24,6 +25,7 @@ Governance events represent high-level lifecycle transitions and authorization d
 | `execution_replay_validation_failed` | Replay detected drift from original execution. |
 
 ## Execution Events
+
 Execution events track the low-level progress of tasks within the substrate.
 
 | Event Category | Description |
@@ -35,6 +37,7 @@ Execution events track the low-level progress of tasks within the substrate.
 | `execution_blocked` | Task cannot start due to resource or policy constraints. |
 
 ## Queue & Lease Events
+
 Events related to the daemon scheduler and task distribution.
 
 | Event Category | Description |
@@ -49,6 +52,7 @@ Events related to the daemon scheduler and task distribution.
 | `lease_conflict_detected` | Multiple workers attempted to claim the same lease. |
 
 ## Telemetry Events
+
 Passive observation events used as evidence for scheduling and governance.
 
 | Event Category | Description |
@@ -66,14 +70,15 @@ Passive observation events used as evidence for scheduling and governance.
 | `telemetry_registry_update_skipped` | Update ignored due to staleness or conflict. |
 
 ## Diagnostics & Operational Events
-Events used for troubleshooting and system health monitoring.
+
+Diagnostics and operational events capture snapshots for debugging and verification.
 
 | Event Category | Description |
 |:---|:---|
 | `diagnostics_snapshot` | A comprehensive capture of system state for debugging. |
 | `replay_metadata` | Metadata describing a replay session. |
-| `proofpack_generated` | An evidence bundle has been successfully exported. |
-| `proofpack_validation_failed` | Integrity check failed on an exported bundle. |
-| `degraded_state` | The system has entered a degraded mode of operation. |
-| `fallback` | A fallback mechanism was triggered. |
+| `proofpack_generated` | A Proofpack has been successfully exported. |
+| `proofpack_validation_failed` | Integrity check failed on an exported Proofpack. |
+| `degraded_state` | The system has entered a Degraded State of operation. |
+| `fallback` | A Degraded State mechanism was triggered. |
 | `operator_override` | An operator manually bypassed a policy gate. |
