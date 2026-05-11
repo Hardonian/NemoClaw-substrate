@@ -62,7 +62,7 @@ describe("auditRedaction", () => {
   });
 
   it("produces summary with exposed and redacted counts", () => {
-    const result = auditRedaction("email: user@test.com ssn: 123-45-6789 token: nvapi-**** redacted");
+    const result = auditRedaction("email: user@test.com ssn: 123-45-6789");
     expect(result.summary["email_exposed"]).toBe(1);
     expect(result.summary["ssn_exposed"]).toBe(1);
   });

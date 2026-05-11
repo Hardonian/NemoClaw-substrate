@@ -3,6 +3,7 @@
 Reason codes provide fine-grained, machine-readable explanations for decisions and state transitions within the NemoClaw substrate. These codes are embedded in receipts and events to ensure every action is auditable.
 
 ## Plan Lifecycle Codes
+
 | Code | Meaning |
 |:---|:---|
 | `plan_created` | The orchestration plan has been synthesized and validated. |
@@ -13,6 +14,7 @@ Reason codes provide fine-grained, machine-readable explanations for decisions a
 | `plan_timed_out` | Total plan execution time exceeded `maxPlanDurationMs`. |
 
 ## Step Lifecycle Codes
+
 | Code | Meaning |
 |:---|:---|
 | `step_created` | An individual execution step was added to the run state. |
@@ -24,6 +26,7 @@ Reason codes provide fine-grained, machine-readable explanations for decisions a
 | `step_timed_out` | Individual step duration exceeded `maxStepDurationMs`. |
 
 ## Policy & Trust Codes
+
 | Code | Meaning |
 |:---|:---|
 | `orchestration_disabled` | Orchestration was skipped because `NEMOCLAW_ORCHESTRATION != 1`. |
@@ -36,6 +39,7 @@ Reason codes provide fine-grained, machine-readable explanations for decisions a
 | `approval_denied` | An operator or gatekeeper explicitly rejected the request. |
 
 ## GPU & Resource Codes
+
 | Code | Meaning |
 |:---|:---|
 | `gpu_available` | Sufficient GPU resources were found and reserved. |
@@ -47,6 +51,7 @@ Reason codes provide fine-grained, machine-readable explanations for decisions a
 | `gpu_scoring_degraded` | Scheduling scoring is less accurate due to missing data. |
 
 ## Daemon & Lease Codes
+
 | Code | Meaning |
 |:---|:---|
 | `daemon_not_started` | The background scheduler process is not running. |
@@ -57,6 +62,7 @@ Reason codes provide fine-grained, machine-readable explanations for decisions a
 | `heartbeat_missed` | The runner failed to signal health within the deadline. |
 
 ## Replay & Verification Codes
+
 | Code | Meaning |
 |:---|:---|
 | `replay_drift_detected` | Replay execution diverged from the recorded history. |
@@ -64,6 +70,7 @@ Reason codes provide fine-grained, machine-readable explanations for decisions a
 | `validation_failed` | Structure or signature verification failed for an artifact. |
 
 ## External Integration Codes
+
 | Code | Meaning |
 |:---|:---|
 | `dynamo_connected` | Successfully connected to the DynamoDB adapter. |

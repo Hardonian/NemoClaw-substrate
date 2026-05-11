@@ -75,4 +75,4 @@ The logical perimeter within which code and data are considered trusted based on
 * **Use**: "Planned for v2.0" instead of "Supports future-proof scaling."
 * **Use**: "Degraded state" instead of "Degraded State in progress" (unless it is actually healing).
 * **Avoid**: Marketing-heavy terms like "AI-powered" unless referring to a specific, implemented model-driven logic.
-*   **Avoid**: "Real-time" unless the latency bounds are deterministic and verified.
+* **Avoid**: "Real-time" unless the latency bounds are deterministic and verified.

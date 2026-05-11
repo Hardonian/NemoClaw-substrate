@@ -8,7 +8,7 @@ import {
   summarizeScaling,
   DEFAULT_SCALING_CONFIG,
   type ScalingTestConfig,
-} from "../../dist/lib/performance/scaling-test";
+} from "./scaling-test";
 
 describe("measureResourceGrowth", () => {
   it("returns 1 for zero-growth workload", () => {
