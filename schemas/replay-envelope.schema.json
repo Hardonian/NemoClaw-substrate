@@ -1,0 +1,60 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://nemoclaw.ai/schemas/replay-envelope.schema.json",
+  "title": "Replay Envelope",
+  "description": "A container for a replayed execution session, including original and replayed receipts and drift analysis.",
+  "type": "object",
+  "properties": {
+    "replayId": {
+      "type": "string"
+    },
+    "originalRunId": {
+      "type": "string"
+    },
+    "originalPlanId": {
+      "type": "string"
+    },
+    "replayedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "originalReceipts": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "List of original receipt IDs."
+    },
+    "replayedReceipts": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "List of newly generated receipt IDs from the replay session."
+    },
+    "driftDetected": {
+      "type": "boolean"
+    },
+    "driftDetails": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/ReplayDriftDetail"
+      }
+    },
+    "consistent": {
+      "type": "boolean",
+      "description": "True if replayed execution exactly matches the original deterministic state."
+    }
+  },
+  "required": ["replayId", "originalRunId", "originalPlanId", "replayedAt", "originalReceipts", "replayedReceipts", "driftDetected", "consistent"],
+  "definitions": {
+    "ReplayDriftDetail": {
+      "type": "object",
+      "properties": {
+        "receiptId": { "type": "string" },
+        "expectedReasonCode": { "type": "string" },
+        "actualReasonCode": { "type": "string" },
+        "expectedData": { "type": "object" },
+        "actualData": { "type": "object" },
+        "description": { "type": "string" }
+      },
+      "required": ["receiptId", "expectedReasonCode", "actualReasonCode", "expectedData", "actualData", "description"]
+    }
+  }
+}
