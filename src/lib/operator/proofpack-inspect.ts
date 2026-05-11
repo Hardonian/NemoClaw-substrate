@@ -80,8 +80,8 @@ export function proofpackAllVerified(info: ProofpackInfo): boolean {
 export function diffProofpack(
   a: ProofpackInfo,
   b: ProofpackInfo,
-): { field: string; oldValue: string | number; newValue: string | number }[] {
-  const diffs: { field: string; oldValue: string | number; newValue: string | number }[] = [];
+): { field: string; oldValue: string | number | boolean; newValue: string | number | boolean }[] {
+  const diffs: { field: string; oldValue: string | number | boolean; newValue: string | number | boolean }[] = [];
 
   const metaKeys: (keyof ProofpackMetadata)[] = ["version", "createdAt", "sessionId", "agent", "model"];
   for (const key of metaKeys) {
