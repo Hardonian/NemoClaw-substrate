@@ -13,7 +13,7 @@ import {
   runSerializationBenchmark,
   summarizeSerialization,
   DEFAULT_SERIALIZATION_CONFIG,
-} from "../../dist/lib/performance/serialization-benchmark";
+} from "./serialization-benchmark";
 
 describe("createTestPayload", () => {
   it("creates payload with expected structure", () => {

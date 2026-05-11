@@ -39,6 +39,7 @@ Runs represent a specific execution instance of a Plan.
 | `timed_out` | `maxStepDurationMs` exceeded. |
 
 ## Determinism Guardrails
-1.  **No Silent Transitions**: Every transition must emit a receipt of the corresponding `ReceiptType`.
-2.  **Immutability**: Once a Step reaches a terminal state (`completed`, `failed`, `skipped`, `cancelled`, `timed_out`), it cannot transition back to `in_progress` (a new step or retry attempt must be created).
-3.  **Dependency Locking**: Steps cannot enter `in_progress` until all IDs in `dependsOnStepIds` are in the `completed` state.
+
+1. **No Silent Transitions**: Every transition must emit a receipt of the corresponding `ReceiptType`.
+2. **Immutability**: Once a Step reaches a terminal state (`completed`, `failed`, `skipped`, `cancelled`, `timed_out`), it cannot transition back to `in_progress` (a new step or retry attempt must be created).
+3. **Dependency Locking**: Steps cannot enter `in_progress` until all IDs in `dependsOnStepIds` are in the `completed` state.

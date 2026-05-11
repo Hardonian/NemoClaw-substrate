@@ -8,7 +8,7 @@ import {
   runProofPackBenchmark,
   summarizeProofPack,
   DEFAULT_PROOFPACK_CONFIG,
-} from "../../dist/lib/performance/proofpack-benchmark";
+} from "./proofpack-benchmark";
 
 describe("generateProofPack", () => {
   it("returns Uint8Array of correct size", () => {

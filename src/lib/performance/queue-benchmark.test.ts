@@ -9,7 +9,7 @@ import {
   runQueueBenchmark,
   summarizeQueue,
   DEFAULT_QUEUE_CONFIG,
-} from "../../dist/lib/performance/queue-benchmark";
+} from "./queue-benchmark";
 
 describe("createQueueMessage", () => {
   it("creates message with correct id", () => {

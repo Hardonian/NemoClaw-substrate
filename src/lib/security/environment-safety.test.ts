@@ -12,11 +12,71 @@ import {
   environmentSafetySummary,
 } from "./environment-safety";
 
+const isWindows = process.platform === "win32";
+
 describe("checkEnvironmentSafety", () => {
   let tmpDir: string;
 
   beforeEach(() => {
     tmpDir = mkdtempSync(join(tmpdir(), "env-safety-test-"));
+  });
+
+  afterEach(() => {
+    rmSync(tmpDir, { recursive: true, force: true });
+  });
+
+  it("reports non-existent files as not too permissive", () => {
+    const report = checkEnvironmentSafety({
+      checkPaths: [join(tmpDir, "nonexistent.txt")],
+      checkNetwork: false,
+      checkUmask: false,
+    });
+
+    const fileCheck = report.fileChecks.find(
+      (f) => f.path === join(tmpDir, "nonexistent.txt"),
+    );
+    expect(fileCheck).toBeDefined();
+    expect(fileCheck?.exists).toBe(false);
+    expect(fileCheck?.isTooPermissive).toBe(false);
+    expect(fileCheck?.issue).toBeNull();
+  });
+
+  it.runIf(!isWindows)("detects files with overly permissive permissions", () => {
+    const filePath = join(tmpDir, "config.json");
+    writeFileSync(filePath, "{}");
+    chmodSync(filePath, 0o777);
+
+    const report = checkEnvironmentSafety({
+      checkPaths: [filePath],
+      maxAllowedPermission: 0o600,
+      checkNetwork: false,
+      checkUmask: false,
+    });
+
+    const fileCheck = report.fileChecks.find((f) => f.path === filePath);
+    expect(fileCheck).toBeDefined();
+    expect(fileCheck?.exists).toBe(true);
+    expect(fileCheck?.isTooPermissive).toBe(true);
+    expect(fileCheck?.issue).toContain("exceeds max");
+  });
+
+  it.runIf(!isWindows)("passes files with acceptable permissions", () => {
+    const filePath = join(tmpDir, "config.json");
+    writeFileSync(filePath, "{}");
+    chmodSync(filePath, 0o600);
+
+    const report = checkEnvironmentSafety({
+      checkPaths: [filePath],
+      maxAllowedPermission: 0o600,
+      checkNetwork: false,
+      checkUmask: false,
+    });
+
+    const fileCheck = report.fileChecks.find((f) => f.path === filePath);
+    expect(fileCheck).toBeDefined();
+    expect(fileCheck?.exists).toBe(true);
+    expect(fileCheck?.isTooPermissive).toBe(false);
+    expect(fileCheck?.issue).toBeNull();
   });
 
   afterEach(() => {
