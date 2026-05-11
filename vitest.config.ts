@@ -48,6 +48,13 @@ export default defineConfig({
       },
       {
         test: {
+          name: "scripts",
+          include: ["scripts/**/*.test.ts"],
+          exclude: ["**/node_modules/**"],
+        },
+      },
+      {
+        test: {
           name: "plugin",
           include: ["nemoclaw/src/**/*.test.ts"],
         },

@@ -7,8 +7,8 @@ import {
   checkSignatures,
   checkContentIntegrity,
   findProofPack,
-} from "../../scripts/verify-proofpack.ts";
-import type { ProofPackSchema } from "../../scripts/verify-proofpack.ts";
+} from "../scripts/verify-proofpack.ts";
+import type { ProofPackSchema } from "../scripts/verify-proofpack.ts";
 
 describe("verify-proofpack script", () => {
   describe("findProofPack", () => {
@@ -99,7 +99,7 @@ describe("verify-proofpack script", () => {
       expect(result.passed).toBe(true);
     });
 
-    it("passes when signatures match entry content hash", () => {
+    it("passes when signatures match entry content hash", async () => {
       const content = "test content";
       const crypto = await import("node:crypto");
       const hash = crypto.createHash("sha256").update(content).digest("hex");
@@ -148,7 +148,7 @@ describe("verify-proofpack script", () => {
       expect(result.passed).toBe(true);
     });
 
-    it("passes when content hash matches", () => {
+    it("passes when content hash matches", async () => {
       const crypto = await import("node:crypto");
       const content = "integrity test";
       const hash = crypto.createHash("sha256").update(content).digest("hex");
