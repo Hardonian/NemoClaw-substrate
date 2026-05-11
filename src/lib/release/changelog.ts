@@ -91,7 +91,7 @@ export function parseConventionalCommit(
     type,
     scope,
     subject,
-    body: breakingInBody ? body : undefined,
+    body,
     breaking: breaking || breakingInBody,
     hash,
   };

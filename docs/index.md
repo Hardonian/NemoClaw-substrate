@@ -20,16 +20,11 @@ status: published
   SPDX-License-Identifier: Apache-2.0
 -->
 
-# NVIDIA NemoClaw
+# NVIDIA NemoClaw: Governed Execution Substrate
 
-```{include} ../README.md
-:start-after: <!-- start-badges -->
-:end-before: <!-- end-badges -->
-```
+NVIDIA NemoClaw is an open-source reference stack that simplifies running [OpenClaw](https://openclaw.ai) always-on assistants within a **governed execution substrate**.
 
-NVIDIA NemoClaw is an open-source reference stack that simplifies running [OpenClaw](https://openclaw.ai) always-on assistants more safely.
-NemoClaw provides onboarding, lifecycle management, and OpenClaw operations within OpenShell containers.
-It installs the [NVIDIA OpenShell](https://github.com/NVIDIA/OpenShell) runtime, part of NVIDIA Agent Toolkit, an environment designed for executing claws with additional security, and open-source models like [NVIDIA Nemotron](https://build.nvidia.com).
+It provides production-grade infrastructure for local operator-grade AI agents, focusing on deterministic control, auditable evidence (proofpacks), and fail-closed security. NemoClaw prioritizes explicit governance and "anti-theatre" transparency over opaque autonomy.
 
 ## Get Started
 
