@@ -113,7 +113,7 @@ export interface ProofpackExportOptions {
   includeGovernanceEvents: boolean;
   includeDiagnostics: boolean;
   includeDegradedStates: boolean;
-  includeFallbackEvidence: boolean;
+  includeDegradedStateTriggerEvidence: boolean;
   includeApprovalLineage: boolean;
   classification: EvidenceClassification;
   redactSecrets: boolean;
@@ -125,7 +125,7 @@ export const DEFAULT_PROOFPACK_EXPORT_OPTIONS: ProofpackExportOptions = {
   includeGovernanceEvents: true,
   includeDiagnostics: true,
   includeDegradedStates: true,
-  includeFallbackEvidence: true,
+  includeDegradedStateTriggerEvidence: true,
   includeApprovalLineage: true,
   classification: "internal",
   redactSecrets: true,
@@ -142,7 +142,7 @@ export interface ReplayEvidencePackage {
   governanceEvents: import("./operational-memory").OperationalEvent[];
   diagnosticsSnapshots: import("./operational-memory").OperationalEvent[];
   degradedStates: DegradedState[];
-  fallbackEvidence: import("./operational-memory").OperationalEvent[];
+  degradedStateTriggerEvidence: import("./operational-memory").OperationalEvent[];
   approvalLineage: import("./operational-memory").OperationalEvent[];
   digest: EvidenceDigest;
 }
@@ -190,8 +190,8 @@ export const DIAGNOSTICS_EVENT_CATEGORIES: ReadonlySet<OperationalEventCategory>
   "proofpack_validation_failed",
 ]);
 
-export const FALLBACK_EVENT_CATEGORIES: ReadonlySet<OperationalEventCategory> = new Set([
-  "fallback",
+export const DEGRADED_STATE_TRIGGER_EVENT_CATEGORIES: ReadonlySet<OperationalEventCategory> = new Set([
+  "degraded_state_trigger",
 ]);
 
 export const APPROVAL_EVENT_CATEGORIES: ReadonlySet<OperationalEventCategory> = new Set([
