@@ -1,7 +1,9 @@
 <!-- SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved. -->
 <!-- SPDX-License-Identifier: Apache-2.0 -->
 
-# ADR Index
+# Architectural Decision Records (ADRs)
+
+These records document the critical architectural decisions made during the development of the NemoClaw substrate.
 
 ## Active ADRs
 
@@ -13,8 +15,6 @@
 - **[ADR-0006: Trust & Attestation Seams](0006-trust-and-attestation-seams.md):** Mapping worker trust to structural separation.
 - **[ADR-0007: Declarative-Only Policy](0007-declarative-only-policy.md):** Why we reject "Policy Learning" in the control plane.
 
-## Cross-links
+## Process
 
-- Capability mapping: `docs/architecture/capability-status-matrix.md`
-- Runtime diagrams: `docs/architecture/system-topology.md`, `docs/architecture/runtime-topology.md`
-- Verification gates: `docs/verification/verification-topology.md`
+NemoClaw ADRs follow a strict truth-grounding process. Decisions are only moved to "Accepted" once the structural implications are verified in the substrate core.
