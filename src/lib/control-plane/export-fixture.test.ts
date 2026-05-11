@@ -220,7 +220,7 @@ describe("fixture-generators", () => {
       expect(result.diagnosticsCount).toBeGreaterThanOrEqual(0);
       expect(result.degradedCount).toBeGreaterThanOrEqual(0);
       expect(result.approvalCount).toBeGreaterThanOrEqual(0);
-      expect(result.fallbackCount).toBeGreaterThanOrEqual(0);
+      expect(result.degradedStateTriggerCount).toBeGreaterThanOrEqual(0);
     });
 
     it("produces deterministic results", () => {
@@ -460,7 +460,7 @@ describe("redaction-validation", () => {
         createdAt: T0,
         phases: [{ phase: "received" as const, at: T0 }],
         degradedEvents: [],
-        fallbackAttempts: [],
+        degradedStateTriggers: [],
         toolInvocations: [],
         timing: {},
         provenance: { source: "test", lineage: ["test"], replayVersion: "1" },
@@ -745,7 +745,7 @@ describe("demo-packs", () => {
         fakeEvent(0, "execution_plan_created"),
         fakeEvent(1, "execution_plan_approved"),
         fakeEvent(2, "degraded_state", { degraded: { category: "degraded", reason: "test", affectedSubsystem: "test", severity: "info", reasonCode: "unknown_error", explanation: "test", sourceComponent: "test", timestamp: T0 } }),
-        fakeEvent(3, "fallback"),
+        fakeEvent(3, "degraded_state_trigger"),
       ];
       const steps = generateDemoWalkthrough(events);
       expect(steps.length).toBeGreaterThan(1);

@@ -36,6 +36,7 @@ export interface PolicyLearningStore {
   getSignals(policyId: string): PolicyLearningSignal[];
   saveSignal(signal: PolicyLearningSignal): void;
   getProposals(policyId: string): PolicyCandidateProposal[];
+  getAllProposalPolicyIds(): string[];
   saveProposal(proposal: PolicyCandidateProposal): void;
   getReviews(proposalId: string): PolicyPromotionReview[];
   saveReview(review: PolicyPromotionReview): void;
@@ -61,6 +62,10 @@ export class InMemoryPolicyLearningStore implements PolicyLearningStore {
 
   getProposals(policyId: string): PolicyCandidateProposal[] {
     return this.proposals.get(policyId) ?? [];
+  }
+
+  getAllProposalPolicyIds(): string[] {
+    return Array.from(this.proposals.keys());
   }
 
   saveProposal(proposal: PolicyCandidateProposal): void {
@@ -338,12 +343,7 @@ export class PolicyLearningManager {
 
   getAllProposals(): PolicyCandidateProposal[] {
     const allProposals: PolicyCandidateProposal[] = [];
-    const policyIds = new Set<string>();
-
-    const allStored = this.store.getProposals("");
-    for (const p of allStored) {
-      policyIds.add(p.policyId);
-    }
+    const policyIds = this.store.getAllProposalPolicyIds();
 
     for (const policyId of policyIds) {
       allProposals.push(...this.store.getProposals(policyId));
