@@ -1,97 +1,126 @@
 <!-- SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved. -->
 <!-- SPDX-License-Identifier: Apache-2.0 -->
 
-# NemoClaw Fork: Local Operator-Grade Execution and Governance
+# NemoClaw: Governed Execution Substrate
 
-This fork of NemoClaw is being shaped into a governed heterogeneous execution substrate for local operator-grade AI execution with explicit release-truth boundaries.
+NemoClaw is a production-grade execution substrate for local operator-grade AI agents. It provides a governed environment that prioritizes deterministic control, auditable evidence, and fail-closed security over opaque autonomy.
 
-## Why this fork exists
+NemoClaw is not a "feature factory"—it is **decision infrastructure**.
 
-The fork prioritizes deterministic and auditable control over opaque autonomy. It focuses on:
+---
 
-- execution plane and control plane separation,
-- truthful degraded-state reporting,
-- execution receipts/provenance,
-- supervised policy promotion,
-- explainable routing/control decisions.
+## 🛡️ Anti-Theatre Doctrine
 
-## Current state vs roadmap
+We reject "AI magic" and architecture theatre. NemoClaw operates under a strict truth-boundary model:
+- **No Hidden Retries:** Failures are reported as first-class events.
+- **No Silent Fanout:** All concurrent execution is governed and accounted for.
+- **No Implicit Autonomy:** The substrate never promotes policy without explicit operator review.
+- **Evidence-Based:** Claims of "trust" or "attestation" map to verifiable code and structural separation, not marketing descriptors.
 
-- **Implemented:** existing CLI/plugin/sandbox orchestration and inference onboarding flows; control-plane verification gates.
-- **Scaffolded:** remote execution and telemetry adapter seams with explicit degraded-state reporting.
-- **Opt-in:** governed routing (`NEMOCLAW_GOVERNED_ROUTING=1`) and heterogeneous bridge (`NEMOCLAW_HETEROGENEOUS_ROUTING=1`).
-- **Planned:** external orchestration adapter integrations after stable local contracts.
-- **Not implemented:** distributed execution, GPU balancing, Dynamo integration, autonomous orchestration/autonomous recovery, automatic policy learning.
+---
 
-## Architecture and planning docs
+## 🏗️ Architecture Overview
 
-- Fork rationale: [docs/fork-rationale.md](docs/fork-rationale.md)
-- Current-state architecture audit: [docs/architecture/current-state.md](docs/architecture/current-state.md)
-- Target-state architecture: [docs/architecture/target-state.md](docs/architecture/target-state.md)
-- Roadmap and dependencies: [docs/roadmap.md](docs/roadmap.md)
-- Verification matrix: [docs/verification/verification-matrix.md](docs/verification/verification-matrix.md)
-- PR verification/reporting guide: [docs/contributing/pr-template-guide.md](docs/contributing/pr-template-guide.md)
-- Branch strategy: [docs/contributing/branch-strategy.md](docs/contributing/branch-strategy.md)
+NemoClaw decomposes agent orchestration into a governed substrate:
 
-## Security hardening doctrine
+1.  **Control Plane:** Governed routing, deterministic dispatch, and policy engine.
+2.  **Execution Plane:** Lifecycle management, queue/lease governance, and sandbox isolation.
+3.  **Observability Plane:** Telemetry lifecycle, correlation-aware tracing, and proofpack generation.
+4.  **Governance Layer:** Attestation, replay validation, and supervised policy promotion.
 
-- Security threat model: [docs/architecture/security-threat-model.md](docs/architecture/security-threat-model.md)
-- Security policy model: [docs/architecture/security-policy-model.md](docs/architecture/security-policy-model.md)
-- Transport security: [docs/architecture/transport-security.md](docs/architecture/transport-security.md)
-- Secret redaction doctrine: [docs/architecture/secret-redaction-doctrine.md](docs/architecture/secret-redaction-doctrine.md)
-- Command execution safety: [docs/architecture/command-execution-safety.md](docs/architecture/command-execution-safety.md)
-- Local-stack security profiles: [docs/architecture/local-stack-security-profiles.md](docs/architecture/local-stack-security-profiles.md)
-- Security verification matrix: [docs/verification/security-verification-matrix.md](docs/verification/security-verification-matrix.md)
+### Trust Boundary Model
+NemoClaw enforces a strict boundary between the **Operator** (High Trust), the **Control Plane** (Governed), and the **Execution Sandbox** (Untrusted). All cross-boundary communication is validated and redacted.
 
-## Control-plane discipline
+---
 
-Control-plane discipline means decisions are governed by inspectable contracts, policy artifacts, and verifiable receipts; not by hidden fallbacks or prompt-only instructions.
+## 📊 Capability Truth Matrix
 
-## Contribution guidance
+| Domain | Implemented | Status | Evidence Reference |
+|---|---|---|---|
+| **Governed Routing** | Yes | Deterministic | `src/lib/control-plane/governed-provider-routing.ts` |
+| **Execution Lifecycle** | Yes | Substrate-Ready | `src/lib/control-plane/execution-lifecycle.ts` |
+| **Replay & Receipts** | Yes | Truth-Grounded | `src/lib/control-plane/replay.ts` |
+| **Telemetry** | Yes | Correlation-Aware | `src/lib/observability/execution-trace.ts` |
+| **Heterogeneous Scheduling** | Yes | Local/Remote | `src/lib/control-plane/heterogeneous-routing.ts` |
+| **GPU-Aware Scheduling** | Scaffolded | Experimental | `src/lib/control-plane/scheduler.ts` |
+| **Worker Attestation** | Scaffolded | Structural | `src/lib/control-plane/worker-trust.ts` |
+| **Distributed Fabric** | Planned | Bounded | ADR-0002 |
+| **Autonomous Recovery** | Intentionally-Not-Implemented | n/a | Governance Doctrine |
 
-When contributing:
+*For the full matrix, see [docs/architecture/capability-status-matrix.md](docs/architecture/capability-status-matrix.md).*
 
-1. Distinguish current repository truth from target-state design.
-2. Avoid implementation claims unless backed by code and tests in the same PR.
-3. Include verification commands and observed outcomes in PR descriptions.
+---
 
-## Not implemented yet (explicitly not implemented in this checkpoint)
+## 🚀 Quickstart: Operator Mode
 
-Unless specifically added and verified in code:
+### 1. Requirements
+- Node.js 22.16+ (LTS)
+- Docker Desktop or Linux Docker
+- NVIDIA GPU (Optional, recommended for local inference)
 
-- no dedicated deterministic scheduler,
-- no dedicated device registry,
-- no dedicated policy-promotion engine,
-- no unified execution receipt framework,
-- no Dynamo-style orchestration integration,
-- no distributed execution handoff,
-- no GPU balancing,
-- no autonomous orchestration or autonomous recovery loops,
-- no automatic policy learning.
-
-## Local bootstrap recovery path
-
-If lifecycle scripts fail in restricted environments, contributors can use `npm install --ignore-scripts` for local verification only, then run typecheck/tests manually. Production/release flows should keep normal install behavior.
-
-## Verification
-
-Preferred contributor flow:
-
+### 2. Local Setup
 ```bash
-npm run verify:changelog-hygiene
-npm run verify:core
-npm run verify:release
+git clone https://github.com/NVIDIA/NemoClaw-substrate
+cd NemoClaw-substrate
+npm install
+npm run build:cli
 ```
 
-- `verify:core` reports deterministic `PASS/WARN/FAIL` status across changelog hygiene, typecheck, lint, and targeted control-plane/probe/governed-routing suites.
-- `verify:release` is the primary release gate for local and CI readiness checks.
-- `verify:all` remains available as a strict-mode variant of `verify:core` that fails for both repository failures and missing required toolchain/dependencies.
-- In restricted local environments, `npm install --ignore-scripts` is a local diagnosis recovery path only and must not be used for release packaging or CI baselines.
+### 3. Verify Core Stability
+```bash
+npm run verify:core
+```
 
-### Residual matrix closure status (2026-05-09)
+---
 
-The governed substrate closure pass is verification-focused: direct branch assertions, replay/diagnostics truth hardening, and status-document coherence. It does not add orchestration, distributed execution, GPU balancing, Dynamo integration, autonomous routing, or automatic policy/trust mutation.
+## 🔦 Reviewer & Operator Maps
 
-## Operator substrate
+### Reviewer Start-Here
+If you are reviewing this repository for security, procurement, or infra-safety:
+1.  **Governance Invariants:** [docs/architecture/governance-invariants.md](docs/architecture/governance-invariants.md)
+2.  **Trust Boundaries:** [docs/architecture/security-policy.md](docs/architecture/security-policy.md)
+3.  **Audit Readiness:** [docs/architecture/evidence-topology.md](docs/architecture/evidence-topology.md)
+4.  **Verification Topology:** [docs/verification/verification-matrix.md](docs/verification/verification-matrix.md)
 
-Added deterministic operator CLI, profiles, and demo fixtures.
+### Operator CLI
+NemoClaw provides a deterministic operator CLI for managing the substrate:
+- `nemoclaw substrate status`: Inspect control-plane health.
+- `nemoclaw substrate replay <receipt-id>`: Replay execution with truth-grounded evidence.
+- `nemoclaw substrate policy review`: Supervised review of pending policy changes.
+
+---
+
+## 🔐 Security Posture
+
+- **Fail-Closed:** Any violation of governance policy or telemetry failure terminates the execution lifecycle.
+- **Redaction-by-Default:** All telemetry is passed through `src/lib/security/redact.ts` before export.
+- **SSRF Validation:** All outgoing network requests are validated against governed policy maps.
+
+---
+
+## 🗺️ Roadmap & Non-Goals
+
+### High-Priority Roadmap
+- [ ] Formal Cryptographic Attestation Chain
+- [ ] Persistence Adapters for Dynamo/S3
+- [ ] Advanced GPU Topology-Aware Scheduling
+
+### Non-Goals
+- Autonomous self-healing without operator oversight.
+- Implicit automatic policy promotion.
+- Opaque "AI-driven" control-plane decisions.
+
+---
+
+## 🤝 Contribution Discipline
+
+NemoClaw follows a strict **Minimal Diff Discipline**. Every PR must:
+- Pass `npm run verify:release`.
+- Include verification evidence in the description.
+- Update the Capability Status Matrix if modifying implementation state.
+
+---
+
+## 📄 License
+SPDX-License-Identifier: Apache-2.0
+Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.

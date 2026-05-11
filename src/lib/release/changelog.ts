@@ -71,7 +71,8 @@ export function parseConventionalCommit(
   message: string,
   hash: string = "",
 ): ConventionalCommit | null {
-  const match = message.trim().match(COMMIT_PATTERN);
+  const firstLine = message.trim().split("\n")[0] ?? "";
+  const match = firstLine.match(COMMIT_PATTERN);
   if (!match) {
     return null;
   }

@@ -59,6 +59,7 @@
         "proofpack",
         "proofpacks",
         "pycache",
+        "PYPAYLOAD",
         "pypi",
         "pypirc",
         "pyproject",
