@@ -125,7 +125,7 @@ export function buildEventsFromReceipt(receipt: ExecutionReceipt, source = "runt
     out.push(log.append({ occurredAt: receipt.createdAt, category: "scheduler_outcome", source, provenance: { requestId: receipt.requestId, receiptId: receipt.receiptId }, replayRef: receipt.provenance, payload: { schedulingDecision: receipt.schedulingDecision as SchedulingDecision } }));
   }
   receipt.degradedEvents.forEach((d: DegradedState) => out.push(log.append({ occurredAt: d.timestamp, category: "degraded_state", source, provenance: { requestId: receipt.requestId, receiptId: receipt.receiptId }, replayRef: receipt.provenance, payload: { degraded: d } })));
-  receipt.fallbackAttempts.forEach((f) => out.push(log.append({ occurredAt: f.at, category: "degraded_state_trigger", source, provenance: { requestId: receipt.requestId, receiptId: receipt.receiptId }, replayRef: receipt.provenance, payload: { fallback: f } })));
+  receipt.degradedStateTriggers.forEach((f) => out.push(log.append({ occurredAt: f.at, category: "degraded_state_trigger", source, provenance: { requestId: receipt.requestId, receiptId: receipt.receiptId }, replayRef: receipt.provenance, payload: { degraded_state_trigger: f } })));
   receipt.operatorOverrides.forEach((o) => out.push(log.append({ occurredAt: o.at, category: "operator_override", source, provenance: { requestId: receipt.requestId, receiptId: receipt.receiptId, actor: o.actor }, replayRef: receipt.provenance, payload: { override: o } })));
   return out;
 }

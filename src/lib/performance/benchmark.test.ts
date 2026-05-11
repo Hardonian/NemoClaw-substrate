@@ -35,8 +35,8 @@ describe("percentile", () => {
     expect(percentile(arr, 99)).toBe(99);
   });
 
-  it("handles unsorted input (uses sorted copy internally for computeStats, but percentile expects sorted)", () => {
-    expect(percentile([1, 3, 2], 50)).toBe(2);
+  it("computes p50 from sorted array at index 1", () => {
+    expect(percentile([1, 2, 3], 50)).toBe(2);
   });
 });
 

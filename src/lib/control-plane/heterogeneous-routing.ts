@@ -49,10 +49,10 @@ export interface HeterogeneousRoutingResult {
 
 export async function routeHeterogeneous(input: {
   requestId: string; nowIso: string; provider: string; model: string; registry: DeviceRegistry; policyBundle: PolicyBundle;
-  governedEnabled: boolean; allowFallback: boolean; routingConfig: HeterogeneousRoutingConfig; remoteConfig: RemoteExecutionConfig;
+  governedEnabled: boolean; allowDegradedStateTrigger: boolean; routingConfig: HeterogeneousRoutingConfig; remoteConfig: RemoteExecutionConfig;
   remoteTransport?: RemoteExecutionTransport; approved?: boolean; operationalMemory?: OperationalMemoryLog; executionPlan?: ExecutionPlan; executionApproval?: ExecutionApproval; executionPlanRequired?: boolean;
 }): Promise<HeterogeneousRoutingResult> {
-  const fallbackProvider = { provider: input.provider, model: input.model };
+  const degradedStateTriggerProvider = { provider: input.provider, model: input.model };
   const local = {
     candidateId: `local:${input.provider}:${input.model}`,
     kind: "local_provider" as const,
@@ -90,23 +90,23 @@ export async function routeHeterogeneous(input: {
   const selected = eligible.sort((a,b) => b.score - a.score || a.candidateId.localeCompare(b.candidateId))[0];
 
   const degradedEvents: DegradedState[] = [];
-  const fallbackAttempts: ExecutionReceipt["fallbackAttempts"] = [];
+  const degradedStateTriggers: ExecutionReceipt["degradedStateTriggers"] = [];
   if (!selected) {
     degradedEvents.push({ category: "degraded", reason: "no eligible candidate", affectedSubsystem: "heterogeneous-routing", severity: "warning", reasonCode: "constraint_unsatisfied", explanation: "No local or remote candidate remained after policy and health filtering.", sourceComponent: "heterogeneous-routing", timestamp: input.nowIso });
   }
 
-  let provider = fallbackProvider.provider;
-  let model = fallbackProvider.model;
+  let provider = degradedStateTriggerProvider.provider;
+  let model = degradedStateTriggerProvider.model;
   let remoteStatus: string | undefined;
   if (selected?.kind === "remote_worker") {
     if (!input.remoteTransport) throw new Error("remote transport required");
     const remote = await runRemoteExecution({ request: { requestId: input.requestId, nowIso: input.nowIso, action: "worker:execute", command: `run:${input.model}`, nodeId: selected.identity, approved: input.approved, executionPlanRequired: input.executionPlanRequired }, config: input.remoteConfig, transport: input.remoteTransport, policyBundle: input.policyBundle, registry: input.registry, operationalMemory: input.operationalMemory, executionPlan: input.executionPlan, executionApproval: input.executionApproval });
     remoteStatus = remote.status;
     if (remote.status !== "succeeded") {
-      fallbackAttempts.push({ at: input.nowIso, reason: `remote_${remote.status}`, target: `${fallbackProvider.provider}/${fallbackProvider.model}` });
-      if (input.allowFallback && policyEval.allowed) {
-        provider = fallbackProvider.provider;
-        model = fallbackProvider.model;
+      degradedStateTriggers.push({ at: input.nowIso, reason: `remote_${remote.status}`, target: `${degradedStateTriggerProvider.provider}/${degradedStateTriggerProvider.model}` });
+      if (input.allowDegradedStateTrigger && policyEval.allowed) {
+        provider = degradedStateTriggerProvider.provider;
+        model = degradedStateTriggerProvider.model;
       }
     }
   }
@@ -125,7 +125,7 @@ export async function routeHeterogeneous(input: {
     nodeId: selected?.kind === "remote_worker" ? selected.identity : undefined,
     modelId: model,
     degradedEvents,
-    fallbackAttempts,
+    degradedStateTriggers,
     toolInvocations: [],
     timing: { totalMs: 0 },
     provenance: { source: "heterogeneous-routing", lineage: ["provider", "remote"], replayVersion: "1" },
@@ -138,7 +138,7 @@ export async function routeHeterogeneous(input: {
 
 export function summarizeHeterogeneousDiagnostics(input: { routing: HeterogeneousRoutingConfig; governedEnabled: boolean; remote: RemoteExecutionConfig; result?: HeterogeneousRoutingResult }): string[] {
   const noCandidateReason = input.result?.selectedCandidate ? "none" : input.result?.receipt.degradedEvents.map((event) => event.reasonCode).join(",") || "no_selected_candidate";
-  const fallbackState = input.result ? (input.result.receipt.fallbackAttempts.length > 0 ? input.result.receipt.fallbackAttempts.map((attempt) => attempt.reason).join(",") : "none") : "none";
+  const degradedStateTriggerState = input.result ? (input.result.receipt.degradedStateTriggers.length > 0 ? input.result.receipt.degradedStateTriggers.map((attempt) => attempt.reason).join(",") : "none") : "none";
 
   return [
     `Heterogeneous routing: ${input.routing.enabled ? "enabled" : "disabled"} (${input.routing.source})`,
@@ -147,7 +147,7 @@ export function summarizeHeterogeneousDiagnostics(input: { routing: Heterogeneou
     `Selected candidate: ${input.result?.selectedCandidate?.candidateId ?? "none"}`,
     `Excluded candidates: ${input.result?.excludedCandidates.map((c) => c.candidateId).join(",") || "none"}`,
     `No-candidate reason: ${noCandidateReason}`,
-    `Fallback: ${fallbackState}`,
+    `Degraded state trigger: ${degradedStateTriggerState}`,
     `Worker trust level: ${input.result?.selectedCandidate?.kind === "remote_worker" ? input.result.selectedCandidate.status : "none"}`,
     `Worker attestation status: ${input.result?.selectedCandidate?.kind === "remote_worker" ? (input.result.selectedCandidate.reasonCodes.join("|") || "none") : "none"}`,
     `Trust denial reason: ${input.result?.excludedCandidates.find((c) => c.kind === "remote_worker")?.reasonCodes.join("|") || "none"}`,

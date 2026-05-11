@@ -13,7 +13,7 @@ export interface TaskClassification {
   batchSuitable: boolean;
   remoteExecutionEligible: boolean;
   approvalRequirementHint: "none" | "recommended" | "required";
-  actionClass: "tool" | "shell" | "file_mutation" | "remote_node" | "provider" | "fallback" | "network_sensitive" | "high_risk" | "generic" | "runtime";
+  actionClass: "tool" | "shell" | "file_mutation" | "remote_node" | "provider" | "degraded_state_trigger" | "network_sensitive" | "high_risk" | "generic" | "runtime";
   providerConstraints: string[];
 }
 

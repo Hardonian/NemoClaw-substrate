@@ -197,7 +197,7 @@ export interface ExecutionReceipt {
   schedulingDecision?: SchedulingDecision;
   policyDecision?: PolicyDecision;
   degradedEvents: DegradedState[];
-  fallbackAttempts: Array<{ at: string; reason: string; target?: string }>;
+  degradedStateTriggers: Array<{ at: string; reason: string; target?: string }>;
   toolInvocations: Array<{ name: string; at: string; durationMs?: number; status: "ok" | "failed" }>;
   timing: { totalMs?: number; queueMs?: number; executionMs?: number };
   provenance: { source: string; lineage: string[]; replayVersion: string; exportedAt?: string };
@@ -205,13 +205,3 @@ export interface ExecutionReceipt {
   operatorOverrides: Array<{ at: string; actor: string; reason: string }>;
 }
 
-export interface ExecutionReceiptLineage {
-  executionPlanId?: string;
-  executionApprovalId?: string;
-  authorizationLineageId?: string;
-  executionIntentHash?: string;
-  executionPolicySnapshotHash?: string;
-  executionTrustSnapshotHash?: string;
-  authorizationSource?: string;
-  replayReferenceId?: string;
-}

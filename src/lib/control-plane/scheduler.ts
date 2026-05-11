@@ -14,9 +14,9 @@ export interface SchedulingInput {
   degradedStates: DegradedState[];
 }
 
-export interface FallbackPlanRecord {
+export interface DegradedStateTriggerPlanRecord {
   originalCandidate: string;
-  fallbackCandidate: string;
+  degradedStateTriggerCandidate: string;
   reason: string;
   policyStatus: string;
   degradedStatus: string;
@@ -27,7 +27,7 @@ export interface SchedulingResult {
   decision: SchedulingDecision;
   excludedByPolicy: string[];
   excludedByHealth: string[];
-  fallbackPlan: FallbackPlanRecord[];
+  degradedStateTriggerPlan: DegradedStateTriggerPlanRecord[];
 }
 
 export function scheduleDeterministically(input: SchedulingInput): SchedulingResult {
@@ -37,7 +37,7 @@ export function scheduleDeterministically(input: SchedulingInput): SchedulingRes
 
   if (!input.policy.allowed) {
     reasons.push({ code: input.policy.reasonCode, explanation: "policy denied scheduling", source: input.policy.sourceRuleId });
-    return { decision: { rejected: [], reasons }, excludedByPolicy: ["*"], excludedByHealth, fallbackPlan: [] };
+    return { decision: { rejected: [], reasons }, excludedByPolicy: ["*"], excludedByHealth, degradedStateTriggerPlan: [] };
   }
 
   const candidates: SchedulingCandidate[] = [];
@@ -64,19 +64,19 @@ export function scheduleDeterministically(input: SchedulingInput): SchedulingRes
 
   if (!candidates.length) {
     reasons.push({ code: "no_candidate", explanation: "no eligible candidate after policy/health filtering", source: "scheduler" });
-    return { decision: { rejected: [], reasons }, excludedByPolicy, excludedByHealth, fallbackPlan: [] };
+    return { decision: { rejected: [], reasons }, excludedByPolicy, excludedByHealth, degradedStateTriggerPlan: [] };
   }
 
   const [selected, ...rest] = candidates;
-  const fallbackPlan = rest.slice(0, 2).map((fallback) => ({
+  const degradedStateTriggerPlan = rest.slice(0, 2).map((trigger) => ({
     originalCandidate: `${selected.nodeId}:${selected.modelId}`,
-    fallbackCandidate: `${fallback.nodeId}:${fallback.modelId}`,
+    degradedStateTriggerCandidate: `${trigger.nodeId}:${trigger.modelId}`,
     reason: "primary_unavailable_or_declined",
     policyStatus: input.policy.reasonCode,
     degradedStatus: input.degradedStates[0]?.reasonCode ?? "none",
-    operatorExplanation: `Fallback is planned only; execution remains explicit and operator-visible for ${fallback.nodeId}.`,
+    operatorExplanation: `Degraded state trigger is planned only; execution remains explicit and operator-visible for ${trigger.nodeId}.`,
   }));
 
   reasons.push({ code: "scheduled", explanation: `selected ${selected.nodeId}/${selected.modelId}`, source: "scheduler" });
-  return { decision: { selected, rejected: rest, reasons }, excludedByPolicy, excludedByHealth, fallbackPlan };
+  return { decision: { selected, rejected: rest, reasons }, excludedByPolicy, excludedByHealth, degradedStateTriggerPlan };
 }
