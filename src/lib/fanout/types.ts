@@ -182,16 +182,18 @@ export interface FanoutReceipt {
   metadata?: Record<string, unknown>;
 }
 
-export type FanoutReceiptType =
-  | "fanout_started"
-  | "candidate_started"
-  | "candidate_completed"
-  | "candidate_failed"
-  | "candidate_cancelled"
-  | "winner_selected"
-  | "loser_recorded"
-  | "fanout_completed"
-  | "fanout_cancelled";
+export enum FanoutReceiptType {
+  FANOUT_STARTED = "fanout_started",
+  CANDIDATE_STARTED = "candidate_started",
+  CANDIDATE_COMPLETED = "candidate_completed",
+  CANDIDATE_FAILED = "candidate_failed",
+  CANDIDATE_CANCELLED = "candidate_cancelled",
+  WINNER_SELECTED = "winner_selected",
+  LOSER_RECORDED = "loser_recorded",
+  FANOUT_COMPLETED = "fanout_completed",
+  FANOUT_CANCELLED = "fanout_cancelled",
+}
+
 
 // ============================================================================
 // Fanout run

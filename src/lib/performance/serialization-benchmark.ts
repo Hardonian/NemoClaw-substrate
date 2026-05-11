@@ -96,7 +96,7 @@ export function serializeBinary(payload: TestPayload): Buffer {
   const metaTotalSize = metaEntrySizes.reduce((a, b) => a + b, 0);
 
   const totalSize =
-    4 + idBytes.length + 8 + payload.data.length * 8 + 4 + metaTotalSize + metaKeys.length * 2;
+    4 + idBytes.length + 8 + 4 + payload.data.length * 8 + 4 + metaTotalSize + metaKeys.length * 2;
 
   const buf = Buffer.alloc(totalSize);
   let offset = 0;

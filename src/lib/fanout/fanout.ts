@@ -93,7 +93,7 @@ export class FanoutManager {
         fanoutId,
         undefined,
         FanoutReasonCode.FANOUT_NOT_ENABLED,
-        FanoutReceiptType.fanout_started,
+        FanoutReceiptType.FANOUT_STARTED,
         { reason: "Fanout is not enabled. Set NEMOCLAW_SPECULATIVE_FANOUT=1 to enable." },
       );
       return { allowed: false, receipt };
@@ -106,7 +106,7 @@ export class FanoutManager {
         fanoutId,
         undefined,
         FanoutReasonCode.POLICY_DENIED,
-        FanoutReceiptType.fanout_started,
+        FanoutReceiptType.FANOUT_STARTED,
         { reason: "Fanout policy is not enabled" },
       );
       return { allowed: false, receipt };
@@ -118,7 +118,7 @@ export class FanoutManager {
         fanoutId,
         undefined,
         FanoutReasonCode.MAX_CANDIDATES_EXCEEDED,
-        FanoutReceiptType.fanout_started,
+        FanoutReceiptType.FANOUT_STARTED,
         {
           requested: candidatePayloads.length,
           maxAllowed: policy.maxCandidates,
@@ -141,7 +141,7 @@ export class FanoutManager {
         fanoutId,
         undefined,
         FanoutReasonCode.BUDGET_EXHAUSTED,
-        FanoutReceiptType.fanout_started,
+        FanoutReceiptType.FANOUT_STARTED,
         {
           requested: candidatePayloads.length,
           remaining: budget.remainingCandidates,
@@ -190,7 +190,7 @@ export class FanoutManager {
       fanoutId,
       undefined,
       FanoutReasonCode.FANOUT_STARTED,
-      FanoutReceiptType.fanout_started,
+      FanoutReceiptType.FANOUT_STARTED,
       { candidateCount: candidates.length },
     );
 
@@ -210,7 +210,7 @@ export class FanoutManager {
         fanoutId,
         candidateId,
         FanoutReasonCode.CANDIDATE_FAILED,
-        FanoutReceiptType.candidate_failed,
+        FanoutReceiptType.CANDIDATE_FAILED,
         { reason: "Fanout run not found" },
       );
     }
@@ -240,7 +240,7 @@ export class FanoutManager {
       fanoutId,
       candidateId,
       FanoutReasonCode.CANDIDATE_COMPLETED,
-      FanoutReceiptType.candidate_completed,
+      FanoutReceiptType.CANDIDATE_COMPLETED,
       { candidateId, durationMs },
     );
   }
@@ -253,7 +253,7 @@ export class FanoutManager {
         fanoutId,
         candidateId,
         FanoutReasonCode.CANDIDATE_CANCELLED,
-        FanoutReceiptType.candidate_cancelled,
+      FanoutReceiptType.CANDIDATE_CANCELLED,
         { reason },
       );
     }
@@ -273,7 +273,7 @@ export class FanoutManager {
       fanoutId,
       candidateId,
       FanoutReasonCode.CANDIDATE_CANCELLED,
-      FanoutReceiptType.candidate_cancelled,
+      FanoutReceiptType.CANDIDATE_CANCELLED,
       { candidateId, reason },
     );
   }
@@ -324,7 +324,7 @@ export class FanoutManager {
           fanoutId,
           c.candidateId,
           FanoutReasonCode.LOSER_RECORDED,
-          FanoutReceiptType.loser_recorded,
+          FanoutReceiptType.LOSER_RECORDED,
           { candidateId: c.candidateId, winnerId: winner.candidateId },
         ),
       );
@@ -345,7 +345,7 @@ export class FanoutManager {
         fanoutId,
         winner.candidateId,
         FanoutReasonCode.WINNER_SELECTED,
-        FanoutReceiptType.winner_selected,
+        FanoutReceiptType.WINNER_SELECTED,
         { winnerId: winner.candidateId },
       ),
     );
@@ -361,7 +361,7 @@ export class FanoutManager {
         fanoutId,
         undefined,
         FanoutReasonCode.FANOUT_CANCELLED,
-        FanoutReceiptType.fanout_cancelled,
+      FanoutReceiptType.FANOUT_CANCELLED,
         { reason },
       );
     }
@@ -403,7 +403,7 @@ export class FanoutManager {
       fanoutId,
       undefined,
       FanoutReasonCode.FANOUT_CANCELLED,
-      FanoutReceiptType.fanout_cancelled,
+      FanoutReceiptType.FANOUT_CANCELLED,
       { reason, cancelledCount: cancelledCandidateIds.length },
     );
   }
