@@ -376,18 +376,15 @@ describe("validateEndpointUrl – URL parsing edge cases", () => {
     expect(result.url).toBe(url);
   });
 
-  it("allows URL with fragment", async () => {
-    mockPublicDns();
-    const url = "https://api.example.com/v1#section";
-    const result = await validateEndpointUrl(url);
-    expect(result.url).toBe(url);
+  it("rejects URL with fragment", async () => {
+    await expect(validateEndpointUrl("https://api.example.com/v1#section")).rejects.toThrow(
+      /must not include a fragment/,
+    );
   });
 
-  it("allows URL with userinfo/basic auth", async () => {
-    mockPublicDns();
-    // URL parser extracts hostname correctly even with userinfo
-    const url = "https://user:pass@api.example.com/v1";
-    const result = await validateEndpointUrl(url);
-    expect(result.url).toBe(url);
+  it("rejects URL with userinfo/basic auth", async () => {
+    await expect(validateEndpointUrl("https://user:pass@api.example.com/v1")).rejects.toThrow(
+      /must not include username\/password credentials/,
+    );
   });
 });
