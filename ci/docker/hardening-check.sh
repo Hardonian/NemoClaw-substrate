@@ -81,7 +81,7 @@ check_no_sudo() {
     local config
     config=$(inspect_config)
     # Check that no layer installs sudo
-    docker history --no-trunc "${IMAGE_NAME}:${IMAGE_TAG}" 2>/dev/null | ! grep -qi 'sudo'
+    ! docker history --no-trunc "${IMAGE_NAME}:${IMAGE_TAG}" 2>/dev/null | grep -qi 'sudo'
 }
 
 check_healthcheck() {
