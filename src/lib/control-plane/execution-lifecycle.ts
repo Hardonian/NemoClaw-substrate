@@ -43,6 +43,7 @@ export type ExecutionLifecycleReasonCode =
   | "missing_lease_history"
   | "hidden_degraded_state_trigger_detected"
   | "hidden_retry_detected"
+  | "lease_renewed"
   | "idempotency_key_conflict"
   | "deterministic_rerun"
   | "cancellation_safe_replay_blocked";
@@ -56,6 +57,7 @@ export const EXECUTION_LIFECYCLE_EVENT_TAXONOMY = [
   "queue_item_expired",
   "queue_conflict_detected",
   "lease_acquired",
+  "lease_renewed",
   "lease_expired",
   "lease_revoked",
   "lease_conflict_detected",
@@ -689,9 +691,9 @@ export function renewQueueLease(input: {
   if (isExpired(lease.expiresAt, input.renewedAt)) return decision(false, "stale_queue_ownership", "lease is stale");
   if (Date.parse(input.expiresAt) <= Date.parse(input.renewedAt)) return decision(false, "invalid_transition", "renewed lease expiry must be in the future");
   const renewed: QueueLease = { ...lease, renewedAt: input.renewedAt, expiresAt: input.expiresAt, renewalCount: (lease.renewalCount ?? 0) + 1 };
-  const receipt = makeReceipt({ eventType: "lease_acquired", plan: input.plan, occurredAt: input.renewedAt, reasonCode: "lease_renewed", queueItemId: input.queueItem.queueItemId, leaseId: lease.leaseId, ownerId: input.ownerId, payload: { expiresAt: input.expiresAt, renewalCount: renewed.renewalCount } });
+  const receipt = makeReceipt({ eventType: "lease_renewed", plan: input.plan, occurredAt: input.renewedAt, reasonCode: "lease_renewed", queueItemId: input.queueItem.queueItemId, leaseId: lease.leaseId, ownerId: input.ownerId, payload: { expiresAt: input.expiresAt, renewalCount: renewed.renewalCount } });
   const queueItem = { ...input.queueItem, lease: renewed, updatedAt: input.renewedAt, receiptReferences: appendReference(input.queueItem.receiptReferences, receipt) };
-  const event = makeEvent({ eventType: "lease_acquired", occurredAt: input.renewedAt, planId: input.plan.planId, queueItemId: input.queueItem.queueItemId, leaseId: lease.leaseId, ownerId: input.ownerId, reasonCode: "lease_renewed", payload: { expiresAt: input.expiresAt, renewalCount: renewed.renewalCount } });
+  const event = makeEvent({ eventType: "lease_renewed", occurredAt: input.renewedAt, planId: input.plan.planId, queueItemId: input.queueItem.queueItemId, leaseId: lease.leaseId, ownerId: input.ownerId, reasonCode: "lease_renewed", payload: { expiresAt: input.expiresAt, renewalCount: renewed.renewalCount } });
   return decision(true, "ok", "lease renewed", { queueItem, lease: renewed, receipt }, [receipt], [event]);
 }
 

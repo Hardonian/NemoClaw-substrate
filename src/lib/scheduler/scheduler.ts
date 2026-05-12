@@ -90,6 +90,10 @@ export const DEFAULT_HEARTBEAT_INTERVAL_MS = 5000;
 export const DEFAULT_STALE_THRESHOLD_MS = 15000;
 export const DEFAULT_LEASE_DURATION_MS = 30000;
 
+export interface DaemonSchedulerOptions {
+  now?: () => string;
+}
+
 // ============================================================================
 // Daemon scheduler
 // ============================================================================
@@ -99,8 +103,12 @@ export class DaemonScheduler {
   private heartbeatHistory: HeartbeatRecord[] = [];
   private receipts: OrchestrationReceipt[] = [];
   private decisions: OrchestrationDecision[] = [];
+  private sequence = 0;
+  private now: () => string;
 
-  constructor() {}
+  constructor(options: DaemonSchedulerOptions = {}) {
+    this.now = options.now ?? (() => new Date().toISOString());
+  }
 
   // --------------------------------------------------------------------------
   // Lifecycle
@@ -124,7 +132,7 @@ export class DaemonScheduler {
       );
     }
 
-    const now = new Date().toISOString();
+    const now = this.now();
     const daemon: DaemonDescriptor = {
       daemonId,
       name,
@@ -141,7 +149,7 @@ export class DaemonScheduler {
       startedAt: now,
     };
 
-    this.emitReceipt(ReceiptType.PLAN_STARTED, OrchestrationReasonCode.DAEMON_NOT_STARTED, {
+    this.emitReceipt(ReceiptType.PLAN_STARTED, OrchestrationReasonCode.DAEMON_STARTED, {
       daemonId,
       daemonName: name,
     });
@@ -153,7 +161,7 @@ export class DaemonScheduler {
 
     return this.makeDecision(
       true,
-      OrchestrationReasonCode.DAEMON_NOT_STARTED,
+      OrchestrationReasonCode.DAEMON_STARTED,
       `Daemon ${name} started`,
     );
   }
@@ -175,7 +183,7 @@ export class DaemonScheduler {
       );
     }
 
-    const now = new Date().toISOString();
+    const now = this.now();
     this.state = {
       ...this.state,
       daemon: { ...this.state.daemon, status: DaemonStatus.STOPPING },
@@ -213,6 +221,14 @@ export class DaemonScheduler {
       );
     }
 
+    if (this.state.daemon.status !== DaemonStatus.RUNNING) {
+      return this.makeDecision(
+        false,
+        OrchestrationReasonCode.DAEMON_SHUTDOWN,
+        `Scheduler is ${this.state.daemon.status}`,
+      );
+    }
+
     if (this.state.daemon.daemonId !== daemonId) {
       return this.makeDecision(
         false,
@@ -221,7 +237,7 @@ export class DaemonScheduler {
       );
     }
 
-    const now = new Date().toISOString();
+    const now = this.now();
     const record: HeartbeatRecord = {
       daemonId,
       timestamp: now,
@@ -248,9 +264,8 @@ export class DaemonScheduler {
       return false;
     }
 
-    const lastHeartbeat = new Date(this.state.daemon.lastHeartbeatAt).getTime();
-    const now = Date.now();
-    return now - lastHeartbeat > this.state.daemon.staleThresholdMs;
+    const lastHeartbeat = Date.parse(this.state.daemon.lastHeartbeatAt);
+    return this.nowMs() - lastHeartbeat > this.state.daemon.staleThresholdMs;
   }
 
   detectStaleDaemons(daemonId: string): OrchestrationDecision {
@@ -294,38 +309,40 @@ export class DaemonScheduler {
       );
     }
 
+    if (this.state.daemon.daemonId !== daemonId) {
+      return this.makeDecision(
+        false,
+        OrchestrationReasonCode.VALIDATION_FAILED,
+        `Daemon ${daemonId} does not match running daemon ${this.state.daemon.daemonId}`,
+      );
+    }
+
     if (this.state.lease && this.state.lease.status === "active") {
-      if (this.state.lease.daemonId === daemonId) {
+      if (this.isLeaseExpired(this.state.lease)) {
+        this.state = {
+          ...this.state,
+          lease: { ...this.state.lease, status: "expired" },
+        };
+      } else if (this.state.lease.daemonId === daemonId) {
         return this.makeDecision(
           true,
           OrchestrationReasonCode.LEASE_ACQUIRED,
           "Lease already held by this daemon",
         );
-      }
-
-      return this.makeDecision(
-        false,
-        OrchestrationReasonCode.LEASE_CONFLICT,
-        `Lease held by daemon ${this.state.lease.daemonId}`,
-      );
-    }
-
-    if (this.state.lease && this.state.lease.status === "active") {
-      const leaseExpiry = new Date(this.state.lease.expiresAt).getTime();
-      if (Date.now() < leaseExpiry) {
+      } else {
         return this.makeDecision(
           false,
           OrchestrationReasonCode.LEASE_CONFLICT,
-          "Active lease conflict",
+          `Lease held by daemon ${this.state.lease.daemonId}`,
         );
       }
     }
 
-    const now = new Date().toISOString();
-    const expiresAt = new Date(Date.now() + DEFAULT_LEASE_DURATION_MS).toISOString();
+    const now = this.now();
+    const expiresAt = new Date(this.nowMs() + DEFAULT_LEASE_DURATION_MS).toISOString();
 
     const lease: SchedulerLease = {
-      leaseId: `lease-${daemonId}-${Date.now()}`,
+      leaseId: this.nextId("lease", daemonId),
       daemonId,
       acquiredAt: now,
       expiresAt,
@@ -381,8 +398,8 @@ export class DaemonScheduler {
       );
     }
 
-    const now = new Date().toISOString();
-    const expiresAt = new Date(Date.now() + DEFAULT_LEASE_DURATION_MS).toISOString();
+    const now = this.now();
+    const expiresAt = new Date(this.nowMs() + DEFAULT_LEASE_DURATION_MS).toISOString();
 
     this.state = {
       ...this.state,
@@ -392,7 +409,17 @@ export class DaemonScheduler {
         expiresAt,
         version: this.state.lease.version + 1,
       },
+      daemon: {
+        ...this.state.daemon,
+        leaseExpiresAt: expiresAt,
+      },
     };
+
+    this.emitReceipt(ReceiptType.PLAN_STARTED, OrchestrationReasonCode.LEASE_RENEWED, {
+      leaseId: this.state.lease.leaseId,
+      daemonId,
+      expiresAt,
+    });
 
     return this.makeDecision(
       true,
@@ -410,7 +437,7 @@ export class DaemonScheduler {
       );
     }
 
-    const now = new Date().toISOString();
+    const now = this.now();
     const leaseId = this.state.lease.leaseId;
 
     this.state = {
@@ -464,8 +491,7 @@ export class DaemonScheduler {
       );
     }
 
-    const expiresAt = new Date(this.state.lease.expiresAt).getTime();
-    if (Date.now() > expiresAt) {
+    if (this.isLeaseExpired(this.state.lease)) {
       this.state = {
         ...this.state,
         lease: { ...this.state.lease, status: "expired" },
@@ -506,7 +532,15 @@ export class DaemonScheduler {
       );
     }
 
-    const now = new Date().toISOString();
+    if (this.state.daemon.daemonId !== daemonId) {
+      return this.makeDecision(
+        false,
+        OrchestrationReasonCode.VALIDATION_FAILED,
+        `Daemon ${daemonId} does not match running daemon ${this.state.daemon.daemonId}`,
+      );
+    }
+
+    const now = this.now();
     this.state = {
       ...this.state,
       schedulingRounds: this.state.schedulingRounds + 1,
@@ -554,13 +588,13 @@ export class DaemonScheduler {
     message: string,
   ): OrchestrationDecision {
     const decision: OrchestrationDecision = {
-      decisionId: `daemon-decision-${Date.now()}`,
+      decisionId: this.nextId("daemon-decision", String(reasonCode)),
       runId: "",
       planId: "",
       allowed,
       reasonCode,
       message,
-      decidedAt: new Date().toISOString(),
+      decidedAt: this.now(),
       approvalRequired: false,
       approvalGranted: false,
     };
@@ -574,15 +608,29 @@ export class DaemonScheduler {
     data: Record<string, unknown>,
   ): OrchestrationReceipt {
     const receipt: OrchestrationReceipt = {
-      receiptId: `daemon-receipt-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      receiptId: this.nextId("daemon-receipt", String(type), String(reasonCode)),
       type,
       runId: "",
       planId: "",
-      timestamp: new Date().toISOString(),
+      timestamp: this.now(),
       reasonCode,
       data,
     };
     this.receipts.push(receipt);
     return receipt;
+  }
+
+  private nextId(prefix: string, ...parts: string[]): string {
+    this.sequence += 1;
+    const cleaned = parts.map((part) => part.replace(/[^a-zA-Z0-9_.:-]+/g, "_") || "none");
+    return [prefix, ...cleaned, String(this.sequence).padStart(6, "0")].join("-");
+  }
+
+  private nowMs(): number {
+    return Date.parse(this.now());
+  }
+
+  private isLeaseExpired(lease: SchedulerLease): boolean {
+    return Date.parse(lease.expiresAt) <= this.nowMs();
   }
 }

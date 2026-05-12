@@ -25,7 +25,7 @@ In the event of a conflict between autonomy and governance, governance always wi
 
 ## Implementation in the Substrate
 
-- **Execution Proofpacks:** Every execution lifecycle produces a verifiable Proofpack. These bundles contain the raw telemetry and policy evaluations used to make decisions, ensuring that "magic" is replaced by auditable receipts.
+- **Execution Proofpacks:** When execution lifecycle evidence is exported, it must be packaged as a verifiable Proofpack built from recorded plans, queue history, leases, receipts, replay lineage, diagnostics, and explicit unavailable states. The substrate does not fabricate a Proofpack for work it did not record.
 - **Strict Verification Gates:** Release readiness is determined by a deterministic verification chain (`verify:core`, `verify:release`), not by subjective "vibe checks" of agent performance.
 - **No Automatic Policy Mutation:** Policies are promoted via supervised operator approval flows. The system does not "learn" new trust boundaries autonomously, as this would violate the principle of deterministic control.
 

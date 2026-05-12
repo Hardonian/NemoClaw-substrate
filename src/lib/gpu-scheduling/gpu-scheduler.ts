@@ -119,6 +119,10 @@ export class InMemoryGpuSchedulingStore implements GpuSchedulingStore {
   }
 }
 
+export interface GpuSchedulerOptions {
+  now?: () => string;
+}
+
 // ============================================================================
 // GPU scheduler
 // ============================================================================
@@ -128,10 +132,12 @@ export class GpuScheduler {
   private policy: GpuSchedulingPolicy;
   private scores: GpuScore[] = [];
   private decisions: GpuSchedulingDecision[] = [];
+  private now: () => string;
 
-  constructor(store: GpuSchedulingStore, policy?: GpuSchedulingPolicy) {
+  constructor(store: GpuSchedulingStore, policy?: GpuSchedulingPolicy, options: GpuSchedulerOptions = {}) {
     this.store = store;
     this.policy = policy ?? DEFAULT_GPU_SCHEDULING_POLICY;
+    this.now = options.now ?? (() => new Date().toISOString());
   }
 
   updatePolicy(policy: GpuSchedulingPolicy): void {
@@ -213,7 +219,7 @@ export class GpuScheduler {
         residencyBonus: 0,
         degradationFlags: ["gpu_unavailable"],
         diagnostics: ["GPU is not available"],
-        scoredAt: new Date().toISOString(),
+        scoredAt: this.now(),
       };
     }
 
@@ -326,7 +332,7 @@ export class GpuScheduler {
       residencyBonus,
       degradationFlags,
       diagnostics,
-      scoredAt: new Date().toISOString(),
+      scoredAt: this.now(),
     };
   }
 

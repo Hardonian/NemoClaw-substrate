@@ -11,6 +11,11 @@ import {
 import type { ProofPackSchema } from "../scripts/verify-proofpack.ts";
 
 describe("verify-proofpack script", () => {
+  async function sha256(content: string): Promise<string> {
+    const crypto = await import("node:crypto");
+    return crypto.createHash("sha256").update(content).digest("hex");
+  }
+
   describe("findProofPack", () => {
     it("returns null when no proof pack exists", () => {
       const result = findProofPack();
@@ -86,6 +91,23 @@ describe("verify-proofpack script", () => {
       expect(result.passed).toBe(false);
       expect(result.detail).toContain("missing type");
     });
+
+    it("fails on duplicate entry ids and invalid digest formats", () => {
+      const pack: ProofPackSchema = {
+        version: "1.0.0",
+        id: "test",
+        entries: [
+          { id: "entry-1", type: "test", hash: "not-a-sha" },
+          { id: "entry-1", type: "test" },
+        ],
+        signatures: { "entry-1": "also-not-a-sha" },
+      };
+      const result = validateSchema(pack);
+      expect(result.passed).toBe(false);
+      expect(result.detail).toContain("duplicate id entry-1");
+      expect(result.detail).toContain("hash must be a sha256 hex digest");
+      expect(result.detail).toContain("signature must be a sha256 hex digest attestation");
+    });
   });
 
   describe("checkSignatures", () => {
@@ -101,8 +123,7 @@ describe("verify-proofpack script", () => {
 
     it("passes when signatures match entry content hash", async () => {
       const content = "test content";
-      const crypto = await import("node:crypto");
-      const hash = crypto.createHash("sha256").update(content).digest("hex");
+      const hash = await sha256(content);
 
       const pack: ProofPackSchema = {
         version: "1.0.0",
@@ -119,7 +140,7 @@ describe("verify-proofpack script", () => {
         version: "1.0.0",
         id: "test",
         entries: [{ id: "e1", type: "test", content: "hello" }],
-        signatures: { e1: "wrong_signature" },
+        signatures: { e1: "0".repeat(64) },
       };
       const result = checkSignatures(pack);
       expect(result.passed).toBe(false);
@@ -135,6 +156,18 @@ describe("verify-proofpack script", () => {
       const result = checkSignatures(pack);
       expect(result.passed).toBe(false);
     });
+
+    it("fails when a signature has no content or entry attestation to verify", async () => {
+      const pack: ProofPackSchema = {
+        version: "1.0.0",
+        id: "test",
+        entries: [{ id: "e1", type: "test" }],
+        signatures: { e1: await sha256("detached") },
+      };
+      const result = checkSignatures(pack);
+      expect(result.passed).toBe(false);
+      expect(result.detail).toContain("no content or entry signature");
+    });
   });
 
   describe("checkContentIntegrity", () => {
@@ -149,9 +182,8 @@ describe("verify-proofpack script", () => {
     });
 
     it("passes when content hash matches", async () => {
-      const crypto = await import("node:crypto");
       const content = "integrity test";
-      const hash = crypto.createHash("sha256").update(content).digest("hex");
+      const hash = await sha256(content);
 
       const pack: ProofPackSchema = {
         version: "1.0.0",
@@ -173,14 +205,37 @@ describe("verify-proofpack script", () => {
       expect(result.detail).toContain("hash mismatch");
     });
 
-    it("skips entries without hash field", () => {
+    it("passes metadata-only entries without content or hash", () => {
       const pack: ProofPackSchema = {
         version: "1.0.0",
         id: "test",
-        entries: [{ id: "e1", type: "test", content: "no hash check" }],
+        entries: [{ id: "e1", type: "metadata" }],
       };
       const result = checkContentIntegrity(pack);
       expect(result.passed).toBe(true);
+      expect(result.detail).toContain("No content-bearing entries");
+    });
+
+    it("fails when content is missing its hash", () => {
+      const pack: ProofPackSchema = {
+        version: "1.0.0",
+        id: "test",
+        entries: [{ id: "e1", type: "test", content: "unsealed" }],
+      };
+      const result = checkContentIntegrity(pack);
+      expect(result.passed).toBe(false);
+      expect(result.detail).toContain("content hash missing");
+    });
+
+    it("fails when a hash cannot be verified against content", async () => {
+      const pack: ProofPackSchema = {
+        version: "1.0.0",
+        id: "test",
+        entries: [{ id: "e1", type: "test", hash: await sha256("missing content") }],
+      };
+      const result = checkContentIntegrity(pack);
+      expect(result.passed).toBe(false);
+      expect(result.detail).toContain("hash present but content missing");
     });
   });
 });

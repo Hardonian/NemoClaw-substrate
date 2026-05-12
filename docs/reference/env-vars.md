@@ -1,43 +1,42 @@
-# Environment Variables & Flags
+# Environment Variables And Flags
 
-NemoClaw-substrate uses environment variables to control orchestration behavior, debug modes, and integration adapters. All orchestration features are disabled by default and must be explicitly enabled.
+This page covers governed-substrate flags only. The broader CLI environment-variable contract is documented in `docs/reference/commands.md` and enforced by `scripts/check-env-var-docs.ts`.
 
-## Core Orchestration Flags
+Flags are not capability claims. A flag listed here may enable a pure contract layer, a diagnostic seam, or a fail-closed adapter preflight without enabling background workers or distributed execution.
 
-| Variable | Default | Description |
+## Implemented Governed-Substrate Flags
+
+| Variable | Default | Truthful Behavior |
 |:---|:---|:---|
-| `NEMOCLAW_ORCHESTRATION` | `0` | Set to `1` to enable the governed orchestration layer. |
-| `NEMOCLAW_DAEMON_SCHEDULER` | `0` | Set to `1` to enable the background daemon for task scheduling and leasing. |
-| `NEMOCLAW_RETRY_POLICY` | `implicit` | Controls retry behavior. Set to `explicit` to require policy-defined retry budgets. |
-| `NEMOCLAW_SPECULATIVE_FANOUT` | `0` | Set to `1` to enable speculative execution across multiple candidates. |
-| `NEMOCLAW_GPU_AWARE_SCHEDULING`| `0` | Set to `1` to enable VRAM and thermal-aware task placement. |
-| `NEMOCLAW_REMOTE_EXECUTION` | `0` | Set to `1` to allow task dispatch to remote compute nodes. |
+| `NEMOCLAW_ORCHESTRATION` | unset | Set to `1` to enable the in-memory orchestration contract layer. When unset, mutating orchestration operations fail closed with `orchestration_disabled`. |
+| `NEMOCLAW_RETRY_POLICY` | unset | Set to `explicit` before the retry manager will allow receipt-backed retry attempts. Unset is fail-closed, not implicit retry. |
+| `NEMOCLAW_GOVERNED_ROUTING` | unset | Set to `1` to opt into governed provider routing. Default routing behavior is preserved when unset. |
+| `NEMOCLAW_GOVERNED_ROUTING_ALLOW_DEGRADED_STATE_TRIGGER` | unset | Set to `1` to allow degraded-state-trigger routing evidence in the governed routing path. |
+| `NEMOCLAW_HETEROGENEOUS_ROUTING` | unset | Set to `1` to enable heterogeneous routing selection contracts. This does not imply remote execution. |
+| `NEMOCLAW_REMOTE_EXECUTION` | unset | Set to `1` to allow the guarded remote-execution adapter to consider transport. Policy eligibility and approval are still required before transport. |
+| `NEMOCLAW_EVIDENCE_FORMAT` | `json` | Selects default Proofpack export formatting where used. Supported values are `json` and `ndjson`. |
 
-## Integration Adapters
+## Scaffolded Or Diagnostic-Only Flags
 
-| Variable | Description |
-|:---|:---|
-| `NEMOCLAW_DYNAMO_ADAPTER` | Set to `1` to use DynamoDB for state persistence and lease management. |
-| `NEMOCLAW_REDIS_ADAPTER` | (Planned) Set to `1` to use Redis for high-frequency queue operations. |
+| Variable | Default | Truthful Behavior |
+|:---|:---|:---|
+| `NEMOCLAW_DYNAMO_ADAPTER` | unset | Enables the Dynamo adapter seam. The adapter is fail-closed by default and does not provide production Dynamo persistence in this repository. |
+| `NEMOCLAW_DAEMON_SCHEDULER` | unset | Enables the in-memory daemon scheduler contract. It does not spawn a background process or poll work by itself. |
+| `NEMOCLAW_SPECULATIVE_FANOUT` | unset | Enables bounded fanout contract bookkeeping. It does not launch candidate execution by itself. |
+| `NEMOCLAW_GPU_AWARE_SCHEDULING` | unset | Enables GPU scoring from caller-provided telemetry. It does not provide fleet GPU balancing or placement. |
 
-## Debugging & Observability
+## Not Implemented By Flags
 
-| Variable | Description |
-|:---|:---|
-| `NEMOCLAW_DEBUG_REPLAY` | Set to `1` to enable detailed logging during replay validation. |
-| `NEMOCLAW_TRACE_POLICY` | Set to `1` to log every policy evaluation decision. |
-| `NEMOCLAW_LOG_REDACTION` | Controls log redaction sensitivity. Options: `strict` (default), `permissive`. |
-| `NEMOCLAW_EVIDENCE_FORMAT` | Controls the default export format for Proofpacks. Options: `json` (default), `ndjson`. |
+No flag in this repository currently enables:
 
-## Security & Trust
+- autonomous orchestration
+- background queue workers
+- daemon lease renewal
+- hidden retries
+- speculative execution fanout
+- GPU balancing
+- production Dynamo-backed state
+- automatic policy learning
+- implicit remote execution
 
-| Variable | Description |
-|:---|:---|
-| `NEMOCLAW_MINIMUM_TRUST` | Sets the global minimum trust level required for execution. |
-| `NEMOCLAW_ATTESTATION_REQUIRED`| Set to `1` to fail execution if hardware attestation is missing. |
-
----
-
-## Anti-Theatre Note
-
-Flags marked as `(Planned)` represent interfaces that are defined in the configuration schema but not yet fully implemented in the runtime. Enabling these will currently result in a `STEP_SKIPPED` or `INTERNAL_ERROR` with a `reasonCode` of `orchestration_disabled` or `internal_error`.
+If a path cannot prove its prerequisites, it must report a blocked, degraded, unavailable, or disabled state rather than silently continuing.

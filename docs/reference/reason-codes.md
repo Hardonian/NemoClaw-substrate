@@ -2,6 +2,8 @@
 
 Reason codes provide fine-grained, machine-readable explanations for decisions and state transitions within the NemoClaw substrate. These codes are embedded in receipts and events to ensure every action is auditable.
 
+This page documents the canonical execution-lifecycle validation and classification codes from `ExecutionLifecycleReasonCode`. Event-specific receipt reasons may reuse event names when the event itself is the reason, but validation failures should resolve to one of these codes.
+
 ## Standard Success & Control Codes
 
 | Code | Meaning |
@@ -54,6 +56,7 @@ Reason codes provide fine-grained, machine-readable explanations for decisions a
 | Code | Meaning |
 |:---|:---|
 | `duplicate_lease_attempt` | A worker attempted to lease a task it already owns. |
+| `lease_renewed` | A lease was explicitly renewed and receipt-backed; no hidden renewal loop is implied. |
 | `conflicting_ownership` | Multiple workers claim ownership of the same task. |
 | `stale_queue_ownership` | A worker's ownership record has not been refreshed. |
 | `queue_item_expired` | A task spent too long in the queue without being claimed. |

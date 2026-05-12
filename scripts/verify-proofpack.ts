@@ -2,9 +2,11 @@
 // SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 //
-// Verifies proof-pack schema, signatures, and content integrity.
+// Verifies proof-pack schema, digest attestations, and content integrity.
 // A proof-pack is a structured collection of verification artifacts with
-// cryptographic signatures and schema validation.
+// deterministic hashes and schema validation. The `signatures` map is treated
+// as a sha256 content attestation for compatibility with older packs; it is not
+// a cryptographic identity signature.
 //
 // Usage:
 //   npx tsx scripts/verify-proofpack.ts
@@ -41,6 +43,14 @@ type VerificationResult = {
   checks: VerificationCheck[];
 };
 
+function isSha256Hex(value: string): boolean {
+  return /^[a-f0-9]{64}$/i.test(value);
+}
+
+function hashContent(content: string): string {
+  return createHash("sha256").update(content).digest("hex");
+}
+
 function loadJSON<T>(absPath: string): T | null {
   if (!existsSync(absPath)) return null;
   try {
@@ -68,22 +78,46 @@ function findProofPack(): string | null {
 function validateSchema(pack: ProofPackSchema): VerificationCheck {
   const errors: string[] = [];
 
-  if (!pack.version) {
+  if (!pack.version?.trim()) {
     errors.push("missing version field");
   }
-  if (!pack.id) {
+  if (!pack.id?.trim()) {
     errors.push("missing id field");
   }
   if (!Array.isArray(pack.entries)) {
     errors.push("entries must be an array");
   } else {
+    const seenIds = new Set<string>();
     for (let i = 0; i < pack.entries.length; i++) {
       const entry = pack.entries[i];
-      if (!entry.id) {
+      if (!entry.id?.trim()) {
         errors.push(`entries[${i}]: missing id`);
+      } else if (seenIds.has(entry.id)) {
+        errors.push(`entries[${i}]: duplicate id ${entry.id}`);
+      } else {
+        seenIds.add(entry.id);
       }
-      if (!entry.type) {
+      if (!entry.type?.trim()) {
         errors.push(`entries[${i}]: missing type`);
+      }
+      if (entry.content !== undefined && typeof entry.content !== "string") {
+        errors.push(`entries[${i}]: content must be a string`);
+      }
+      if (entry.hash !== undefined && !isSha256Hex(entry.hash)) {
+        errors.push(`entries[${i}]: hash must be a sha256 hex digest`);
+      }
+      if (entry.signature !== undefined && !isSha256Hex(entry.signature)) {
+        errors.push(`entries[${i}]: signature must be a sha256 hex digest attestation`);
+      }
+    }
+  }
+  if (pack.signatures) {
+    for (const [entryId, signature] of Object.entries(pack.signatures)) {
+      if (!entryId.trim()) {
+        errors.push("signatures contains an empty entry id");
+      }
+      if (!isSha256Hex(signature)) {
+        errors.push(`signatures[${entryId}]: signature must be a sha256 hex digest attestation`);
       }
     }
   }
@@ -91,12 +125,16 @@ function validateSchema(pack: ProofPackSchema): VerificationCheck {
   if (errors.length > 0) {
     return { name: "schema_validation", passed: false, detail: errors.join("; ") };
   }
-  return { name: "schema_validation", passed: true, detail: `Valid schema with ${pack.entries?.length ?? 0} entries` };
+  return {
+    name: "schema_validation",
+    passed: true,
+    detail: `Valid schema with ${pack.entries?.length ?? 0} entries`,
+  };
 }
 
 function checkSignatures(pack: ProofPackSchema): VerificationCheck {
   if (!pack.signatures || Object.keys(pack.signatures).length === 0) {
-    return { name: "signature_check", passed: true, detail: "No signatures to verify" };
+    return { name: "signature_check", passed: true, detail: "No digest attestations to verify" };
   }
 
   const validSignatures: string[] = [];
@@ -109,9 +147,13 @@ function checkSignatures(pack: ProofPackSchema): VerificationCheck {
       continue;
     }
 
-    // Compute expected hash of entry content
-    if (entry.content) {
-      const expectedHash = createHash("sha256").update(entry.content).digest("hex");
+    if (!isSha256Hex(signature)) {
+      invalidSignatures.push(`${entryId}: invalid digest attestation format`);
+      continue;
+    }
+
+    if (entry.content !== undefined) {
+      const expectedHash = hashContent(entry.content);
       if (signature === expectedHash) {
         validSignatures.push(entryId);
       } else if (entry.signature && signature === entry.signature) {
@@ -127,15 +169,22 @@ function checkSignatures(pack: ProofPackSchema): VerificationCheck {
         invalidSignatures.push(`${entryId}: signature mismatch`);
       }
     } else {
-      // No content or signature to verify — treat as valid
-      validSignatures.push(entryId);
+      invalidSignatures.push(`${entryId}: no content or entry signature to verify`);
     }
   }
 
   if (invalidSignatures.length > 0) {
-    return { name: "signature_check", passed: false, detail: `Invalid: ${invalidSignatures.join(", ")}` };
+    return {
+      name: "signature_check",
+      passed: false,
+      detail: `Invalid: ${invalidSignatures.join(", ")}`,
+    };
   }
-  return { name: "signature_check", passed: true, detail: `${validSignatures.length} signature(s) verified` };
+  return {
+    name: "signature_check",
+    passed: true,
+    detail: `${validSignatures.length} signature(s) verified`,
+  };
 }
 
 function checkContentIntegrity(pack: ProofPackSchema): VerificationCheck {
@@ -144,29 +193,47 @@ function checkContentIntegrity(pack: ProofPackSchema): VerificationCheck {
   }
 
   const errors: string[] = [];
+  let verified = 0;
 
   for (const entry of pack.entries) {
-    if (!entry.hash) continue;
-
-    if (entry.content) {
-      const actualHash = createHash("sha256").update(entry.content).digest("hex");
-      if (actualHash !== entry.hash) {
-        errors.push(`${entry.id}: content hash mismatch (expected ${entry.hash}, got ${actualHash})`);
+    if (entry.content !== undefined) {
+      if (!entry.hash) {
+        errors.push(`${entry.id}: content hash missing`);
+        continue;
       }
+      const actualHash = hashContent(entry.content);
+      if (actualHash !== entry.hash) {
+        errors.push(
+          `${entry.id}: content hash mismatch (expected ${entry.hash}, got ${actualHash})`,
+        );
+      } else {
+        verified += 1;
+      }
+    } else if (entry.hash) {
+      errors.push(`${entry.id}: hash present but content missing`);
     }
   }
 
   if (errors.length > 0) {
     return { name: "content_integrity", passed: false, detail: errors.join("; ") };
   }
-  return { name: "content_integrity", passed: true, detail: `${pack.entries.length} entry hash(es) verified` };
+  if (verified === 0) {
+    return {
+      name: "content_integrity",
+      passed: true,
+      detail: "No content-bearing entries to verify",
+    };
+  }
+  return {
+    name: "content_integrity",
+    passed: true,
+    detail: `${verified} content hash(es) verified`,
+  };
 }
 
 function main(): VerificationResult {
   const args = process.argv.slice(2);
-  const packPath = args.includes("--pack")
-    ? args[args.indexOf("--pack") + 1]
-    : null;
+  const packPath = args.includes("--pack") ? args[args.indexOf("--pack") + 1] : null;
 
   console.log("=== Proof-Pack Verification ===\n");
 
@@ -175,7 +242,10 @@ function main(): VerificationResult {
   if (packPath) {
     if (!existsSync(join(REPO_ROOT, packPath))) {
       console.error(`FAIL: Proof pack not found: ${packPath}`);
-      return { passed: false, checks: [{ name: "file_exists", passed: false, detail: `Not found: ${packPath}` }] };
+      return {
+        passed: false,
+        checks: [{ name: "file_exists", passed: false, detail: `Not found: ${packPath}` }],
+      };
     }
     packFile = packPath;
   } else {
@@ -184,14 +254,22 @@ function main(): VerificationResult {
 
   if (!packFile) {
     console.log("WARN: No proof pack found — skipping verification");
-    console.log("Create proof-pack/proof.json or proof-pack.json to enable proof-pack verification");
-    return { passed: true, checks: [{ name: "file_exists", passed: true, detail: "No proof pack to verify" }] };
+    console.log(
+      "Create proof-pack/proof.json or proof-pack.json to enable proof-pack verification",
+    );
+    return {
+      passed: true,
+      checks: [{ name: "file_exists", passed: true, detail: "No proof pack to verify" }],
+    };
   }
 
   const pack = loadJSON<ProofPackSchema>(join(REPO_ROOT, packFile));
   if (!pack) {
     console.error(`FAIL: Could not parse proof pack: ${packFile}`);
-    return { passed: false, checks: [{ name: "parse", passed: false, detail: `Invalid JSON: ${packFile}` }] };
+    return {
+      passed: false,
+      checks: [{ name: "parse", passed: false, detail: `Invalid JSON: ${packFile}` }],
+    };
   }
 
   console.log(`Loaded proof pack: ${packFile} (version ${pack.version ?? "unknown"})\n`);

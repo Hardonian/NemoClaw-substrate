@@ -110,6 +110,7 @@ describe("execution lifecycle substrate", () => {
       "queue_item_expired",
       "queue_conflict_detected",
       "lease_acquired",
+      "lease_renewed",
       "lease_expired",
       "lease_revoked",
       "lease_conflict_detected",
@@ -190,6 +191,8 @@ describe("execution lifecycle substrate", () => {
     const renewed = renewQueueLease({ plan: queuedPlan, queueItem: leased.value!.queueItem, ownerId: "owner-1", renewedAt: "2026-05-10T00:02:00.000Z", expiresAt: "2026-05-10T00:20:00.000Z" });
     expect(renewed.ok).toBe(true);
     expect(renewed.value?.lease.renewalCount).toBe(1);
+    expect(renewed.receipts[0]?.eventType).toBe("lease_renewed");
+    expect(renewed.events[0]?.eventType).toBe("lease_renewed");
 
     const expired = expireQueueLease({ plan: queuedPlan, queueItem: renewed.value!.queueItem, expiredAt: "2026-05-10T00:21:00.000Z" });
     expect(expired.ok).toBe(true);

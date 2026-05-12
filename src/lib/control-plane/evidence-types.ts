@@ -170,6 +170,7 @@ export const GOVERNANCE_EVENT_CATEGORIES: ReadonlySet<OperationalEventCategory> 
   "queue_item_expired",
   "queue_conflict_detected",
   "lease_acquired",
+  "lease_renewed",
   "lease_expired",
   "lease_revoked",
   "lease_conflict_detected",

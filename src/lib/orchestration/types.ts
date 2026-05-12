@@ -86,8 +86,12 @@ export enum OrchestrationReasonCode {
   APPROVAL_DENIED = "approval_denied",
 
   // Daemon scheduler
+  DAEMON_STARTED = "daemon_started",
   DAEMON_NOT_STARTED = "daemon_not_started",
   DAEMON_SHUTDOWN = "daemon_shutdown",
+  LEASE_ACQUIRED = "lease_acquired",
+  LEASE_RENEWED = "lease_renewed",
+  LEASE_RELEASED = "lease_released",
   LEASE_STALE = "lease_stale",
   LEASE_EXPIRED = "lease_expired",
   LEASE_CONFLICT = "lease_conflict",

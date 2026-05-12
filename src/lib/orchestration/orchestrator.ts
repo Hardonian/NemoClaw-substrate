@@ -23,16 +23,39 @@ import {
   OrchestrationReasonCode,
   OrchestrationReplayReference,
   ReplayDriftDetail,
-  PlanStatus,
-  RunStatus,
   StepStatus,
   ReceiptType,
   isOrchestrationEnabled,
   validateOrchestrationPlan,
   validateOrchestrationStep,
-  validateOrchestrationReceipt,
-  validateOrchestrationDecision,
 } from "./types";
+
+export interface OrchestrationEngineOptions {
+  now?: () => string;
+}
+
+const TERMINAL_PLAN_STATUSES = new Set<OrchestrationPlan["status"]>([
+  "completed",
+  "failed",
+  "cancelled",
+  "timed_out",
+]);
+
+const TERMINAL_STEP_STATUSES = new Set<OrchestrationStep["status"]>([
+  "completed",
+  "failed",
+  "skipped",
+  "cancelled",
+  "timed_out",
+]);
+
+function appendUnique(values: string[], value: string): string[] {
+  return values.includes(value) ? values : [...values, value];
+}
+
+function sanitizeIdPart(value: string): string {
+  return value.replace(/[^a-zA-Z0-9_.:-]+/g, "_") || "none";
+}
 
 // ============================================================================
 // Store interfaces
@@ -95,10 +118,13 @@ export class OrchestrationEngine {
   private runStore: OrchestrationRunStore;
   private receipts: OrchestrationReceipt[] = [];
   private decisions: OrchestrationDecision[] = [];
+  private sequence = 0;
+  private now: () => string;
 
-  constructor(planStore: OrchestrationPlanStore, runStore: OrchestrationRunStore) {
+  constructor(planStore: OrchestrationPlanStore, runStore: OrchestrationRunStore, options: OrchestrationEngineOptions = {}) {
     this.planStore = planStore;
     this.runStore = runStore;
+    this.now = options.now ?? (() => new Date().toISOString());
   }
 
   // --------------------------------------------------------------------------
@@ -183,7 +209,7 @@ export class OrchestrationEngine {
       );
     }
 
-    const now = new Date().toISOString();
+    const now = this.now();
     const updatedPlan: OrchestrationPlan = {
       ...plan,
       status: "running",
@@ -220,6 +246,16 @@ export class OrchestrationEngine {
   }
 
   completePlan(planId: string, runId: string): OrchestrationDecision {
+    if (!isOrchestrationEnabled()) {
+      return this.makeDecision(
+        planId,
+        runId,
+        false,
+        OrchestrationReasonCode.ORCHESTRATION_DISABLED,
+        "Orchestration is disabled",
+      );
+    }
+
     const plan = this.planStore.get(planId);
     if (!plan) {
       return this.makeDecision(
@@ -231,7 +267,28 @@ export class OrchestrationEngine {
       );
     }
 
-    const now = new Date().toISOString();
+    if (plan.status !== "running") {
+      return this.makeDecision(
+        planId,
+        runId,
+        false,
+        OrchestrationReasonCode.VALIDATION_FAILED,
+        `Cannot complete plan in ${plan.status} status`,
+      );
+    }
+
+    const incompleteSteps = plan.steps.filter((step) => !["completed", "skipped"].includes(step.status));
+    if (incompleteSteps.length > 0) {
+      return this.makeDecision(
+        planId,
+        runId,
+        false,
+        OrchestrationReasonCode.VALIDATION_FAILED,
+        `Cannot complete plan with unfinished steps: ${incompleteSteps.map((step) => step.stepId).join(", ")}`,
+      );
+    }
+
+    const now = this.now();
     this.planStore.set({
       ...plan,
       status: "completed",
@@ -260,6 +317,16 @@ export class OrchestrationEngine {
   }
 
   failPlan(planId: string, runId: string, reason: string): OrchestrationDecision {
+    if (!isOrchestrationEnabled()) {
+      return this.makeDecision(
+        planId,
+        runId,
+        false,
+        OrchestrationReasonCode.ORCHESTRATION_DISABLED,
+        "Orchestration is disabled",
+      );
+    }
+
     const plan = this.planStore.get(planId);
     if (!plan) {
       return this.makeDecision(
@@ -271,7 +338,17 @@ export class OrchestrationEngine {
       );
     }
 
-    const now = new Date().toISOString();
+    if (TERMINAL_PLAN_STATUSES.has(plan.status)) {
+      return this.makeDecision(
+        planId,
+        runId,
+        false,
+        OrchestrationReasonCode.VALIDATION_FAILED,
+        `Cannot fail terminal plan in ${plan.status} status`,
+      );
+    }
+
+    const now = this.now();
     this.planStore.set({
       ...plan,
       status: "failed",
@@ -302,6 +379,16 @@ export class OrchestrationEngine {
   }
 
   cancelPlan(planId: string, runId: string): OrchestrationDecision {
+    if (!isOrchestrationEnabled()) {
+      return this.makeDecision(
+        planId,
+        runId,
+        false,
+        OrchestrationReasonCode.ORCHESTRATION_DISABLED,
+        "Orchestration is disabled",
+      );
+    }
+
     const plan = this.planStore.get(planId);
     if (!plan) {
       return this.makeDecision(
@@ -313,7 +400,17 @@ export class OrchestrationEngine {
       );
     }
 
-    const now = new Date().toISOString();
+    if (TERMINAL_PLAN_STATUSES.has(plan.status)) {
+      return this.makeDecision(
+        planId,
+        runId,
+        false,
+        OrchestrationReasonCode.VALIDATION_FAILED,
+        `Cannot cancel terminal plan in ${plan.status} status`,
+      );
+    }
+
+    const now = this.now();
     this.planStore.set({
       ...plan,
       status: "cancelled",
@@ -356,46 +453,6 @@ export class OrchestrationEngine {
       );
     }
 
-    const errors = validateOrchestrationStep(step);
-    if (errors.length > 0) {
-      return this.makeDecision(
-        planId,
-        runId,
-        false,
-        OrchestrationReasonCode.VALIDATION_FAILED,
-        `Step validation failed: ${errors.join(", ")}`,
-      );
-    }
-
-    const now = new Date().toISOString();
-    const updatedStep: OrchestrationStep = {
-      ...step,
-      status: "in_progress",
-      startedAt: now,
-      updatedAt: now,
-    };
-
-    const plan = this.planStore.get(planId);
-    if (plan) {
-      const updatedSteps = plan.steps.map((s) => (s.stepId === step.stepId ? updatedStep : s));
-      this.planStore.set({ ...plan, steps: updatedSteps, updatedAt: now });
-    }
-
-    this.emitReceipt(planId, runId, ReceiptType.STEP_STARTED, OrchestrationReasonCode.STEP_STARTED, {
-      stepId: step.stepId,
-      stepName: step.name,
-    });
-
-    return this.makeDecision(
-      planId,
-      runId,
-      true,
-      OrchestrationReasonCode.STEP_STARTED,
-      `Step ${step.name} started`,
-    );
-  }
-
-  completeStep(planId: string, runId: string, stepId: string): OrchestrationDecision {
     const plan = this.planStore.get(planId);
     if (!plan) {
       return this.makeDecision(
@@ -407,7 +464,142 @@ export class OrchestrationEngine {
       );
     }
 
-    const now = new Date().toISOString();
+    const run = this.runStore.get(runId);
+    if (!run) {
+      return this.makeDecision(
+        planId,
+        runId,
+        false,
+        OrchestrationReasonCode.VALIDATION_FAILED,
+        `Run ${runId} not found`,
+      );
+    }
+
+    if (plan.status !== "running" || run.status !== "executing") {
+      return this.makeDecision(
+        planId,
+        runId,
+        false,
+        OrchestrationReasonCode.VALIDATION_FAILED,
+        `Cannot start step unless plan is running and run is executing (plan=${plan.status}, run=${run.status})`,
+      );
+    }
+
+    const storedStep = plan.steps.find((candidate) => candidate.stepId === step.stepId);
+    if (!storedStep) {
+      return this.makeDecision(
+        planId,
+        runId,
+        false,
+        OrchestrationReasonCode.VALIDATION_FAILED,
+        `Step ${step.stepId} is not part of plan ${planId}`,
+      );
+    }
+
+    if (storedStep.status !== "pending") {
+      return this.makeDecision(
+        planId,
+        runId,
+        false,
+        OrchestrationReasonCode.VALIDATION_FAILED,
+        `Cannot start step ${step.stepId} from ${storedStep.status} status`,
+      );
+    }
+
+    const incompleteDependencies = storedStep.dependsOnStepIds.filter((dependencyId) => {
+      const dependency = plan.steps.find((candidate) => candidate.stepId === dependencyId);
+      return dependency?.status !== "completed" && !run.completedStepIds.includes(dependencyId);
+    });
+    if (incompleteDependencies.length > 0) {
+      return this.makeDecision(
+        planId,
+        runId,
+        false,
+        OrchestrationReasonCode.VALIDATION_FAILED,
+        `Step ${step.stepId} has incomplete dependencies: ${incompleteDependencies.join(", ")}`,
+      );
+    }
+
+    const errors = validateOrchestrationStep(storedStep);
+    if (errors.length > 0) {
+      return this.makeDecision(
+        planId,
+        runId,
+        false,
+        OrchestrationReasonCode.VALIDATION_FAILED,
+        `Step validation failed: ${errors.join(", ")}`,
+      );
+    }
+
+    const now = this.now();
+    const updatedStep: OrchestrationStep = {
+      ...storedStep,
+      status: "in_progress",
+      startedAt: now,
+      updatedAt: now,
+    };
+
+    const updatedSteps = plan.steps.map((s) => (s.stepId === storedStep.stepId ? updatedStep : s));
+    this.planStore.set({ ...plan, steps: updatedSteps, updatedAt: now });
+    this.runStore.set({ ...run, currentStepId: storedStep.stepId });
+
+    this.emitReceipt(planId, runId, ReceiptType.STEP_STARTED, OrchestrationReasonCode.STEP_STARTED, {
+      stepId: storedStep.stepId,
+      stepName: storedStep.name,
+    });
+
+    return this.makeDecision(
+      planId,
+      runId,
+      true,
+      OrchestrationReasonCode.STEP_STARTED,
+      `Step ${storedStep.name} started`,
+    );
+  }
+
+  completeStep(planId: string, runId: string, stepId: string): OrchestrationDecision {
+    if (!isOrchestrationEnabled()) {
+      return this.makeDecision(
+        planId,
+        runId,
+        false,
+        OrchestrationReasonCode.ORCHESTRATION_DISABLED,
+        "Orchestration is disabled",
+      );
+    }
+
+    const plan = this.planStore.get(planId);
+    if (!plan) {
+      return this.makeDecision(
+        planId,
+        runId,
+        false,
+        OrchestrationReasonCode.VALIDATION_FAILED,
+        `Plan ${planId} not found`,
+      );
+    }
+
+    const step = plan.steps.find((candidate) => candidate.stepId === stepId);
+    if (!step) {
+      return this.makeDecision(
+        planId,
+        runId,
+        false,
+        OrchestrationReasonCode.VALIDATION_FAILED,
+        `Step ${stepId} not found in plan ${planId}`,
+      );
+    }
+    if (step.status !== "in_progress") {
+      return this.makeDecision(
+        planId,
+        runId,
+        false,
+        OrchestrationReasonCode.VALIDATION_FAILED,
+        `Cannot complete step ${stepId} from ${step.status} status`,
+      );
+    }
+
+    const now = this.now();
     const updatedSteps = plan.steps.map((s) => {
       if (s.stepId === stepId) {
         return { ...s, status: "completed" as StepStatus, completedAt: now, updatedAt: now };
@@ -421,7 +613,8 @@ export class OrchestrationEngine {
     if (run) {
       this.runStore.set({
         ...run,
-        completedStepIds: [...run.completedStepIds, stepId],
+        currentStepId: run.currentStepId === stepId ? undefined : run.currentStepId,
+        completedStepIds: appendUnique(run.completedStepIds, stepId),
       });
     }
 
@@ -445,6 +638,16 @@ export class OrchestrationEngine {
     reasonCode: OrchestrationReasonCode,
     message: string,
   ): OrchestrationDecision {
+    if (!isOrchestrationEnabled()) {
+      return this.makeDecision(
+        planId,
+        runId,
+        false,
+        OrchestrationReasonCode.ORCHESTRATION_DISABLED,
+        "Orchestration is disabled",
+      );
+    }
+
     const plan = this.planStore.get(planId);
     if (!plan) {
       return this.makeDecision(
@@ -456,7 +659,27 @@ export class OrchestrationEngine {
       );
     }
 
-    const now = new Date().toISOString();
+    const step = plan.steps.find((candidate) => candidate.stepId === stepId);
+    if (!step) {
+      return this.makeDecision(
+        planId,
+        runId,
+        false,
+        OrchestrationReasonCode.VALIDATION_FAILED,
+        `Step ${stepId} not found in plan ${planId}`,
+      );
+    }
+    if (step.status !== "in_progress") {
+      return this.makeDecision(
+        planId,
+        runId,
+        false,
+        OrchestrationReasonCode.VALIDATION_FAILED,
+        `Cannot fail step ${stepId} from ${step.status} status`,
+      );
+    }
+
+    const now = this.now();
     const updatedSteps = plan.steps.map((s) => {
       if (s.stepId === stepId) {
         return {
@@ -477,7 +700,8 @@ export class OrchestrationEngine {
     if (run) {
       this.runStore.set({
         ...run,
-        failedStepIds: [...run.failedStepIds, stepId],
+        currentStepId: run.currentStepId === stepId ? undefined : run.currentStepId,
+        failedStepIds: appendUnique(run.failedStepIds, stepId),
       });
     }
 
@@ -490,6 +714,16 @@ export class OrchestrationEngine {
   }
 
   skipStep(planId: string, runId: string, stepId: string, reason: string): OrchestrationDecision {
+    if (!isOrchestrationEnabled()) {
+      return this.makeDecision(
+        planId,
+        runId,
+        false,
+        OrchestrationReasonCode.ORCHESTRATION_DISABLED,
+        "Orchestration is disabled",
+      );
+    }
+
     const plan = this.planStore.get(planId);
     if (!plan) {
       return this.makeDecision(
@@ -501,7 +735,27 @@ export class OrchestrationEngine {
       );
     }
 
-    const now = new Date().toISOString();
+    const step = plan.steps.find((candidate) => candidate.stepId === stepId);
+    if (!step) {
+      return this.makeDecision(
+        planId,
+        runId,
+        false,
+        OrchestrationReasonCode.VALIDATION_FAILED,
+        `Step ${stepId} not found in plan ${planId}`,
+      );
+    }
+    if (TERMINAL_STEP_STATUSES.has(step.status)) {
+      return this.makeDecision(
+        planId,
+        runId,
+        false,
+        OrchestrationReasonCode.VALIDATION_FAILED,
+        `Cannot skip terminal step ${stepId} in ${step.status} status`,
+      );
+    }
+
+    const now = this.now();
     const updatedSteps = plan.steps.map((s) => {
       if (s.stepId === stepId) {
         return { ...s, status: "skipped" as StepStatus, updatedAt: now };
@@ -515,7 +769,8 @@ export class OrchestrationEngine {
     if (run) {
       this.runStore.set({
         ...run,
-        skippedStepIds: [...run.skippedStepIds, stepId],
+        currentStepId: run.currentStepId === stepId ? undefined : run.currentStepId,
+        skippedStepIds: appendUnique(run.skippedStepIds, stepId),
       });
     }
 
@@ -543,13 +798,36 @@ export class OrchestrationEngine {
     originalPlanId: string,
     replayPlan: OrchestrationPlan,
   ): OrchestrationReplayReference {
+    if (!isOrchestrationEnabled()) {
+      return {
+        replayId: replayRunId,
+        originalRunId,
+        originalPlanId,
+        replayedAt: this.now(),
+        originalReceipts: [],
+        replayedReceipts: [],
+        driftDetected: true,
+        driftDetails: [
+          {
+            receiptId: "orchestration-disabled",
+            expectedReasonCode: OrchestrationReasonCode.REPLAY_CONSISTENT,
+            actualReasonCode: OrchestrationReasonCode.ORCHESTRATION_DISABLED,
+            expectedData: {},
+            actualData: { replayPlanId: replayPlan.planId },
+            description: "Replay validation blocked because orchestration is disabled",
+          },
+        ],
+        consistent: false,
+      };
+    }
+
     const originalRun = this.runStore.get(originalRunId);
     if (!originalRun) {
       return {
         replayId: replayRunId,
         originalRunId,
         originalPlanId,
-        replayedAt: new Date().toISOString(),
+        replayedAt: this.now(),
         originalReceipts: [],
         replayedReceipts: [],
         driftDetected: true,
@@ -573,8 +851,9 @@ export class OrchestrationEngine {
     for (const originalReceipt of originalRun.receipts) {
       const matchingReplay = this.receipts.find(
         (r) =>
+          r.runId === replayRunId &&
           r.type === originalReceipt.type &&
-          r.planId === originalPlanId &&
+          r.planId === replayPlan.planId &&
           r.stepId === originalReceipt.stepId,
       );
 
@@ -616,9 +895,9 @@ export class OrchestrationEngine {
       replayId: replayRunId,
       originalRunId,
       originalPlanId,
-      replayedAt: new Date().toISOString(),
+      replayedAt: this.now(),
       originalReceipts: originalRun.receipts.map((r) => r.receiptId),
-      replayedReceipts,
+      replayedReceipts: replayReceipts,
       driftDetected,
       driftDetails,
       consistent: !driftDetected,
@@ -637,6 +916,16 @@ export class OrchestrationEngine {
     trustLevel: string,
     approvalGranted: boolean,
   ): OrchestrationDecision {
+    if (!isOrchestrationEnabled()) {
+      return this.makeDecision(
+        planId,
+        runId,
+        false,
+        OrchestrationReasonCode.ORCHESTRATION_DISABLED,
+        "Orchestration is disabled",
+      );
+    }
+
     if (!policy.enabled) {
       return this.makeDecision(
         planId,
@@ -647,7 +936,7 @@ export class OrchestrationEngine {
       );
     }
 
-    if (policy.expiresAt && new Date(policy.expiresAt) < new Date()) {
+    if (policy.expiresAt && Date.parse(policy.expiresAt) <= Date.parse(this.now())) {
       return this.makeDecision(
         planId,
         runId,
@@ -657,7 +946,9 @@ export class OrchestrationEngine {
       );
     }
 
-    if (trustLevel < policy.minimumTrustLevel) {
+    const trustRank = this.trustRank(trustLevel);
+    const minimumTrustRank = this.trustRank(policy.minimumTrustLevel);
+    if (trustRank === undefined || minimumTrustRank === undefined || trustRank < minimumTrustRank) {
       return this.makeDecision(
         planId,
         runId,
@@ -725,16 +1016,22 @@ export class OrchestrationEngine {
     reasonCode: OrchestrationReasonCode,
     message: string,
   ): OrchestrationDecision {
+    const decidedAt = this.now();
     const decision: OrchestrationDecision = {
-      decisionId: `decision-${planId}-${runId}-${Date.now()}`,
+      decisionId: this.nextId("decision", planId, runId, reasonCode, decidedAt),
       runId,
       planId,
       allowed,
       reasonCode,
       message,
-      decidedAt: new Date().toISOString(),
+      decidedAt,
+      approvalRequired: false,
     };
     this.decisions.push(decision);
+    const run = this.runStore.get(runId);
+    if (run) {
+      this.runStore.set({ ...run, decisions: [...run.decisions, decision] });
+    }
     return decision;
   }
 
@@ -745,16 +1042,38 @@ export class OrchestrationEngine {
     reasonCode: OrchestrationReasonCode,
     data: Record<string, unknown>,
   ): OrchestrationReceipt {
+    const timestamp = this.now();
     const receipt: OrchestrationReceipt = {
-      receiptId: `receipt-${planId}-${runId}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      receiptId: this.nextId("receipt", planId, runId, type, reasonCode, timestamp),
       type,
       runId,
       planId,
-      timestamp: new Date().toISOString(),
+      timestamp,
       reasonCode,
       data,
     };
     this.receipts.push(receipt);
+    const run = this.runStore.get(runId);
+    if (run) {
+      this.runStore.set({ ...run, receipts: [...run.receipts, receipt] });
+    }
     return receipt;
+  }
+
+  private nextId(prefix: string, ...parts: string[]): string {
+    this.sequence += 1;
+    return [prefix, ...parts.map(sanitizeIdPart), String(this.sequence).padStart(6, "0")].join("-");
+  }
+
+  private trustRank(level: string): number | undefined {
+    const ranks: Record<string, number> = {
+      none: 0,
+      untrusted: 0,
+      low: 1,
+      medium: 2,
+      high: 3,
+      trusted: 4,
+    };
+    return ranks[level.trim().toLowerCase()];
   }
 }

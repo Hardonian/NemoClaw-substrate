@@ -43,6 +43,10 @@ export interface FanoutStore {
   saveBudget(budget: FanoutBudget): void;
 }
 
+export interface FanoutManagerOptions {
+  now?: () => string;
+}
+
 export class InMemoryFanoutStore implements FanoutStore {
   private runs = new Map<string, FanoutRun>();
   private budgets = new Map<string, FanoutBudget>();
@@ -72,9 +76,12 @@ export class FanoutManager {
   private store: FanoutStore;
   private receipts: FanoutReceipt[] = [];
   private policies = new Map<string, FanoutPolicy>();
+  private sequence = 0;
+  private now: () => string;
 
-  constructor(store: FanoutStore) {
+  constructor(store: FanoutStore, options: FanoutManagerOptions = {}) {
     this.store = store;
+    this.now = options.now ?? (() => new Date().toISOString());
   }
 
   registerPolicy(policy: FanoutPolicy): void {
@@ -130,7 +137,7 @@ export class FanoutManager {
     let budget = this.store.getBudget(runId);
     if (!budget) {
       if (policy.budgetRequired) {
-        budget = createFanoutBudget(runId, policy.maxCandidates);
+        budget = { ...createFanoutBudget(runId, policy.maxCandidates), createdAt: this.now(), updatedAt: this.now() };
         this.store.saveBudget(budget);
       }
     }
@@ -150,13 +157,13 @@ export class FanoutManager {
       return { allowed: false, receipt };
     }
 
-    const now = new Date().toISOString();
+    const now = this.now();
     const candidates: FanoutCandidate[] = candidatePayloads.map((payload, index) => {
       let updatedBudget = budget;
       if (updatedBudget) {
         const allocated = allocateCandidate(updatedBudget);
         if (allocated) {
-          updatedBudget = allocated;
+          updatedBudget = { ...allocated, updatedAt: this.now() };
           this.store.saveBudget(updatedBudget);
         }
       }
@@ -194,7 +201,7 @@ export class FanoutManager {
       { candidateCount: candidates.length },
     );
 
-    return { allowed: true, run, receipt };
+    return { allowed: true, run: this.store.getRun(fanoutId) ?? run, receipt };
   }
 
   completeCandidate(
@@ -215,9 +222,30 @@ export class FanoutManager {
       );
     }
 
-    const now = new Date().toISOString();
-    const startedAt = run.candidates.find((c) => c.candidateId === candidateId)?.startedAt;
-    const durationMs = startedAt ? Date.now() - new Date(startedAt).getTime() : undefined;
+    const candidate = run.candidates.find((c) => c.candidateId === candidateId);
+    if (!candidate) {
+      return this.makeReceipt(
+        run.runId,
+        fanoutId,
+        candidateId,
+        FanoutReasonCode.CANDIDATE_FAILED,
+        FanoutReceiptType.CANDIDATE_FAILED,
+        { reason: "Fanout candidate not found" },
+      );
+    }
+    if (candidate.status !== "pending" && candidate.status !== "running") {
+      return this.makeReceipt(
+        run.runId,
+        fanoutId,
+        candidateId,
+        FanoutReasonCode.CANDIDATE_FAILED,
+        FanoutReceiptType.CANDIDATE_FAILED,
+        { reason: `Fanout candidate is ${candidate.status}` },
+      );
+    }
+
+    const now = this.now();
+    const durationMs = candidate.startedAt ? this.nowMs() - Date.parse(candidate.startedAt) : undefined;
 
     const updatedCandidates = run.candidates.map((c) => {
       if (c.candidateId === candidateId) {
@@ -253,12 +281,12 @@ export class FanoutManager {
         fanoutId,
         candidateId,
         FanoutReasonCode.CANDIDATE_CANCELLED,
-      FanoutReceiptType.CANDIDATE_CANCELLED,
+        FanoutReceiptType.CANDIDATE_CANCELLED,
         { reason },
       );
     }
 
-    const now = new Date().toISOString();
+    const now = this.now();
     const updatedCandidates = run.candidates.map((c) => {
       if (c.candidateId === candidateId) {
         return { ...c, status: "cancelled" as CandidateStatus, cancelledAt: now };
@@ -311,7 +339,7 @@ export class FanoutManager {
     }
 
     const receipts: FanoutReceipt[] = [];
-    const now = new Date().toISOString();
+    const now = this.now();
 
     const updatedCandidates = run.candidates.map((c) => {
       if (c.candidateId === winner.candidateId) {
@@ -361,12 +389,12 @@ export class FanoutManager {
         fanoutId,
         undefined,
         FanoutReasonCode.FANOUT_CANCELLED,
-      FanoutReceiptType.FANOUT_CANCELLED,
+        FanoutReceiptType.FANOUT_CANCELLED,
         { reason },
       );
     }
 
-    const now = new Date().toISOString();
+    const now = this.now();
     const cancelledCandidateIds = run.candidates
       .filter((c) => c.status === "pending" || c.status === "running")
       .map((c) => c.candidateId);
@@ -379,7 +407,7 @@ export class FanoutManager {
     });
 
     const cancellation: FanoutCancellation = {
-      cancellationId: `cancel-${fanoutId}-${Date.now()}`,
+      cancellationId: this.nextId("cancel", fanoutId),
       fanoutId,
       runId: run.runId,
       cancelledCandidateIds,
@@ -421,16 +449,30 @@ export class FanoutManager {
     data: Record<string, unknown>,
   ): FanoutReceipt {
     const receipt: FanoutReceipt = {
-      receiptId: `fanout-receipt-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      receiptId: this.nextId("fanout-receipt", fanoutId, candidateId ?? "none", String(type), String(reasonCode)),
       runId,
       fanoutId,
       candidateId,
-      timestamp: new Date().toISOString(),
+      timestamp: this.now(),
       reasonCode,
       type,
       data,
     };
     this.receipts.push(receipt);
+    const run = this.store.getRun(fanoutId);
+    if (run) {
+      this.store.saveRun({ ...run, receipts: [...run.receipts, receipt] });
+    }
     return receipt;
+  }
+
+  private nextId(prefix: string, ...parts: string[]): string {
+    this.sequence += 1;
+    const cleaned = parts.map((part) => part.replace(/[^a-zA-Z0-9_.:-]+/g, "_") || "none");
+    return [prefix, ...cleaned, String(this.sequence).padStart(6, "0")].join("-");
+  }
+
+  private nowMs(): number {
+    return Date.parse(this.now());
   }
 }
