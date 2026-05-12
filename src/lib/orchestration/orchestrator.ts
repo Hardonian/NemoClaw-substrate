@@ -541,7 +541,7 @@ export class OrchestrationEngine {
     originalRunId: string,
     replayRunId: string,
     originalPlanId: string,
-    replayPlan: OrchestrationPlan,
+    plan: OrchestrationPlan,
   ): OrchestrationReplayReference {
     const originalRun = this.runStore.get(originalRunId);
     if (!originalRun) {
@@ -568,7 +568,7 @@ export class OrchestrationEngine {
     }
 
     const driftDetails: ReplayDriftDetail[] = [];
-    const replayedReceipts: string[] = [];
+    const replayedReceiptIds: string[] = [];
 
     for (const originalReceipt of originalRun.receipts) {
       const matchingReplay = this.receipts.find(
@@ -579,7 +579,7 @@ export class OrchestrationEngine {
       );
 
       if (matchingReplay) {
-        replayedReceipts.push(matchingReplay.receiptId);
+        replayedReceiptIds.push(matchingReplay.receiptId);
         if (matchingReplay.reasonCode !== originalReceipt.reasonCode) {
           driftDetails.push({
             receiptId: matchingReplay.receiptId,
@@ -618,7 +618,7 @@ export class OrchestrationEngine {
       originalPlanId,
       replayedAt: new Date().toISOString(),
       originalReceipts: originalRun.receipts.map((r) => r.receiptId),
-      replayedReceipts,
+      replayedReceipts: replayedReceiptIds,
       driftDetected,
       driftDetails,
       consistent: !driftDetected,

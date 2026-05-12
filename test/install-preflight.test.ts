@@ -18,6 +18,7 @@ const BASH_PATH = (() => {
     "C:\\Program Files\\Git\\bin\\bash.exe",
     "C:\\Program Files (x86)\\Git\\bin\\bash.exe",
     "C:\\Git\\bin\\bash.exe",
+    "C:\\ProgramData\\chocolatey\\bin\\bash.exe",
   ];
   for (const p of commonPaths) {
     if (fs.existsSync(p)) return p;
@@ -52,13 +53,19 @@ function buildIsolatedSystemPath() {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "nemoclaw-preflight-sysbin-"));
   const EXCLUDE = new Set(["node", "npm", "npx"]);
   
-  const sysDirs = ["/usr/bin", "/bin"];
+  const sysDirs = process.platform === "win32" ? [] : ["/usr/bin", "/bin"];
   if (process.platform === "win32") {
-    // On Windows, try to find Git Bash's usr/bin where grep, sed, etc. live.
-    const gitBashUsrBin = "C:\\Program Files\\Git\\usr\\bin";
-    if (fs.existsSync(gitBashUsrBin)) {
-      sysDirs.push(gitBashUsrBin);
+    // On Windows, derive Git Bash's usr/bin from BASH_PATH if possible.
+    // BASH_PATH is usually .../bin/bash.exe, and we want .../usr/bin
+    if (path.isAbsolute(BASH_PATH)) {
+      const gitRoot = path.dirname(path.dirname(BASH_PATH));
+      const usrBin = path.join(gitRoot, "usr", "bin");
+      if (fs.existsSync(usrBin)) {
+        sysDirs.push(usrBin);
+      }
     }
+    // Also include standard Windows system directories to keep the environment functional
+    sysDirs.push("C:\\Windows\\system32", "C:\\Windows");
   }
 
   for (const sysDir of sysDirs) {
@@ -172,7 +179,7 @@ exit 0
   );
 
   const result = spawnSync(
-    "bash",
+    BASH_PATH,
     [
       "-c",
       `
@@ -253,7 +260,7 @@ exit 1
 `,
     );
 
-    const result = spawnSync("bash", [INSTALLER], {
+    const result = spawnSync(BASH_PATH, [INSTALLER], {
       cwd: path.join(import.meta.dirname, ".."),
       encoding: "utf-8",
       env: {
@@ -361,7 +368,7 @@ exit 98
 `,
     );
 
-    const result = spawnSync("bash", [INSTALLER], {
+    const result = spawnSync(BASH_PATH, [INSTALLER], {
       cwd: tmp,
       encoding: "utf-8",
       env: {
@@ -452,7 +459,7 @@ exit 98
 `,
     );
 
-    const result = spawnSync("bash", [INSTALLER], {
+    const result = spawnSync(BASH_PATH, [INSTALLER], {
       cwd: tmp,
       encoding: "utf-8",
       env: {
@@ -472,7 +479,7 @@ exit 98
   });
 
   it("scripts/install.sh runs as the installer from a repo checkout", () => {
-    const result = spawnSync("bash", [INSTALLER_PAYLOAD, "--help"], {
+    const result = spawnSync(BASH_PATH, [INSTALLER_PAYLOAD, "--help"], {
       cwd: path.join(import.meta.dirname, ".."),
       encoding: "utf-8",
     });
@@ -486,7 +493,7 @@ exit 98
   it("scripts/install.sh --help works when run directly outside a repo checkout", () => {
     const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "nemoclaw-installer-payload-stdin-"));
     const scriptContents = fs.readFileSync(INSTALLER_PAYLOAD, "utf-8");
-    const result = spawnSync("bash", ["-s", "--", "--help"], {
+    const result = spawnSync(BASH_PATH, ["-s", "--", "--help"], {
       cwd: tmp,
       input: scriptContents,
       encoding: "utf-8",
@@ -504,7 +511,7 @@ exit 98
   });
 
   it("--help exits 0 and shows install usage", () => {
-    const result = spawnSync("bash", [INSTALLER, "--help"], {
+    const result = spawnSync(BASH_PATH, [INSTALLER, "--help"], {
       cwd: path.join(import.meta.dirname, ".."),
       encoding: "utf-8",
     });
@@ -537,7 +544,7 @@ exit 98
   });
 
   it("--version exits 0 and prints the version number", () => {
-    const result = spawnSync("bash", [INSTALLER, "--version"], {
+    const result = spawnSync(BASH_PATH, [INSTALLER, "--version"], {
       cwd: path.join(import.meta.dirname, ".."),
       encoding: "utf-8",
     });
@@ -549,7 +556,7 @@ exit 98
   });
 
   it("-v exits 0 and prints the version number", () => {
-    const result = spawnSync("bash", [INSTALLER, "-v"], {
+    const result = spawnSync(BASH_PATH, [INSTALLER, "-v"], {
       cwd: path.join(import.meta.dirname, ".."),
       encoding: "utf-8",
     });
@@ -561,7 +568,7 @@ exit 98
   });
 
   it("piped --help does not show the placeholder installer version", () => {
-    const result = spawnSync("bash", ["-s", "--", "--help"], {
+    const result = spawnSync(BASH_PATH, ["-s", "--", "--help"], {
       cwd: os.tmpdir(),
       encoding: "utf-8",
       input: fs.readFileSync(INSTALLER, "utf-8"),
@@ -574,7 +581,7 @@ exit 98
   });
 
   it("piped --version omits the placeholder installer version", () => {
-    const result = spawnSync("bash", ["-s", "--", "--version"], {
+    const result = spawnSync(BASH_PATH, ["-s", "--", "--version"], {
       cwd: os.tmpdir(),
       encoding: "utf-8",
       input: fs.readFileSync(INSTALLER, "utf-8"),
@@ -661,7 +668,7 @@ fi`,
       "[project]\nname = 'llm-router'\n",
     );
 
-    const result = spawnSync("bash", [INSTALLER], {
+    const result = spawnSync(BASH_PATH, [INSTALLER], {
       cwd: tmp,
       encoding: "utf-8",
       env: {
@@ -757,7 +764,7 @@ fi`,
       JSON.stringify({ name: "nemoclaw-plugin", version: "0.1.0" }, null, 2),
     );
 
-    const result = spawnSync("bash", [INSTALLER], {
+    const result = spawnSync(BASH_PATH, [INSTALLER], {
       cwd: tmp,
       encoding: "utf-8",
       env: {
@@ -859,7 +866,7 @@ fi`,
       JSON.stringify({ name: "nemoclaw-plugin", version: "0.1.0" }, null, 2),
     );
 
-    const result = spawnSync("bash", [INSTALLER], {
+    const result = spawnSync(BASH_PATH, [INSTALLER], {
       cwd: tmp,
       encoding: "utf-8",
       env: {
@@ -966,7 +973,7 @@ fi`,
       JSON.stringify({ name: "nemoclaw-plugin", version: "0.1.0" }, null, 2),
     );
 
-    const result = spawnSync("bash", [INSTALLER, "--fresh"], {
+    const result = spawnSync(BASH_PATH, [INSTALLER, "--fresh"], {
       cwd: tmp,
       encoding: "utf-8",
       env: {
@@ -1056,7 +1063,7 @@ EOS
 fi`,
     );
 
-    const result = spawnSync("bash", [INSTALLER], {
+    const result = spawnSync(BASH_PATH, [INSTALLER], {
       cwd: path.join(import.meta.dirname, ".."),
       encoding: "utf-8",
       env: {
@@ -1129,7 +1136,7 @@ exit 0
 `,
     );
 
-    const result = spawnSync("bash", [INSTALLER], {
+    const result = spawnSync(BASH_PATH, [INSTALLER], {
       cwd: path.join(import.meta.dirname, ".."),
       encoding: "utf-8",
       env: {
@@ -1206,7 +1213,7 @@ EOS
 fi`,
     );
 
-    const result = spawnSync("bash", [INSTALLER, "--non-interactive"], {
+    const result = spawnSync(BASH_PATH, [INSTALLER, "--non-interactive"], {
       cwd: path.join(import.meta.dirname, ".."),
       encoding: "utf-8",
       env: {
@@ -1278,7 +1285,7 @@ fi`,
     );
 
     const result = spawnSync(
-      "bash",
+      BASH_PATH,
       [INSTALLER, "--non-interactive", "--yes-i-accept-third-party-software"],
       {
         cwd: path.join(import.meta.dirname, ".."),
@@ -1335,7 +1342,7 @@ if [ "$1" = "install" ] || [ "$1" = "run" ] || [ "$1" = "link" ]; then
 fi`,
     );
 
-    const result = spawnSync("bash", [INSTALLER], {
+    const result = spawnSync(BASH_PATH, [INSTALLER], {
       cwd: tmp,
       encoding: "utf-8",
       env: {
@@ -1459,7 +1466,7 @@ exit 0
 `,
     );
 
-    const result = spawnSync("bash", [INSTALLER], {
+    const result = spawnSync(BASH_PATH, [INSTALLER], {
       cwd: tmp,
       encoding: "utf-8",
       env: {
@@ -1584,7 +1591,7 @@ exit 0
 `,
     );
 
-    const result = spawnSync("bash", [INSTALLER], {
+    const result = spawnSync(BASH_PATH, [INSTALLER], {
       cwd: tmp,
       encoding: "utf-8",
       env: {
@@ -1664,7 +1671,7 @@ fi`,
       JSON.stringify({ name: "nemoclaw-plugin", version: "0.1.0" }, null, 2),
     );
 
-    const result = spawnSync("bash", [INSTALLER], {
+    const result = spawnSync(BASH_PATH, [INSTALLER], {
       cwd: tmp,
       encoding: "utf-8",
       env: {
@@ -1711,7 +1718,7 @@ describe("installer release-tag resolution", () => {
    * `fakeBin` must contain a `curl` stub (and optionally `node`).
    */
   function callResolveReleaseTag(fakeBin: string, env: Record<string, string | undefined> = {}) {
-    return spawnSync("bash", ["-c", `source "${INSTALLER}" 2>/dev/null; resolve_release_tag`], {
+    return spawnSync(BASH_PATH, ["-c", `source "${INSTALLER}" 2>/dev/null; resolve_release_tag`], {
       cwd: path.join(import.meta.dirname, ".."),
       encoding: "utf-8",
       env: {
@@ -1825,7 +1832,7 @@ exit 0`,
       JSON.stringify({ name: "nemoclaw-plugin", version: "0.1.0" }, null, 2),
     );
 
-    const result = spawnSync("bash", [INSTALLER], {
+    const result = spawnSync(BASH_PATH, [INSTALLER], {
       cwd: tmp,
       encoding: "utf-8",
       env: {
@@ -1901,7 +1908,7 @@ EOS
 fi`,
     );
 
-    const result = spawnSync("bash", [INSTALLER], {
+    const result = spawnSync(BASH_PATH, [INSTALLER], {
       cwd: tmp,
       encoding: "utf-8",
       env: {
@@ -1988,7 +1995,7 @@ INSTALL
 `,
     );
 
-    const result = spawnSync("bash", ["-c", `source "${INSTALLER}" 2>/dev/null; install_nodejs`], {
+    const result = spawnSync(BASH_PATH, ["-c", `source "${INSTALLER}" 2>/dev/null; install_nodejs`], {
       cwd: path.join(import.meta.dirname, ".."),
       encoding: "utf-8",
       env: {
@@ -2014,7 +2021,7 @@ describe("installer pure helpers", () => {
    * Helper: source install.sh and call a function, returning stdout.
    */
   function callInstallerFn(fnCall: string, env: Record<string, string | undefined> = {}) {
-    return spawnSync("bash", ["-c", `source "${INSTALLER}" 2>/dev/null; ${fnCall}`], {
+    return spawnSync(BASH_PATH, ["-c", `source "${INSTALLER}" 2>/dev/null; ${fnCall}`], {
       cwd: path.join(import.meta.dirname, ".."),
       encoding: "utf-8",
       env: {
@@ -2026,7 +2033,7 @@ describe("installer pure helpers", () => {
   }
 
   function callInstallerPayloadFn(fnCall: string, env: Record<string, string | undefined> = {}) {
-    return spawnSync("bash", ["-c", `source "${INSTALLER_PAYLOAD}" 2>/dev/null; ${fnCall}`], {
+    return spawnSync(BASH_PATH, ["-c", `source "${INSTALLER_PAYLOAD}" 2>/dev/null; ${fnCall}`], {
       cwd: path.join(import.meta.dirname, ".."),
       encoding: "utf-8",
       env: {
@@ -2053,7 +2060,7 @@ exit 1
     );
 
     const r = spawnSync(
-      "bash",
+      BASH_PATH,
       [
         "-c",
         `source "${INSTALLER}" 2>/dev/null; verify_nemoclaw; printf 'READY=%s\n' "$NEMOCLAW_READY_NOW"`,
@@ -2207,7 +2214,7 @@ exit 1
       JSON.stringify({ name: "nemoclaw", version: "0.1.0" }, null, 2),
     );
     const r = spawnSync(
-      "bash",
+      BASH_PATH,
       [
         "-c",
         `source "${INSTALLER}" 2>/dev/null; is_source_checkout "${tmp}" && echo yes || echo no`,
@@ -2230,7 +2237,7 @@ exit 1
       JSON.stringify({ name: "nemoclaw", version: "0.1.0" }, null, 2),
     );
     const r = spawnSync(
-      "bash",
+      BASH_PATH,
       [
         "-c",
         `source "${INSTALLER}" 2>/dev/null; is_source_checkout "${tmp}" && echo yes || echo no`,
@@ -2253,7 +2260,7 @@ exit 1
       JSON.stringify({ name: "nemoclaw", version: "0.1.0" }, null, 2),
     );
     const r = spawnSync(
-      "bash",
+      BASH_PATH,
       [
         "-c",
         `source "${INSTALLER}" 2>/dev/null; is_source_checkout "${tmp}" && echo yes || echo no`,
@@ -2279,7 +2286,7 @@ exit 1
     // The temp dir advertises git metadata but has no usable tags,
     // so the function should fall back to package.json instead of exiting.
     const r = spawnSync(
-      "bash",
+      BASH_PATH,
       ["-c", `source "${INSTALLER}" 2>/dev/null; SCRIPT_DIR="${tmp}"; resolve_installer_version`],
       {
         cwd: tmp,
@@ -2297,7 +2304,7 @@ exit 1
     // The temp dir has no .git, no .version, and no package.json,
     // so the function should fall back to DEFAULT_NEMOCLAW_VERSION.
     const r = spawnSync(
-      "bash",
+      BASH_PATH,
       ["-c", `source "${INSTALLER}" 2>/dev/null; SCRIPT_DIR="${tmp}"; resolve_installer_version`],
       {
         cwd: tmp,
@@ -2497,7 +2504,7 @@ exit 0
 
 describe("installer flag parsing", () => {
   it("rejects unknown flags with usage + error", () => {
-    const result = spawnSync("bash", [INSTALLER, "--bogus"], {
+    const result = spawnSync(BASH_PATH, [INSTALLER, "--bogus"], {
       cwd: path.join(import.meta.dirname, ".."),
       encoding: "utf-8",
     });
@@ -2509,7 +2516,7 @@ describe("installer flag parsing", () => {
   });
 
   it("--help shows NEMOCLAW_INSTALL_TAG in environment section", () => {
-    const result = spawnSync("bash", [INSTALLER, "--help"], {
+    const result = spawnSync(BASH_PATH, [INSTALLER, "--help"], {
       cwd: path.join(import.meta.dirname, ".."),
       encoding: "utf-8",
     });
@@ -2533,7 +2540,7 @@ describe("installer runtime checks (sourced)", () => {
     env: Record<string, string | undefined> = {},
   ) {
     return spawnSync(
-      "bash",
+      BASH_PATH,
       ["-c", `source "${INSTALLER}" 2>/dev/null; ensure_supported_runtime`],
       {
         cwd: path.join(import.meta.dirname, ".."),
@@ -2705,7 +2712,7 @@ exit 0`,
     const useSetsid = process.platform !== "darwin";
     const bashScript = `source ${JSON.stringify(INSTALLER_PAYLOAD)} 2>/dev/null; show_usage_notice </dev/null`;
     const result = useSetsid
-      ? spawnSync("setsid", ["bash", "-c", bashScript], {
+      ? spawnSync("setsid", [BASH_PATH, "-c", bashScript], {
           cwd: tmp,
           encoding: "utf-8",
           env: {
@@ -2715,7 +2722,7 @@ exit 0`,
             ...env,
           },
         })
-      : spawnSync("bash", ["-c", bashScript], {
+      : spawnSync(BASH_PATH, ["-c", bashScript], {
           cwd: tmp,
           encoding: "utf-8",
           env: {
@@ -2871,7 +2878,7 @@ fi
 exit 0`,
     });
 
-    const result = spawnSync("bash", [CURL_PIPE_INSTALLER], {
+    const result = spawnSync(BASH_PATH, [CURL_PIPE_INSTALLER], {
       cwd: tmp,
       encoding: "utf-8",
       env: {
@@ -2917,7 +2924,7 @@ fi
 exit 0`,
     });
 
-    const result = spawnSync("bash", [CURL_PIPE_INSTALLER], {
+    const result = spawnSync(BASH_PATH, [CURL_PIPE_INSTALLER], {
       cwd: tmp,
       encoding: "utf-8",
       env: {
@@ -2954,7 +2961,7 @@ main() {
 }`,
     );
 
-    const result = spawnSync("bash", ["-s", "--", "--version"], {
+    const result = spawnSync(BASH_PATH, ["-s", "--", "--version"], {
       cwd: repoLike,
       input: fs.readFileSync(rootInstaller, "utf-8"),
       encoding: "utf-8",
@@ -3009,7 +3016,7 @@ exit 0`,
     });
 
     const installerInput = fs.readFileSync(CURL_PIPE_INSTALLER, "utf-8");
-    const result = spawnSync("bash", [], {
+    const result = spawnSync(BASH_PATH, [], {
       cwd: tmp,
       input: installerInput,
       encoding: "utf-8",
@@ -3070,7 +3077,7 @@ exit 0`,
     });
 
     const installerInput = fs.readFileSync(CURL_PIPE_INSTALLER, "utf-8");
-    const result = spawnSync("bash", [], {
+    const result = spawnSync(BASH_PATH, [], {
       cwd: tmp,
       input: installerInput,
       encoding: "utf-8",
@@ -3151,6 +3158,14 @@ exit 0`,
         },
       },
     );
+    if (result.error) {
+      throw new Error(`Failed to spawn ${bashBinary}: ${result.error.message}`);
+    }
+    const stdout = result.stdout ?? "";
+    const stderr = result.stderr ?? "";
+    // Normalize result for tests that expect strings
+    result.stdout = stdout;
+    result.stderr = stderr;
     const phases = fs.existsSync(phaseLog) ? fs.readFileSync(phaseLog, "utf-8") : "";
     return { result, phases, tmp };
   }
@@ -3205,7 +3220,7 @@ exit 0`,
     );
 
     const python =
-      spawnSync("bash", ["-lc", "command -v python3"], { encoding: "utf-8" }).stdout.trim() ||
+      spawnSync(BASH_PATH, ["-lc", "command -v python3"], { encoding: "utf-8" }).stdout?.trim() ||
       "python3";
     const ptyRunner = `
 import os
