@@ -7,7 +7,7 @@
 
 ## Overview
 
-This section describes repository truth as of this commit only. NemoClaw currently provides CLI and plugin-driven sandbox lifecycle management, onboarding, provider/model selection, policy preset application, and diagnostics. It does not yet implement a dedicated deterministic control plane with device registry, scheduler, or receipt framework.
+This section describes repository truth as of this commit only. NemoClaw currently provides CLI and plugin-driven sandbox lifecycle management, onboarding, provider/model selection, policy preset application, and diagnostics. A control-plane library layer exists in `src/lib/control-plane/` and `src/lib/execution/` with policy engine, execution lifecycle, replay, worker trust, and device registry modules; these are tested library contracts not yet wired into the main CLI execution paths.
 
 ## Execution entrypoints
 
@@ -48,9 +48,11 @@ This section describes repository truth as of this commit only. NemoClaw current
 
 ## Routing or scheduling behavior present today
 
-- Current routing is provider/model selection behavior coupled to onboarding and runtime inference probing.
-- There is no standalone deterministic scheduler component for multi-device local execution.
-- Some drift handling/reporting exists (for example live gateway inference differing from onboarded values in inventory/status flows).
+- Onboarding and provider selection flow runs through `src/lib/onboard.ts` and provider catalog helpers.
+- A deterministic scheduler library exists in `src/lib/control-plane/scheduler.ts` but is not wired into the CLI flow.
+- Governed provider routing exists behind `NEMOCLAW_GOVERNED_ROUTING=1` in `src/lib/control-plane/governed-provider-routing.ts`.
+- Heterogeneous routing exists behind `NEMOCLAW_HETEROGENEOUS_ROUTING=1` in `src/lib/control-plane/heterogeneous-routing.ts`.
+- Remote execution adapter exists behind `NEMOCLAW_REMOTE_EXECUTION=1` in `src/lib/control-plane/remote-execution.ts`.
 
 ## Degraded/failure-state behavior present today
 

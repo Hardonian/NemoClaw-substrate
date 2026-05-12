@@ -37,7 +37,7 @@ function runtimeShellEnvShimBlock(src: string): string {
 }
 
 function nonRootFallbackBlock(src: string): string {
-  const start = src.indexOf("# ── Non-root fallback");
+  const start = src.indexOf("# ── Non-root degraded");
   const end = src.indexOf("# ── Root path", start);
   expect(start).toBeGreaterThan(-1);
   expect(end).toBeGreaterThan(start);
@@ -96,7 +96,7 @@ function startScriptLine(src: string, needle: string): string {
 }
 
 function nonRootIntegrityGateBlock(src: string): string {
-  const marker = src.indexOf("# ── Non-root fallback");
+  const marker = src.indexOf("# ── Non-root degraded");
   const start = src.indexOf('if [ "$(id -u)" -ne 0 ]; then', marker);
   const end = src.indexOf("  apply_model_override", start);
   if (start === -1 || end === -1 || end <= start) {
@@ -118,7 +118,7 @@ function rootIntegrityGateBlock(src: string): string {
   return src.slice(verifyStart, lineEnd === -1 ? undefined : lineEnd);
 }
 
-describe("nemoclaw-start non-root fallback", () => {
+describe("nemoclaw-start non-root degraded", () => {
   it("exits before startup work when locked config integrity fails in non-root mode", () => {
     const src = fs.readFileSync(START_SCRIPT, "utf-8");
     const script = [
@@ -339,7 +339,7 @@ describe("nemoclaw-start gateway preload process detection (#2478)", () => {
     expect(run.stderr).toContain("[sandbox-safety-net] loaded (openclaw-gateway)");
   });
 
-  it("activates the ciao guard fallback for the re-execed openclaw-gateway child", () => {
+  it("activates the ciao guard degraded for the re-execed openclaw-gateway child", () => {
     const run = runEmbeddedPreload(ciaoGuardScript, "/usr/local/bin/openclaw-gateway", "--port");
     expect(run.status).toBe(0);
     expect(run.stderr).toContain("[guard] ciao-network-guard loaded (openclaw-gateway)");
@@ -1526,7 +1526,7 @@ describe("Telegram diagnostics (#2766)", () => {
   }
 
   function preGatewaySetupBlock(kind: "non-root" | "root", gatewayLog: string, autoPairLog: string) {
-    const nonRootMarker = src.indexOf("# ── Non-root fallback");
+    const nonRootMarker = src.indexOf("# ── Non-root degraded");
     const start =
       kind === "non-root"
         ? src.indexOf('if [ "$(id -u)" -ne 0 ]; then', nonRootMarker)

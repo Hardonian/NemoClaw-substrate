@@ -80,7 +80,7 @@ describe("#2666 — silent empty output regression", () => {
     expect(lines.length).toBeGreaterThan(0);
   });
 
-  it("getSandboxInventory does not throw when recovery returns the registry-only fallback", async () => {
+  it("getSandboxInventory does not throw when recovery returns the registry-only degraded", async () => {
     const deps = buildDepsWithThrowingRecovery();
     const inventory = await getSandboxInventory(deps);
     expect(inventory.sandboxes).toHaveLength(1);
@@ -102,12 +102,12 @@ describe("#2666 — list-command-deps resilience wrapper", () => {
       recoveredFromSession: true,
       recoveredFromGateway: 2,
     }));
-    const fallback = vi.fn(() => ({ sandboxes: [], defaultSandbox: null }));
+    const degraded = vi.fn(() => ({ sandboxes: [], defaultSandbox: null }));
 
-    const result = await recoverRegistryEntriesWithFallback(primary, fallback);
+    const result = await recoverRegistryEntriesWithFallback(primary, degraded);
 
     expect(primary).toHaveBeenCalledOnce();
-    expect(fallback).not.toHaveBeenCalled();
+    expect(degraded).not.toHaveBeenCalled();
     expect(result.sandboxes).toEqual([
       { name: "happy", model: null, provider: null, gpuEnabled: false, policies: [] },
     ]);
@@ -119,20 +119,20 @@ describe("#2666 — list-command-deps resilience wrapper", () => {
     const primary = vi.fn(async () => {
       throw new Error("simulated openshell hang");
     });
-    const fallback = vi.fn(() => ({
+    const degraded = vi.fn(() => ({
       sandboxes: [
         { name: "my-assist", model: "test-model", provider: "test-provider", gpuEnabled: false, policies: [] },
       ],
       defaultSandbox: "my-assist",
     }));
 
-    const result = await recoverRegistryEntriesWithFallback(primary, fallback);
+    const result = await recoverRegistryEntriesWithFallback(primary, degraded);
 
     expect(primary).toHaveBeenCalledOnce();
-    expect(fallback).toHaveBeenCalledOnce();
+    expect(degraded).toHaveBeenCalledOnce();
     expect(result.sandboxes).toHaveLength(1);
     expect(result.sandboxes[0].name).toBe("my-assist");
-    // Fallback synthesizes recovery flags so downstream rendering treats the
+    // Degraded synthesizes recovery flags so downstream rendering treats the
     // result as the registry-only state, not a partial recovery from gateway.
     expect(result.recoveredFromGateway).toBe(0);
     expect(result.recoveredFromSession).toBe(false);
@@ -254,7 +254,7 @@ describe("#2666 — subprocess regression: simulated (container-stopped + foreig
     expect(combined.trim().length).toBeGreaterThan(0);
     expect(combined).toContain("my-assist");
     // `list` succeeds even when the live gateway is unreachable: the
-    // registry-only listing is the documented fallback behavior (#2666).
+    // registry-only listing is the documented degraded behavior (#2666).
     expect(code).toBe(0);
   });
 

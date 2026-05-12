@@ -579,9 +579,9 @@ console.log = () => {};
     // Warn path, not exit: tier suggestions were applied (non-empty).
     assert.ok(
       payload.applied.length > 0,
-      `expected fallback presets to be applied, got: ${JSON.stringify(payload.applied)}`,
+      `expected degraded presets to be applied, got: ${JSON.stringify(payload.applied)}`,
     );
-    // Warnings mention the bad value, the tier-name hint, and the fallback.
+    // Warnings mention the bad value, the tier-name hint, and the degraded.
     // They land on stderr via console.warn.
     assert.match(result.stderr, /Unsupported NEMOCLAW_POLICY_MODE: restricted/);
     assert.match(result.stderr, /NEMOCLAW_POLICY_TIER=restricted/);

@@ -78,9 +78,9 @@ export function getProbeRecovery(
   if (failures.some((failure) => classifyValidationFailure(failure).kind === "endpoint")) {
     return { kind: "endpoint", retry: "selection" };
   }
-  const fallback = classifyValidationFailure(failures[0]);
-  if (!allowModelRetry && fallback.kind === "model") {
+  const degraded = classifyValidationFailure(failures[0]);
+  if (!allowModelRetry && degraded.kind === "model") {
     return { kind: "unknown", retry: "selection" };
   }
-  return fallback;
+  return degraded;
 }

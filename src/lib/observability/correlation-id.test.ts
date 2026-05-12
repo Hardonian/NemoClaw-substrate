@@ -57,8 +57,8 @@ describe("runWithCorrelation / getCorrelationContext", () => {
 });
 
 describe("getCurrentCorrelationId", () => {
-  it("returns fallback when no context is active", () => {
-    expect(getCurrentCorrelationId("fallback")).toBe("fallback");
+  it("returns degraded when no context is active", () => {
+    expect(getCurrentCorrelationId("degraded")).toBe("degraded");
   });
 
   it("returns the correlation ID when context is active", async () => {

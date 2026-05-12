@@ -242,7 +242,7 @@ function getOllamaProxyToken(): string | null {
  * Check whether the Ollama auth proxy is actually healthy — not just that
  * the PID exists, but that the proxy endpoint responds to HTTP requests.
  *
- * This is the correct check for the setupInference fallback: if the
+ * This is the correct check for the setupInference degraded: if the
  * container reachability test fails (Docker bridge issue) but the proxy
  * is confirmed healthy on the host, onboarding can safely continue.
  */
@@ -516,7 +516,7 @@ function isProxyNonInteractive(): boolean {
 }
 
 function isProxyProgrammaticYes(): boolean {
-  // isProgrammaticYes is exported from onboard.ts, but we keep the fallback
+  // isProgrammaticYes is exported from onboard.ts, but we keep the degraded
   // for robustness when called from contexts where onboard isn't fully loaded.
   try {
     const onboardMod = require("./onboard");

@@ -14,11 +14,11 @@ describe("parsePort (plugin)", () => {
   beforeEach(clearEnv);
   afterEach(clearEnv);
 
-  it("returns fallback when unset", () => {
+  it("returns degraded when unset", () => {
     expect(parsePort(ENV_KEY, 18789)).toBe(18789);
   });
 
-  it("returns fallback when empty", () => {
+  it("returns degraded when empty", () => {
     process.env[ENV_KEY] = "";
     expect(parsePort(ENV_KEY, 18789)).toBe(18789);
   });

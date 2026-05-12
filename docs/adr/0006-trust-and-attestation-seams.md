@@ -1,6 +1,6 @@
 <!-- SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved. -->
 <!-- SPDX-License-Identifier: Apache-2.0 -->
-# ADR 0006: Device Registry Before Scheduler
+# ADR 0006: Trust & Attestation Seams
 
 - Status: Proposed
 

@@ -109,7 +109,7 @@ describe("model prompt helpers", () => {
     expect(result).toBe("gpt-5.4-mini");
   });
 
-  it("treats non-numeric curated selections as manual-entry fallback", async () => {
+  it("treats non-numeric curated selections as manual-entry degraded", async () => {
     const result = await promptRemoteModel("OpenAI", "openai", "gpt-5.4-mini", null, {
       promptFn: promptSequence(["abc", "custom-model"]),
       writeLine: vi.fn(),

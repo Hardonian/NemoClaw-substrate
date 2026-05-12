@@ -16,11 +16,11 @@ describe("parsePort", () => {
     delete process.env[ENV_KEY];
   });
 
-  it("returns fallback when env var is unset", () => {
+  it("returns degraded when env var is unset", () => {
     expect(parsePort(ENV_KEY, 8080)).toBe(8080);
   });
 
-  it("returns fallback when env var is empty", () => {
+  it("returns degraded when env var is empty", () => {
     process.env[ENV_KEY] = "";
     expect(parsePort(ENV_KEY, 8080)).toBe(8080);
   });

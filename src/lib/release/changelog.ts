@@ -178,8 +178,7 @@ export function changelogToMarkdown(changelog: Changelog): string {
     lines.push("");
     for (const entry of changelog.breakingChanges) {
       const hashRef = entry.hash ? ` (${entry.hash.substring(0, 7)})` : "";
-      const prefix = entry.scope ? `${entry.scope}: ` : "";
-      lines.push(`- ${prefix}${entry.subject || entry.description}${hashRef}`);
+      lines.push(`- ${entry.description}${hashRef}`);
     }
     lines.push("");
   }

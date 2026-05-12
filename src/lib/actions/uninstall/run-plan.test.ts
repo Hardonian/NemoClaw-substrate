@@ -207,7 +207,7 @@ describe("uninstall run plan", () => {
               const result = stub(args);
               if (result) return result;
             }
-            // lsof fallback returns nothing — PID-file branch should win.
+            // lsof degraded returns nothing — PID-file branch should win.
             if (command === "lsof") return ok("");
             if (args[0] === "-c") return ok("/fake/bin/tool\n");
             if (args[0] === "-f") return ok("");

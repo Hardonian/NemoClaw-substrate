@@ -11,12 +11,12 @@ This index maps deprecated or drifting terminology to their canonical NemoClaw e
 | `evidence bundle`, `export bundle` | **Proofpack** | Export | Proofpacks contain evidence. |
 | `task queue`, `lease manager` | **Queue / Lease** | Execution | Queue handles waiting; Lease handles active reservations. |
 | `autonomous failover`, `auto-recover` | **Degraded State** | Execution | Failure semantics require operator judgment. |
-| `fallback`, `failover`, `fail-safe` | **Degraded State** | Control Plane | Avoid "self-healing" theatre; always surface degraded states explicitly. |
+| `degraded`, `failover`, `fail-safe` | **Degraded State** | Control Plane | Avoid "self-healing" theatre; always surface degraded states explicitly. |
 | `hidden rule`, `implicit policy` | **Explicit Policy** | Governance | All routing is explicitly governed. |
 | `trust decision` | **Authorization** | Policy Engine | Trust is evidence-based confidence; Authorization is binary policy. |
 | `orchestrate`, `seamless`, `automatic` | **Coordinate / Deterministic** | Actions / CLI | Avoid theatre; focus on explicit coordination. |
 | `auto-fix`, `auto-detect`, `auto-healing` | **Remediation / Discovery** | Onboard | Use "Remediation" for manual/semi-auto fixes; "Discovery" for probes. |
-| `fallback`, `failover` | **Degraded State** | Routing | Explicitly acknowledge the state rather than implying hidden magic. |
+| `degraded`, `failover` | **Degraded State** | Routing | Explicitly acknowledge the state rather than implying hidden magic. |
 | `background`, `daemon` | **Detached / Long-lived** | Execution | Be explicit about the lifecycle (e.g. "Detached Timer"). |
 <!-- markdownlint-enable anti-theatre-terms -->
 

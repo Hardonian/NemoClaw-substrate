@@ -1,0 +1,109 @@
+﻿src/lib/config/config-validator.test.ts(111,12): error TS18046: 'result.config.nested' is of type 'unknown'.
+src/lib/config/migration.test.ts(62,12): error TS18046: 'obj.a' is of type 'unknown'.
+src/lib/config/migration.test.ts(84,12): error TS18046: 'obj.a' is of type 'unknown'.
+src/lib/config/migration.test.ts(85,12): error TS18046: 'obj.a' is of type 'unknown'.
+src/lib/config/migration.test.ts(113,19): error TS2339: Property 'new' does not exist on type '{ old: string; }'.
+src/lib/config/migration.test.ts(140,19): error TS2339: Property 'level' does not exist on type '{ verbose: boolean; }'.
+src/lib/inference/ollama/model-size.test.ts(139,52): error TS2322: Type '"degraded"' is not assignable to type 'SizeSource'.
+src/lib/observability/correlation-id.ts(58,3): error TS2322: Type 'T | Promise<T>' is not assignable to type 'Promise<T>'.
+  Type 'T' is not assignable to type 'Promise<T>'.
+src/lib/observability/lifecycle-timeline.test.ts(114,33): error TS2345: Argument of type '({ name: string; startMs: number; endMs: number; status: string; } | { name: string; startMs: number; endMs: undefined; status: string; })[]' is not assignable to parameter of type 'TimelinePhase[]'.
+  Type '{ name: string; startMs: number; endMs: number; status: string; } | { name: string; startMs: number; endMs: undefined; status: string; }' is not assignable to type 'TimelinePhase'.
+    Type '{ name: string; startMs: number; endMs: number; status: string; }' is not assignable to type 'TimelinePhase'.
+      Types of property 'status' are incompatible.
+        Type 'string' is not assignable to type '"failed" | "skipped" | "running" | "completed"'.
+src/lib/orchestration/orchestrator.test.ts(184,66): error TS2345: Argument of type '{ stepId: string; planId: string; name: string; status: string; dependsOnStepIds: never[]; payload: {}; approvalRequired: boolean; createdAt: string; updatedAt: string; retryCount: number; maxRetries: number; }' is not assignable to parameter of type 'OrchestrationStep'.
+  Types of property 'status' are incompatible.
+    Type 'string' is not assignable to type 'StepStatus'.
+src/lib/orchestration/orchestrator.test.ts(208,49): error TS2345: Argument of type '{ stepId: string; planId: string; name: string; status: string; dependsOnStepIds: never[]; payload: {}; approvalRequired: boolean; createdAt: string; updatedAt: string; retryCount: number; maxRetries: number; }' is not assignable to parameter of type 'OrchestrationStep'.
+  Types of property 'status' are incompatible.
+    Type 'string' is not assignable to type 'StepStatus'.
+src/lib/orchestration/orchestrator.test.ts(234,49): error TS2345: Argument of type '{ stepId: string; planId: string; name: string; status: string; dependsOnStepIds: never[]; payload: {}; approvalRequired: boolean; createdAt: string; updatedAt: string; retryCount: number; maxRetries: number; }' is not assignable to parameter of type 'OrchestrationStep'.
+  Types of property 'status' are incompatible.
+    Type 'string' is not assignable to type 'StepStatus'.
+src/lib/orchestration/orchestrator.test.ts(266,49): error TS2345: Argument of type '{ stepId: string; planId: string; name: string; status: string; dependsOnStepIds: never[]; payload: {}; approvalRequired: boolean; createdAt: string; updatedAt: string; retryCount: number; maxRetries: number; }' is not assignable to parameter of type 'OrchestrationStep'.
+  Types of property 'status' are incompatible.
+    Type 'string' is not assignable to type 'StepStatus'.
+src/lib/orchestration/orchestrator.test.ts(441,49): error TS2345: Argument of type '{ stepId: string; planId: string; name: string; status: string; dependsOnStepIds: never[]; payload: {}; approvalRequired: boolean; createdAt: string; updatedAt: string; retryCount: number; maxRetries: number; }' is not assignable to parameter of type 'OrchestrationStep'.
+  Types of property 'status' are incompatible.
+    Type 'string' is not assignable to type 'StepStatus'.
+src/lib/performance/profile-report.test.ts(131,38): error TS2345: Argument of type '{ operationName: string; baselineMeanMs: number; instrumentedMeanMs: number; overheadPercent: number; withinBudget: boolean; maxOverheadPercent: number; }[]' is not assignable to parameter of type 'ProfileResult[]'.
+  Property 'stats' is missing in type '{ operationName: string; baselineMeanMs: number; instrumentedMeanMs: number; overheadPercent: number; withinBudget: boolean; maxOverheadPercent: number; }' but required in type 'ProfileResult'.
+src/lib/performance/profile-report.test.ts(149,38): error TS2345: Argument of type '{ operationName: string; baselineMeanMs: number; instrumentedMeanMs: number; overheadPercent: number; withinBudget: boolean; maxOverheadPercent: number; }[]' is not assignable to parameter of type 'ProfileResult[]'.
+  Property 'stats' is missing in type '{ operationName: string; baselineMeanMs: number; instrumentedMeanMs: number; overheadPercent: number; withinBudget: boolean; maxOverheadPercent: number; }' but required in type 'ProfileResult'.
+src/lib/performance/proofpack-benchmark.test.ts(120,40): error TS2345: Argument of type '{ name: string; concurrency: number; packSize: number; totalPacks: number; latencyResult: { meanMs: number; }; throughputPacksPerSec: number; meetsLatencyTarget: boolean; meetsThroughputTarget: boolean; }[]' is not assignable to parameter of type 'ProofPackBenchmarkResult[]'.
+  Type '{ name: string; concurrency: number; packSize: number; totalPacks: number; latencyResult: { meanMs: number; }; throughputPacksPerSec: number; meetsLatencyTarget: boolean; meetsThroughputTarget: boolean; }' is not assignable to type 'ProofPackBenchmarkResult'.
+    Types of property 'latencyResult' are incompatible.
+      Type '{ meanMs: number; }' is missing the following properties from type 'BenchmarkResult': name, iterations, medianMs, p95Ms, and 4 more.
+src/lib/performance/proofpack-benchmark.test.ts(140,40): error TS2345: Argument of type '{ name: string; concurrency: number; packSize: number; totalPacks: number; latencyResult: { meanMs: number; }; throughputPacksPerSec: number; meetsLatencyTarget: boolean; meetsThroughputTarget: boolean; }[]' is not assignable to parameter of type 'ProofPackBenchmarkResult[]'.
+  Type '{ name: string; concurrency: number; packSize: number; totalPacks: number; latencyResult: { meanMs: number; }; throughputPacksPerSec: number; meetsLatencyTarget: boolean; meetsThroughputTarget: boolean; }' is not assignable to type 'ProofPackBenchmarkResult'.
+    Types of property 'latencyResult' are incompatible.
+      Type '{ meanMs: number; }' is missing the following properties from type 'BenchmarkResult': name, iterations, medianMs, p95Ms, and 4 more.
+src/lib/performance/queue-benchmark.test.ts(112,36): error TS2345: Argument of type '{ burstSize: number; totalMessages: number; totalTimeMs: number; msPerMessage: number; meetsTarget: boolean; targetMsPerMessage: number; }[]' is not assignable to parameter of type 'QueueBenchmarkResult[]'.
+  Property 'stats' is missing in type '{ burstSize: number; totalMessages: number; totalTimeMs: number; msPerMessage: number; meetsTarget: boolean; targetMsPerMessage: number; }' but required in type 'QueueBenchmarkResult'.
+src/lib/policy-learning/policy-learning.test.ts(179,9): error TS2693: 'ReviewDecision' only refers to a type, but is being used as a value here.
+src/lib/policy-learning/policy-learning.test.ts(180,9): error TS2693: 'RiskLevel' only refers to a type, but is being used as a value here.
+src/lib/release/changelog.ts(182,38): error TS2339: Property 'subject' does not exist on type 'ChangelogEntry'.
+src/lib/scheduler/scheduler.ts(241,31): error TS2339: Property 'LEASE_RENEWED' does not exist on type 'typeof OrchestrationReasonCode'.
+src/lib/scheduler/scheduler.ts(279,31): error TS2339: Property 'LEASE_RENEWED' does not exist on type 'typeof OrchestrationReasonCode'.
+src/lib/scheduler/scheduler.ts(301,35): error TS2339: Property 'LEASE_ACQUIRED' does not exist on type 'typeof OrchestrationReasonCode'.
+src/lib/scheduler/scheduler.ts(347,72): error TS2339: Property 'LEASE_ACQUIRED' does not exist on type 'typeof OrchestrationReasonCode'.
+src/lib/scheduler/scheduler.ts(354,31): error TS2339: Property 'LEASE_ACQUIRED' does not exist on type 'typeof OrchestrationReasonCode'.
+src/lib/scheduler/scheduler.ts(399,31): error TS2339: Property 'LEASE_RENEWED' does not exist on type 'typeof OrchestrationReasonCode'.
+src/lib/scheduler/scheduler.ts(431,74): error TS2339: Property 'LEASE_RELEASED' does not exist on type 'typeof OrchestrationReasonCode'.
+src/lib/scheduler/scheduler.ts(437,31): error TS2339: Property 'LEASE_RELEASED' does not exist on type 'typeof OrchestrationReasonCode'.
+src/lib/scheduler/scheduler.ts(483,31): error TS2339: Property 'LEASE_ACQUIRED' does not exist on type 'typeof OrchestrationReasonCode'.
+src/lib/security/proofpack-access.test.ts(53,57): error TS2345: Argument of type '{ accessRules: { role: string; allowedActions: string[]; resourcePattern: string; }[]; integrityAlgorithm: "sha256"; encryptionAlgorithm: "aes-256-gcm"; }' is not assignable to parameter of type 'ProofpackAccessConfig'.
+  Types of property 'accessRules' are incompatible.
+    Type '{ role: string; allowedActions: string[]; resourcePattern: string; }[]' is not assignable to type 'AccessControlRule[]'.
+      Type '{ role: string; allowedActions: string[]; resourcePattern: string; }' is not assignable to type 'AccessControlRule'.
+        Types of property 'allowedActions' are incompatible.
+          Type 'string[]' is not assignable to type 'AccessLevel[]'.
+            Type 'string' is not assignable to type 'AccessLevel'.
+src/lib/security/proofpack-access.test.ts(54,57): error TS2345: Argument of type '{ accessRules: { role: string; allowedActions: string[]; resourcePattern: string; }[]; integrityAlgorithm: "sha256"; encryptionAlgorithm: "aes-256-gcm"; }' is not assignable to parameter of type 'ProofpackAccessConfig'.
+  Types of property 'accessRules' are incompatible.
+    Type '{ role: string; allowedActions: string[]; resourcePattern: string; }[]' is not assignable to type 'AccessControlRule[]'.
+      Type '{ role: string; allowedActions: string[]; resourcePattern: string; }' is not assignable to type 'AccessControlRule'.
+        Types of property 'allowedActions' are incompatible.
+          Type 'string[]' is not assignable to type 'AccessLevel[]'.
+            Type 'string' is not assignable to type 'AccessLevel'.
+src/lib/security/proofpack-access.test.ts(66,58): error TS2345: Argument of type '{ accessRules: { role: string; allowedActions: string[]; resourcePattern: string; }[]; integrityAlgorithm: "sha256"; encryptionAlgorithm: "aes-256-gcm"; }' is not assignable to parameter of type 'ProofpackAccessConfig'.
+  Types of property 'accessRules' are incompatible.
+    Type '{ role: string; allowedActions: string[]; resourcePattern: string; }[]' is not assignable to type 'AccessControlRule[]'.
+      Type '{ role: string; allowedActions: string[]; resourcePattern: string; }' is not assignable to type 'AccessControlRule'.
+        Types of property 'allowedActions' are incompatible.
+          Type 'string[]' is not assignable to type 'AccessLevel[]'.
+            Type 'string' is not assignable to type 'AccessLevel'.
+src/lib/security/proofpack-access.test.ts(67,59): error TS2345: Argument of type '{ accessRules: { role: string; allowedActions: string[]; resourcePattern: string; }[]; integrityAlgorithm: "sha256"; encryptionAlgorithm: "aes-256-gcm"; }' is not assignable to parameter of type 'ProofpackAccessConfig'.
+  Types of property 'accessRules' are incompatible.
+    Type '{ role: string; allowedActions: string[]; resourcePattern: string; }[]' is not assignable to type 'AccessControlRule[]'.
+      Type '{ role: string; allowedActions: string[]; resourcePattern: string; }' is not assignable to type 'AccessControlRule'.
+        Types of property 'allowedActions' are incompatible.
+          Type 'string[]' is not assignable to type 'AccessLevel[]'.
+            Type 'string' is not assignable to type 'AccessLevel'.
+src/lib/security/proofpack-access.test.ts(220,42): error TS2345: Argument of type '{ accessRules: { role: string; allowedActions: string[]; resourcePattern: string; }[]; integrityAlgorithm: "sha256"; encryptionAlgorithm: "aes-256-gcm"; }' is not assignable to parameter of type 'ProofpackAccessConfig'.
+  Types of property 'accessRules' are incompatible.
+    Type '{ role: string; allowedActions: string[]; resourcePattern: string; }[]' is not assignable to type 'AccessControlRule[]'.
+      Type '{ role: string; allowedActions: string[]; resourcePattern: string; }' is not assignable to type 'AccessControlRule'.
+        Types of property 'allowedActions' are incompatible.
+          Type 'string[]' is not assignable to type 'AccessLevel[]'.
+            Type 'string' is not assignable to type 'AccessLevel'.
+src/lib/security/proofpack-access.test.ts(221,43): error TS2345: Argument of type '{ accessRules: { role: string; allowedActions: string[]; resourcePattern: string; }[]; integrityAlgorithm: "sha256"; encryptionAlgorithm: "aes-256-gcm"; }' is not assignable to parameter of type 'ProofpackAccessConfig'.
+  Types of property 'accessRules' are incompatible.
+    Type '{ role: string; allowedActions: string[]; resourcePattern: string; }[]' is not assignable to type 'AccessControlRule[]'.
+      Type '{ role: string; allowedActions: string[]; resourcePattern: string; }' is not assignable to type 'AccessControlRule'.
+        Types of property 'allowedActions' are incompatible.
+          Type 'string[]' is not assignable to type 'AccessLevel[]'.
+            Type 'string' is not assignable to type 'AccessLevel'.
+src/lib/security/proofpack-access.test.ts(222,43): error TS2345: Argument of type '{ accessRules: { role: string; allowedActions: string[]; resourcePattern: string; }[]; integrityAlgorithm: "sha256"; encryptionAlgorithm: "aes-256-gcm"; }' is not assignable to parameter of type 'ProofpackAccessConfig'.
+  Types of property 'accessRules' are incompatible.
+    Type '{ role: string; allowedActions: string[]; resourcePattern: string; }[]' is not assignable to type 'AccessControlRule[]'.
+      Type '{ role: string; allowedActions: string[]; resourcePattern: string; }' is not assignable to type 'AccessControlRule'.
+        Types of property 'allowedActions' are incompatible.
+          Type 'string[]' is not assignable to type 'AccessLevel[]'.
+            Type 'string' is not assignable to type 'AccessLevel'.
+test/verify-release.test.ts(109,47): error TS2345: Argument of type '{ compatibility: { agents: string; }; }' is not assignable to parameter of type 'ManifestSchema'.
+  Types of property 'compatibility' are incompatible.
+    Type '{ agents: string; }' is not assignable to type 'Record<string, CompatibilityEntry[]>'.
+      Property 'agents' is incompatible with index signature.
+        Type 'string' is not assignable to type 'CompatibilityEntry[]'.

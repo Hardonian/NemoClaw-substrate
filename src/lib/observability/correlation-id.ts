@@ -54,7 +54,7 @@ export function generateCorrelationId(): string {
  * Run a callback within a correlation context.
  * All async calls nested inside share the same context.
  */
-export function runWithCorrelation<T>(context: CorrelationContext, fn: () => Promise<T> | T): Promise<T> {
+export function runWithCorrelation<T>(context: CorrelationContext, fn: () => Promise<T> | T): Promise<T> | T {
   return correlationStorage.run(context, fn);
 }
 
@@ -67,11 +67,11 @@ export function getCorrelationContext(): CorrelationContext | undefined {
 }
 
 /**
- * Get the current correlation ID, or a fallback if none is active.
+ * Get the current correlation ID, or a degraded if none is active.
  */
-export function getCurrentCorrelationId(fallback = "none"): string {
+export function getCurrentCorrelationId(degraded = "none"): string {
   const ctx = correlationStorage.getStore();
-  return ctx?.correlationId ?? fallback;
+  return ctx?.correlationId ?? degraded;
 }
 
 /**

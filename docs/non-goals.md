@@ -7,7 +7,13 @@
 
 This document lists items that are deliberately out of scope for the current phase of NemoClaw. These are conscious exclusions, not oversights.
 
-## Orchestration and Scaling
+## Orchestration and Execution
+
+- No autonomous orchestration loops.
+- No hidden retries or daemon-worker autonomous recovery.
+- No policy learning from prompts.
+- No automatic queue workers, lease renewal loops, speculative fanout, GPU balancing, Dynamo integration, or automatic remote execution enablement.
+- No unsupported distributed execution claims.
 
 | Item | Rationale |
 |------|-----------|

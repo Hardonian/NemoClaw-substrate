@@ -122,10 +122,10 @@ class Utils {
     }
 
     /**
-     * Safe substring with fallback
+     * Safe substring with degraded
      */
-    safeSubstring(str, maxLength = 200, fallback = '') {
-        if (!str) return fallback;
+    safeSubstring(str, maxLength = 200, degraded = '') {
+        if (!str) return degraded;
         return str.length > maxLength ? str.substring(0, maxLength) : str;
     }
 
@@ -137,10 +137,10 @@ class Utils {
     }
 
     /**
-     * Safe array access with fallback
+     * Safe array access with degraded
      */
-    safeArray(arr, fallback = []) {
-        return Array.isArray(arr) ? arr : fallback;
+    safeArray(arr, degraded = []) {
+        return Array.isArray(arr) ? arr : degraded;
     }
 }
 

@@ -9,8 +9,6 @@ This guide describes the architecture of the NemoClaw governed execution substra
 
 - **[Governance Invariants](governance-invariants.md):** The non-negotiable rules of the substrate.
 - **[Governance Map](governance-map.md):** Policy and decision flow.
-- **[Trust Boundaries](security-boundaries.md):** Where we draw the line between high-trust and untrusted code.
-- **[Operator Truth Model](operator-truth-model.md):** How trust is established and maintained.
 - **[Anti-Theatre Doctrine](anti-theatre-doctrine.md):** Our core philosophy on AI autonomy.
 
 ## Execution Substrate
@@ -33,6 +31,7 @@ This guide describes the architecture of the NemoClaw governed execution substra
 
 - **[Device Registry](device-registry.md):** Capability discovery and inventory.
 - **[Scheduler](scheduler.md):** Deterministic device selection.
+- **[Worker Identity & Trust](worker-identity-trust.md):** Worker identity, trust levels, and attestation records.
 - **[Observability](observability.md):** Telemetry and tracing.
 - **[Evidence Topology](evidence-topology.md):** Telemetry and proofpack structure.
 - **[Failure Semantics](failure-semantics.md):** How the system behaves under component failure.
@@ -40,6 +39,7 @@ This guide describes the architecture of the NemoClaw governed execution substra
 
 ## Reference
 
+- **[Subsystem Ownership Map](subsystem-ownership-map.md):** Core subsystems and their architectural boundaries.
 - **[Architecture Cartography](architecture-cartography.md):** Visual topology and file mappings.
 - **[Governance Glossary](governance-glossary.md):** Canonical definitions of governance terms.
 - **[Canonical Terminology](canonical-terminology-index.md):** Ensuring consistent language across the substrate.

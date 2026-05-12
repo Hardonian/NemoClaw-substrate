@@ -124,14 +124,14 @@ class EnhancedSearch {
         // 1. Most likely path based on calculated nesting
         paths.push(`${staticPath}/${moduleDir}/${fileName}`);
 
-        // 2. Fallback static paths (for different nesting scenarios)
+        // 2. Degraded static paths (for different nesting scenarios)
         paths.push(`_static/${moduleDir}/${fileName}`);
         paths.push(`./_static/${moduleDir}/${fileName}`);
         if (nestingLevel > 1) {
             paths.push(`../_static/${moduleDir}/${fileName}`);
         }
 
-        // 3. Legacy fallback paths
+        // 3. Legacy degraded paths
         paths.push(`./modules/${fileName}`);
         paths.push(`../modules/${fileName}`);
         paths.push(`modules/${fileName}`);
@@ -164,7 +164,7 @@ class EnhancedSearch {
     }
 
     fallbackToDefaultSearch() {
-        // Don't interfere with default search - just fallback
+        // Don't interfere with default search - just degraded
     }
 
     getDocuments() {

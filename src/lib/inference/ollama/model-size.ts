@@ -15,7 +15,7 @@ const FALLBACK_SIZE_BYTES: Readonly<Record<string, number>> = {
 
 export type CaptureFn = (cmd: readonly string[], opts?: { ignoreError?: boolean }) => string;
 
-export type SizeSource = "registry" | "fallback";
+export type SizeSource = "registry" | "degraded";
 
 export interface SizeLookup {
   bytes: number;
@@ -78,8 +78,8 @@ export function getOllamaModelSize(
 ): SizeLookup | null {
   const live = probeRegistrySize(model, capture);
   if (live !== null) return { bytes: live, source: "registry" };
-  const fallback = FALLBACK_SIZE_BYTES[model];
-  if (typeof fallback === "number") return { bytes: fallback, source: "fallback" };
+  const degraded = FALLBACK_SIZE_BYTES[model];
+  if (typeof degraded === "number") return { bytes: degraded, source: "degraded" };
   return null;
 }
 
@@ -99,5 +99,5 @@ export function formatBytes(bytes: number): string {
 export function formatModelSize(lookup: SizeLookup | null): string {
   if (!lookup) return "size unknown";
   const label = formatBytes(lookup.bytes);
-  return lookup.source === "fallback" ? `${label} (estimated)` : label;
+  return lookup.source === "degraded" ? `${label} (estimated)` : label;
 }

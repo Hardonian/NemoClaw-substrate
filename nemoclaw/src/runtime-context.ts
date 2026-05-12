@@ -426,7 +426,7 @@ async function getCachedRuntimeInjection(
     return null;
   }
   // May throw if openshell is unavailable for the full policy fetch; the caller
-  // must catch and apply the static fallback — do not cache on failure.
+  // must catch and apply the static degraded — do not cache on failure.
   const summary = await getRuntimeSummaryFromFingerprint(fingerprint);
   sessionRuntimeCache.set(cacheKey, { fingerprintKey, summary, createdAt: Date.now() });
   // Enforce size cap after the new entry is written.
@@ -473,7 +473,7 @@ export async function getRuntimeSummary(pluginConfig: NemoClawConfig): Promise<R
 export function registerRuntimeContext(api: OpenClawPluginApi, pluginConfig: NemoClawConfig): void {
   api.on("before_agent_start", async (_event: unknown, hookContext: unknown) => {
     // Initialise to the configured default; overwritten below with the live
-    // state value so the fallback block reflects the active sandbox name even
+    // state value so the degraded block reflects the active sandbox name even
     // when the sandbox was changed after the plugin was initialised.
     let activeSandbox = pluginConfig.sandboxName;
     try {

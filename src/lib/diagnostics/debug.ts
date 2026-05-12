@@ -145,7 +145,7 @@ function detectSandboxName(): string {
     /* registry unreadable — fall through to openshell probe */
   }
 
-  // Fallback: ask the live gateway directly
+  // Degraded: ask the live gateway directly
   if (!commandExists("openshell")) return "default";
   try {
     const output = execFileSync("openshell", ["sandbox", "list"], {

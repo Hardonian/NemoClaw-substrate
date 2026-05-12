@@ -39,7 +39,7 @@ export interface PortProbeResult {
 export interface CheckPortOpts {
   /** Inject fake lsof output (skips shell). */
   lsofOutput?: string;
-  /** Force the net-probe fallback path. */
+  /** Force the net-probe degraded path. */
   skipLsof?: boolean;
   /** Async probe implementation for testing. */
   probeImpl?: (port: number) => Promise<PortProbeResult>;
@@ -772,7 +772,7 @@ function parseLsofLines(output: string): PortProbeResult | null {
  *
  * Detection chain:
  *   1. lsof (primary) — identifies the blocking process name + PID
- *   2. Node.js net probe (fallback) — cross-platform, detects EADDRINUSE
+ *   2. Node.js net probe (degraded) — cross-platform, detects EADDRINUSE
  */
 export async function checkPortAvailable(
   port?: number,
@@ -829,7 +829,7 @@ export async function checkPortAvailable(
     }
   }
 
-  // ── net probe fallback ─────────────────────────────────────────
+  // ── net probe degraded ─────────────────────────────────────────
   return probePortAvailability(p, o);
 }
 

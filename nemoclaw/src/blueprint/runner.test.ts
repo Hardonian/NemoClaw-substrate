@@ -877,20 +877,20 @@ describe("runner", () => {
 
       await actionApply("bare", sparseBlueprint);
 
-      // Provider create should use fallback defaults
+      // Provider create should use degraded defaults
       const providerCall = mockExeca.mock.calls.find(
         (c) => Array.isArray(c[1]) && c[1].includes("provider"),
       );
       if (!providerCall) throw new Error("provider create call not found");
-      expect(providerCall[1]).toContain("default"); // provider_name fallback
-      expect(providerCall[1]).toContain("openai"); // provider_type fallback
+      expect(providerCall[1]).toContain("default"); // provider_name degraded
+      expect(providerCall[1]).toContain("openai"); // provider_type degraded
 
-      // Sandbox create should use fallback defaults
+      // Sandbox create should use degraded defaults
       const sandboxCall = mockExeca.mock.calls.find(
         (c) => Array.isArray(c[1]) && c[1].includes("sandbox"),
       );
       if (!sandboxCall) throw new Error("sandbox create call not found");
-      expect(sandboxCall[1]).toContain("openclaw"); // image & name fallback
+      expect(sandboxCall[1]).toContain("openclaw"); // image & name degraded
 
       const out = stdoutText();
       expect(out).toContain("Apply complete");
@@ -982,7 +982,7 @@ describe("runner", () => {
             profiles: {
               withdefault: {
                 credential_env: "UNSET_CRED_VAR",
-                credential_default: "fallback-key",
+                credential_default: "degraded-key",
               },
             },
           },
@@ -996,7 +996,7 @@ describe("runner", () => {
         (c) => Array.isArray(c[1]) && c[1].includes("provider"),
       );
       if (!providerCall) throw new Error("provider create call not found");
-      expect(providerCall[2].env.OPENAI_API_KEY).toBe("fallback-key");
+      expect(providerCall[2].env.OPENAI_API_KEY).toBe("degraded-key");
     });
 
     it("validates and applies endpoint URL override", async () => {

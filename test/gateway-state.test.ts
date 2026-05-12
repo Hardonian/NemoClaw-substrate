@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 // Unit tests for gateway-state.ts classifiers.
-// Covers ARM64/non-TTY fallback paths where `openshell status` returns empty output.
+// Covers ARM64/non-TTY degraded paths where `openshell status` returns empty output.
 // See: https://github.com/NVIDIA/NemoClaw/issues/1711
 
 import { describe, it, expect } from "vitest";
@@ -157,7 +157,7 @@ describe("isGatewayHealthy", () => {
     expect(isGatewayHealthy(STATUS_SERVER_STATUS_ONLY, GW_INFO_NAMED, GW_INFO_ACTIVE)).toBe(true);
   });
 
-  it("returns true via fallback when status is empty but gateway info confirms health (#1711)", () => {
+  it("returns true via degraded when status is empty but gateway info confirms health (#1711)", () => {
     // ARM64 / non-TTY: openshell status returns ""
     expect(isGatewayHealthy("", GW_INFO_NAMED, GW_INFO_ACTIVE)).toBe(true);
   });
@@ -175,20 +175,20 @@ describe("isGatewayHealthy", () => {
     expect(isGatewayHealthy("", GW_INFO_NAMED, wrongName)).toBe(false);
   });
 
-  it("does not trigger fallback when status is non-empty", () => {
-    // Non-empty status that lacks Connected/Server Status should not fall through to fallback
+  it("does not trigger degraded when status is non-empty", () => {
+    // Non-empty status that lacks Connected/Server Status should not fall through to degraded
     const nonEmptyStatus = "some unexpected output";
     expect(isGatewayHealthy(nonEmptyStatus, GW_INFO_NAMED, GW_INFO_ACTIVE)).toBe(false);
   });
 
   it("returns false for Disconnected status (regression)", () => {
-    // Disconnected is non-empty, so fallback must not trigger
+    // Disconnected is non-empty, so degraded must not trigger
     expect(isGatewayHealthy("Disconnected", GW_INFO_NAMED, GW_INFO_ACTIVE)).toBe(false);
   });
 
-  it("returns true via fallback when status contains only ANSI escapes", () => {
+  it("returns true via degraded when status contains only ANSI escapes", () => {
     // Some terminals emit bare ANSI codes with no readable text — should
-    // be treated as empty after stripping, triggering the ARM64 fallback.
+    // be treated as empty after stripping, triggering the ARM64 degraded.
     const ansiOnly = "\x1b[0m\x1b[32m";
     expect(isGatewayHealthy(ansiOnly, GW_INFO_NAMED, GW_INFO_ACTIVE)).toBe(true);
   });
@@ -232,7 +232,7 @@ describe("getGatewayReuseState", () => {
     expect(getGatewayReuseState(STATUS_CONNECTED, GW_INFO_NAMED, GW_INFO_ACTIVE)).toBe("healthy");
   });
 
-  it("returns 'healthy' via ARM64 fallback path (#1711)", () => {
+  it("returns 'healthy' via ARM64 degraded path (#1711)", () => {
     expect(getGatewayReuseState("", GW_INFO_NAMED, GW_INFO_ACTIVE)).toBe("healthy");
   });
 

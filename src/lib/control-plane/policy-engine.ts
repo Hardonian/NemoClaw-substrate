@@ -3,6 +3,7 @@
 
 import type { PolicyRule, PolicyEffect, PolicyReasonCode, PolicyEvaluationContext } from "./governance";
 import { deterministicSerialize } from "./serde";
+import { createHash } from "node:crypto";
 
 export type PolicyScope = "global" | "environment" | "runtime" | "worker" | "execution" | "operator" | "emergency";
 
@@ -191,7 +192,7 @@ export function evaluatePolicyEngine(inheritance: PolicyInheritance, context: Po
   }
 
   const trace: PolicyEvaluationTrace = {
-    traceId: `trace-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+    traceId: `trace-${createHash("sha256").update(deterministicSerialize({ context, finalEffect, winningRuleId, winningScope })).digest("base64url").slice(0, 16)}`,
     evaluatedAt: new Date().toISOString(),
     context,
     decisions: { nodes, edges },
@@ -245,7 +246,7 @@ export function mutatePolicyPack(
   const newDigest = computePolicyPackDigest(updatedPack);
 
   const mutation: PolicyMutationRecord = {
-    mutationId: `mut-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+    mutationId: `mut-${createHash("sha256").update(deterministicSerialize({ packId: pack.packId, operator, previousDigest, newDigest, addedRuleCount: addedRules.length, removedRuleCount: removedRuleIds.length, addedOverrideCount: addedOverrides.length, removedOverrideCount: removedOverrideIds.length })).digest("base64url").slice(0, 16)}`,
     packId: pack.packId,
     timestamp: new Date().toISOString(),
     operator,

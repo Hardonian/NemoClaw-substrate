@@ -16,14 +16,14 @@ export default class InternalInstallerPlanCommand extends Command {
     help: Flags.help({ char: "h" }),
     json: Flags.boolean({ description: "Print the installer plan as JSON" }),
     "install-ref": Flags.string({ description: "Install ref override" }),
-    "install-tag": Flags.string({ description: "Install tag fallback" }),
-    "git-describe-version": Flags.string({ description: "git describe version fallback", hidden: true }),
+    "install-tag": Flags.string({ description: "Install tag degraded" }),
+    "git-describe-version": Flags.string({ description: "git describe version degraded", hidden: true }),
     "node-version": Flags.string({ description: "Detected Node.js version" }),
     "npm-prefix": Flags.string({ description: "Detected npm prefix" }),
     "npm-version": Flags.string({ description: "Detected npm version" }),
-    "package-json-version": Flags.string({ description: "package.json version fallback", hidden: true }),
+    "package-json-version": Flags.string({ description: "package.json version degraded", hidden: true }),
     provider: Flags.string({ description: "Installer provider value" }),
-    "stamped-version": Flags.string({ description: "Stamped .version fallback", hidden: true }),
+    "stamped-version": Flags.string({ description: "Stamped .version degraded", hidden: true }),
   };
 
   public async run(): Promise<void> {

@@ -1,6 +1,6 @@
 <!-- SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved. -->
 <!-- SPDX-License-Identifier: Apache-2.0 -->
-# ADR 0004: Supervised Policy Promotion
+# ADR 0004: Policy Promotion Engine
 
 - Status: Proposed
 

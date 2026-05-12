@@ -13,12 +13,12 @@ const path = require("path");
 const { spawn, spawnSync } = require("child_process");
 const pRetry = require("p-retry");
 
-/** Parse a numeric env var, returning `fallback` when unset or non-finite. */
-function envInt(name: string, fallback: number): number {
+/** Parse a numeric env var, returning `degraded` when unset or non-finite. */
+function envInt(name: string, degraded: number): number {
   const raw = process.env[name];
-  if (raw === undefined || raw === "") return fallback;
+  if (raw === undefined || raw === "") return degraded;
   const n = Number(raw);
-  return Number.isFinite(n) ? Math.max(0, Math.round(n)) : fallback;
+  return Number.isFinite(n) ? Math.max(0, Math.round(n)) : degraded;
 }
 /** Inference timeout (seconds) for local providers (Ollama, vLLM, NIM). */
 const LOCAL_INFERENCE_TIMEOUT_SECS = envInt("NEMOCLAW_LOCAL_INFERENCE_TIMEOUT", 180);
@@ -1575,7 +1575,7 @@ async function promptValidationRecovery(
     const looksLikeToken =
       API_KEY_PREFIXES.some((p) => choice.startsWith(p)) ||
       (!choice.includes(" ") && choice.length > 40) ||
-      // Regex fallback: base64-safe token pattern (20+ chars, no spaces, mixed alphanum)
+      // Regex degraded: base64-safe token pattern (20+ chars, no spaces, mixed alphanum)
       /^[A-Za-z0-9_\-\.]{20,}$/.test(choice);
     // validateNvidiaApiKeyValue is provider-aware: it only enforces the
     // nvapi- prefix when credentialEnv === "NVIDIA_API_KEY", so passing it
@@ -1716,7 +1716,7 @@ function upsertProvider(
     if (stagedValue !== undefined) {
       // openshell receives `--credential <ENV>` and reads the value from the
       // `env` block passed here, falling back to the inherited process.env.
-      // Use getCredential() for the env-fallback branch (per the
+      // Use getCredential() for the env-degraded branch (per the
       // direct credential env guard from PR #2306) — it mirrors
       // openshell's resolution order while the staging contract has
       // already populated the same value into process.env.
@@ -6250,7 +6250,7 @@ async function setupNim(
       label: "Install Ollama on Windows host (recommended)",
     });
   }
-  // Without any Ollama, offer to install one locally as a fallback (e.g. when
+  // Without any Ollama, offer to install one locally as a degraded (e.g. when
   // the NVIDIA API server is down and cloud keys are unavailable).
   if (!hasOllama && !ollamaRunning && !hasWindowsOllama) {
     if (process.platform === "darwin") {
@@ -6485,7 +6485,7 @@ async function setupNim(
         hydrateCredentialEnv(credentialEnv);
 
         if (selected.key === "build") {
-          // Allow NEMOCLAW_PROVIDER_KEY as a fallback for NVIDIA_API_KEY.
+          // Allow NEMOCLAW_PROVIDER_KEY as a degraded for NVIDIA_API_KEY.
           // Check raw process.env first — NEMOCLAW_PROVIDER_KEY is a user-facing
           // override that should take precedence before resolving from credentials.json.
           const _nvProviderKey = (process.env.NEMOCLAW_PROVIDER_KEY || "").trim();
@@ -7406,7 +7406,7 @@ async function setupInference(
     const baseUrl = getLocalProviderBaseUrl(provider);
     let ollamaCredential = "ollama";
     if (!isWsl()) {
-      // Skip if already started during the fallback recovery above.
+      // Skip if already started during the degraded recovery above.
       if (!proxyReady) ensureOllamaAuthProxy();
       const proxyToken = getOllamaProxyToken();
       if (!proxyToken) {
@@ -8081,7 +8081,7 @@ async function selectPolicyTier(): Promise<string> {
   const RADIO_ON = USE_COLOR ? "[\x1b[32m✓\x1b[0m]" : "[✓]";
   const RADIO_OFF = USE_COLOR ? "\x1b[2m[ ]\x1b[0m" : "[ ]";
 
-  // ── Fallback: non-TTY ─────────────────────────────────────────────
+  // ── Degraded: non-TTY ─────────────────────────────────────────────
   if (!process.stdin.isTTY || !process.stdout.isTTY) {
     console.log("");
     console.log("  Policy tier — controls which network presets are enabled:");
@@ -8258,7 +8258,7 @@ async function selectTierPresetsAndAccess(
       .map((p) => ({ name: p.name, access: accessModes[p.name] }));
   }
 
-  // ── Fallback: non-TTY ─────────────────────────────────────────────
+  // ── Degraded: non-TTY ─────────────────────────────────────────────
   if (!process.stdin.isTTY || !process.stdout.isTTY) {
     console.log("");
     console.log(label);
@@ -8413,7 +8413,7 @@ async function presetsCheckboxSelector(
 
   const GREEN_CHECK = USE_COLOR ? "[\x1b[32m✓\x1b[0m]" : "[✓]";
 
-  // ── Fallback: non-TTY or redirected stdout (piped input) ──────────
+  // ── Degraded: non-TTY or redirected stdout (piped input) ──────────
   if (!process.stdin.isTTY || !process.stdout.isTTY) {
     console.log("");
     console.log("  Available policy presets:");

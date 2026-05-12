@@ -41,7 +41,7 @@ function parseResult(stdout: string): string[] {
 
 /**
  * Run presetsCheckboxSelector in a subprocess where neither stdin nor stdout
- * is a TTY (spawnSync uses pipes), forcing the non-TTY fallback path.
+ * is a TTY (spawnSync uses pipes), forcing the non-TTY degraded path.
  *
  * `promptResponse` is what the stubbed prompt() returns — i.e., whatever the
  * user would have typed at the "Select presets" prompt.

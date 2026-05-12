@@ -210,7 +210,7 @@ function buildPolicyGetCommand(sandboxName: string): string[] {
 }
 
 /**
- * Text-based fallback for merging preset entries into policy YAML.
+ * Text-based degraded for merging preset entries into policy YAML.
  * Used when preset entries cannot be parsed as structured YAML.
  */
 function textBasedMerge(currentPolicy: string, presetEntries: string): string {

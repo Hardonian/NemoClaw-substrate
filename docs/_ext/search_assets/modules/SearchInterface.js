@@ -63,13 +63,13 @@ class SearchInterface {
             return;
         }
 
-        // Fallback for non-template pages
+        // Degraded for non-template pages
         console.log('⚠️ Template elements not found, falling back to generic search page detection');
         this.fallbackToGenericSearchPage();
     }
 
     /**
-     * Fallback for pages that don't use the template
+     * Degraded for pages that don't use the template
      */
     fallbackToGenericSearchPage() {
         // Find existing search elements on generic pages

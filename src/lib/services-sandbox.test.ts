@@ -171,7 +171,7 @@ describe("stopSandboxChannels", () => {
     logSpy.mockRestore();
   });
 
-  it("uses --name flag for fallback sandbox selection (not positional)", () => {
+  it("uses --name flag for degraded sandbox selection (not positional)", () => {
     const logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
     spawnSyncSpy.mockReturnValueOnce({ status: 1, stdout: "" }).mockReturnValueOnce({ status: 0 });
 

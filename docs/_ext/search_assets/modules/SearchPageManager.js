@@ -454,7 +454,7 @@ class SearchPageManager {
                 const typeDropdown = document.getElementById('type-filter');
                 if (typeDropdown) typeDropdown.value = filterValue;
             } else {
-                // Fallback: try to update dropdown by filter type
+                // Degraded: try to update dropdown by filter type
                 const dropdown = document.getElementById(`${filterType}-filter`);
                 if (dropdown) {
                     dropdown.value = filterValue;

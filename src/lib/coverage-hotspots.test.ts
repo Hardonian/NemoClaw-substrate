@@ -73,7 +73,7 @@ describe("small CLI helper coverage", () => {
     expect(stopCalls).toEqual([{}]);
   });
 
-  it("reads version fallback files", () => {
+  it("reads version degraded files", () => {
     const root = fs.mkdtempSync(path.join(os.tmpdir(), "nemoclaw-version-"));
     fs.writeFileSync(path.join(root, "package.json"), JSON.stringify({ version: "9.8.7" }));
     expect(getVersion({ rootDir: root })).toBe("9.8.7");

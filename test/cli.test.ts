@@ -2944,7 +2944,7 @@ describe("CLI dispatch", () => {
 
   it("connect --probe-only falls back to SSH when sandbox exec never starts", () => {
     const home = fs.mkdtempSync(
-      path.join(os.tmpdir(), "nemoclaw-cli-connect-probe-exec-fallback-"),
+      path.join(os.tmpdir(), "nemoclaw-cli-connect-probe-exec-degraded-"),
     );
     const localBin = path.join(home, "bin");
     const openshellCalls = path.join(home, "openshell-calls");
@@ -4916,7 +4916,7 @@ describe("list shows live gateway inference", () => {
   });
 
   it("falls back to registry values when openshell inference get fails", () => {
-    const home = fs.mkdtempSync(path.join(os.tmpdir(), "nemoclaw-cli-list-fallback-"));
+    const home = fs.mkdtempSync(path.join(os.tmpdir(), "nemoclaw-cli-list-degraded-"));
     const localBin = path.join(home, "bin");
     const registryDir = path.join(home, ".nemoclaw");
     fs.mkdirSync(localBin, { recursive: true });

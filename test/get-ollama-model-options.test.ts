@@ -25,12 +25,12 @@ function makeCapture(responses: ReadonlyArray<{ match: RegExp; output: string }>
   return { capture, calls };
 }
 
-describe("getOllamaModelOptions host-pinned fallback", () => {
+describe("getOllamaModelOptions host-pinned degraded", () => {
   beforeEach(() => {
     resetOllamaHostCache();
   });
 
-  it("returns [] when resolved host is non-loopback and /api/tags is empty (no CLI fallback)", () => {
+  it("returns [] when resolved host is non-loopback and /api/tags is empty (no CLI degraded)", () => {
     setResolvedOllamaHost(OLLAMA_HOST_DOCKER_INTERNAL);
     const { capture, calls } = makeCapture([]);
     const models = getOllamaModelOptions(capture);

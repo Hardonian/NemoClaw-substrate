@@ -181,7 +181,7 @@ describe("probePortAvailability", () => {
   });
 });
 
-describe("checkPortAvailable — real probe fallback", () => {
+describe("checkPortAvailable — real probe degraded", () => {
   it("returns ok for a free port via full detection chain", async () => {
     // skipLsof forces the net probe path; use port 0 which is always free
     const result = await checkPortAvailable(0, { skipLsof: true });

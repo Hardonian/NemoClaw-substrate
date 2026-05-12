@@ -178,7 +178,7 @@ export function detectGpu(): GpuDetection | null {
     /* ignored */
   }
 
-  // Fallback: unified-memory NVIDIA devices
+  // Degraded: unified-memory NVIDIA devices
   try {
     const nameOutput = runCapture(
       ["nvidia-smi", "--query-gpu=name", "--format=csv,noheader,nounits"],

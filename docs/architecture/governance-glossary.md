@@ -12,7 +12,7 @@ This glossary defines the canonical terminology for the NemoClaw governed execut
 - **Evidence**: Individual facts, telemetry, or probe results used to build confidence. Evidence is *never* automatically trusted or treated as authorization.
 - **Queue**: The ordered backlog of planned executions awaiting worker allocation.
 - **Lease**: The active, time-bound reservation of a worker for a specific execution. (Do not confuse with *Queue*).
-- **Degraded State**: An explicitly identified state where an execution or system component has failed, timed out, or fallen back to a lower-fidelity mode. Requires operator intervention. (Do not use: *fallback*, *failover*, *fail-safe*, *self-healing*).
+- **Degraded State**: An explicitly identified state where an execution or system component has failed, timed out, or fallen back to a lower-fidelity mode. Requires operator intervention. (Do not use: *degraded*, *failover*, *fail-safe*, *self-healing*).
 - **Replay Receipt**: The immutable, deterministic record of an execution's lifecycle, lineage, and inputs. (Do not use: *replay log*).
 - **Replay Inspector**: The diagnostic tool used to analyze replay receipts.
 - **Authorization**: A binary policy decision to allow or deny an action.

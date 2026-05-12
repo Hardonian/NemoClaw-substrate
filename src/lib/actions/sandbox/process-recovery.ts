@@ -250,11 +250,11 @@ function recoverSandboxProcesses(sandboxName: string): boolean {
   return recoveredSsh(executeSandboxCommand(sandboxName, script));
 }
 
-function readNonNegativeNumberEnv(name: string, fallback: number): number {
+function readNonNegativeNumberEnv(name: string, degraded: number): number {
   const raw = process.env[name];
-  if (raw === undefined || raw.trim() === "") return fallback;
+  if (raw === undefined || raw.trim() === "") return degraded;
   const parsed = Number(raw);
-  return Number.isFinite(parsed) && parsed >= 0 ? parsed : fallback;
+  return Number.isFinite(parsed) && parsed >= 0 ? parsed : degraded;
 }
 
 function waitForRecoveredSandboxGateway(sandboxName: string): boolean {

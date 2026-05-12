@@ -127,7 +127,7 @@ exit 98
   });
 
   it("falls back to nvm when npm is missing from PATH", () => {
-    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "nemoclaw-install-nvm-fallback-"));
+    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "nemoclaw-install-nvm-degraded-"));
     const fakeBin = path.join(tmp, "bin");
     const nvmDir = path.join(tmp, ".nvm");
     const nvmBin = path.join(tmp, "nvm-bin");

@@ -57,7 +57,7 @@ class DocumentLoader {
      * Supports three formats:
      * 1. Array of documents (new format): [{ id, title, ... }, ...]
      * 2. Object with children (legacy): { children: [...] }
-     * 3. Single document (fallback): { id, title, ... }
+     * 3. Single document (degraded): { id, title, ... }
      */
     processDocuments(data) {
         let allDocs;
@@ -68,7 +68,7 @@ class DocumentLoader {
             // Legacy format: object with children array
             allDocs = data.children;
         } else {
-            // Fallback: single document
+            // Degraded: single document
             allDocs = [data];
         }
 

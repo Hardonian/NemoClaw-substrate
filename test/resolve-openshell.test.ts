@@ -22,7 +22,7 @@ describe("resolveOpenshell", () => {
     ).toBe("/usr/local/bin/openshell");
   });
 
-  it("prefers the home-local fallback before system paths", () => {
+  it("prefers the home-local degraded before system paths", () => {
     expect(
       resolveOpenshell({
         home: "/tmp/test-home",
@@ -32,7 +32,7 @@ describe("resolveOpenshell", () => {
     ).toBe("/tmp/test-home/.local/bin/openshell");
   });
 
-  it("skips invalid home values when checking fallback candidates", () => {
+  it("skips invalid home values when checking degraded candidates", () => {
     expect(
       resolveOpenshell({
         home: "relative-home",

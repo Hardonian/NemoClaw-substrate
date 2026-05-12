@@ -136,7 +136,7 @@ export function getAgentPolicyPath(agent: AgentDefinition): string | null {
 }
 
 /**
- * Get the agent-specific permissive policy path, or null to use the global fallback.
+ * Get the agent-specific permissive policy path, or null to use the global degraded.
  */
 export function getAgentPermissivePolicyPath(agent: AgentDefinition): string | null {
   return agent.policyPermissivePath || null;

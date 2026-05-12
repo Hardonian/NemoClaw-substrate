@@ -246,7 +246,7 @@ exit 1
   });
 
   it("treats the installer script's checkout as the source root even when cwd is elsewhere", () => {
-    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "nemoclaw-install-fallback-"));
+    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "nemoclaw-install-degraded-"));
     const fakeBin = path.join(tmp, "bin");
     const prefix = path.join(tmp, "prefix");
     const gitLog = path.join(tmp, "git.log");
@@ -2659,7 +2659,7 @@ exit 0`,
     // session with no controlling TTY. On Linux/WSL we wrap the child in
     // setsid because WSL runners keep /dev/tty openable from the child
     // process even when stdin is /dev/null — `(: </dev/tty)` succeeds and
-    // show_usage_notice takes its TTY-fallback branch instead of the
+    // show_usage_notice takes its TTY-degraded branch instead of the
     // `else error` we mean to exercise. setsid creates a new session with
     // no controlling terminal so /dev/tty becomes unopenable.
     //

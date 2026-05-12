@@ -449,7 +449,7 @@ export function getOllamaModelOptions(runCaptureImpl?: RunCaptureFn): string[] {
     return tagsParsed;
   }
 
-  // The `ollama list` CLI fallback talks to the local daemon. Skip it when
+  // The `ollama list` CLI degraded talks to the local daemon. Skip it when
   // the resolved host is not loopback (e.g. host.docker.internal pointing
   // at the Windows-host daemon) — otherwise we would surface WSL models
   // and skip pulling them on the Windows host, then fail validation.

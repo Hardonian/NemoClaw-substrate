@@ -65,7 +65,7 @@
     }
   };
 
-  // Fallback: catch uncaughtException from ciao if the monkey-patch
+  // Degraded: catch uncaughtException from ciao if the monkey-patch
   // doesn't cover all call sites. Gateway-only — registering ANY
   // uncaughtException listener tells Node "don't crash by default", and
   // we want CLI processes (agent, doctor, plugins, tui) to keep default

@@ -54,7 +54,7 @@ describe("config set nested URL SSRF enforcement", () => {
       const { configSet } = require("../dist/lib/sandbox-config");
       const nestedValue = JSON.stringify({
         primary: "https://api.nvidia.com/v1",
-        fallback: ["https://example.com/v1", { internal: "http://localhost:8080/internal" }],
+        degraded: ["https://example.com/v1", { internal: "http://localhost:8080/internal" }],
       });
 
       await expect(
@@ -208,7 +208,7 @@ describe("config set nested URL SSRF enforcement", () => {
       const { configSet } = require("../dist/lib/sandbox-config");
       const nestedValue = JSON.stringify({
         primary: "https://93.184.216.34/v1",
-        fallback: ["http://93.184.216.35/v1", { backup: "https://93.184.216.36/v2" }],
+        degraded: ["http://93.184.216.35/v1", { backup: "https://93.184.216.36/v2" }],
       });
 
       await expect(
@@ -359,7 +359,7 @@ describe("config set nested URL SSRF enforcement", () => {
       const { configSet } = require("../dist/lib/sandbox-config");
       const nestedValue = JSON.stringify({
         primary: "HTTP://93.184.216.34/v1",
-        fallback: ["HtTpS://93.184.216.35/v2", { backup: "hTtP://93.184.216.36/v3" }],
+        degraded: ["HtTpS://93.184.216.35/v2", { backup: "hTtP://93.184.216.36/v3" }],
       });
 
       await expect(

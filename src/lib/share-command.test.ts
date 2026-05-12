@@ -96,7 +96,7 @@ describe("share-command helpers", () => {
     withProcessPlatform("linux", () => {
       spawnSyncMock.mockImplementation((cmd: string) => {
         if (cmd === "mountpoint") return { status: 1 };
-        if (cmd === "mount") throw new Error("mount fallback should not run");
+        if (cmd === "mount") throw new Error("mount degraded should not run");
         return { status: 1, stdout: "", stderr: "" };
       });
 

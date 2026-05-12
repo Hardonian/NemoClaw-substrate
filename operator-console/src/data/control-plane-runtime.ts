@@ -37,8 +37,8 @@ export function summarizeDegradedTimeline(events: OperationalEvent[]): string[] 
 
 export function summarizeFallbackFrequency(events: OperationalEvent[]): Record<string, number> {
   const out: Record<string, number> = {};
-  for (const event of events.filter((e) => e.category === "fallback")) {
-    const reason = (event.payload["fallback"] as { reason?: string } | undefined)?.reason ?? "unknown";
+  for (const event of events.filter((e) => e.category === "degraded")) {
+    const reason = (event.payload["degraded"] as { reason?: string } | undefined)?.reason ?? "unknown";
     out[reason] = (out[reason] ?? 0) + 1;
   }
   return Object.fromEntries(Object.entries(out).sort(([a], [b]) => a.localeCompare(b)));
@@ -83,7 +83,7 @@ export function summarizeHeterogeneousDiagnostics(input: { routing: { enabled: b
     `Selected candidate: ${input.result?.selectedCandidate?.candidateId ?? "none"}`,
     `Excluded candidates: ${input.result?.excludedCandidates?.map((c) => c.candidateId).join(",") || "none"}`,
     `No-candidate reason: ${noCandidateReason}`,
-    `Fallback: ${fallbackState}`,
+    `Degraded: ${fallbackState}`,
     `Receipt: ${input.result?.receipt.receiptId ?? "none"}`,
   ];
 }

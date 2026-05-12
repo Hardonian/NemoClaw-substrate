@@ -18,19 +18,19 @@ This document describes intended architecture for this fork. Status labels:
 | Component | Status | Notes |
 |---|---|---|
 | Execution plane (existing CLI/plugin/sandbox actions) | Implemented | Present in repo today. |
-| Control plane separation | Planned | Explicit control-plane contracts are not yet present. |
-| Canonical request envelope | Planned | Contract/type not yet implemented. |
-| Device registry | Planned | No dedicated registry for heterogeneous device capability snapshots yet. |
-| Capability snapshots | Planned | No unified snapshot schema yet. |
-| Deterministic scheduler | Planned | No standalone deterministic scheduler module yet. |
-| Policy engine | Partial | Policy presets and schemas exist, but no dedicated decision-time policy engine with approval workflow. |
-| Approval gates | Planned | No explicit gate framework for policy promotion or routing approvals yet. |
-| Execution receipts | Planned | No cross-cutting receipt contract currently emitted for control decisions. |
-| Degraded-state taxonomy | Partial | Local degraded reporting exists in specific commands, but no shared taxonomy. |
-| Operational memory | Planned | No explicit append-only operator decision memory module yet. |
-| Supervised policy promotion | Planned | Not implemented yet as formal workflow. |
-| Observability | Partial | Diagnostics/log surfaces exist; no unified control-plane observability model yet. |
-| Replayability/audit history | Partial | Some audit/state artifacts exist; no end-to-end replayable control history contract yet. |
+| Control plane separation | Library-implemented | Contracts exist in `src/lib/control-plane/` but are not wired into the main CLI flow. |
+| Canonical request envelope | Scaffolded | Type definitions exist in control-plane modules. |
+| Device registry | Library-implemented | In-memory registry in `src/lib/control-plane/device-registry.ts`. |
+| Capability snapshots | Library-implemented | Worker capability types in `src/lib/control-plane/worker-trust.ts`. |
+| Deterministic scheduler | Library-implemented | Scheduler logic in `src/lib/control-plane/scheduler.ts`, not wired into CLI. |
+| Policy engine | Library-implemented | Multi-scope policy engine in `src/lib/control-plane/policy-engine.ts`. |
+| Approval gates | Library-implemented | Approval workflow types in `src/lib/control-plane/execution-plans.ts`. |
+| Execution receipts | Library-implemented | Receipt generation in `src/lib/control-plane/execution-lifecycle.ts`. |
+| Degraded-state taxonomy | Library-implemented | Types in `src/lib/control-plane/types.ts`, surfaced in local diagnostics. |
+| Operational memory | Library-implemented | Event log in `src/lib/control-plane/operational-memory.ts`. |
+| Supervised policy promotion | Library-implemented | Policy promotion logic in `src/lib/control-plane/policy-promotion.ts`. |
+| Observability | Library-implemented | Summary functions in `src/lib/control-plane/observability.ts`. |
+| Replayability/audit history | Library-implemented | Replay envelopes in `src/lib/control-plane/replay.ts`. |
 | Dynamo-style orchestration adapter seam | Planned | Adapter seam is a design target only. |
 
 ## Execution plane vs control plane

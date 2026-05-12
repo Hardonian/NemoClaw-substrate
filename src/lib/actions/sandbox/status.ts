@@ -62,7 +62,7 @@ export async function showSandboxStatus(sandboxName: string): Promise<void> {
   // hanging when its container is stopped and the published port is held by a
   // foreign listener) suppress the sandbox header. The downstream switch
   // handles `gateway_error` by printing an actionable block + exit(1), so a
-  // synthesized fallback keeps the user-visible contract intact.
+  // synthesized degraded keeps the user-visible contract intact.
   let lookup: SandboxGatewayState;
   try {
     lookup = await getReconciledSandboxGatewayState(sandboxName, {

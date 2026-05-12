@@ -509,7 +509,7 @@ describe("registerRuntimeContext", () => {
     });
   });
 
-  describe("error fallback", () => {
+  describe("error degraded", () => {
     it("returns minimal static context and logs a warning when getCachedRuntimeInjection throws", async () => {
       vi.mocked(loadState).mockImplementation(() => {
         throw new Error("disk read failure");
@@ -532,7 +532,7 @@ describe("registerRuntimeContext", () => {
       ).toBe(true);
     });
 
-    it("includes the sandbox name from pluginConfig in the fallback block", async () => {
+    it("includes the sandbox name from pluginConfig in the degraded block", async () => {
       vi.mocked(loadState).mockImplementation(() => {
         throw new Error("unexpected");
       });

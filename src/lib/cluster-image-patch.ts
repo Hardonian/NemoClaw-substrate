@@ -182,7 +182,7 @@ export function extractUpstreamVersion(upstreamImage: string): string {
  * changes, the SHA changes, the patched tag changes, and the next onboard
  * rebuilds. Without it, a stale upstream re-push is silently invisible.
  *
- * Callers should resolve and pass `upstreamDigest`. The optional fallback is
+ * Callers should resolve and pass `upstreamDigest`. The optional degraded is
  * for unit-testable callers that don't care to model docker inspect.
  */
 export function computePatchedTag(opts: {

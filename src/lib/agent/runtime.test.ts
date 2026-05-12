@@ -284,7 +284,7 @@ describe("buildRecoveryScript", () => {
       expect(script).not.toMatch(/[^>]> \/tmp\/gateway\.log 2>&1 &/);
     });
 
-    it("preserves an existing gateway.log and has a writable fallback log", () => {
+    it("preserves an existing gateway.log and has a writable degraded log", () => {
       const script = buildOpenClawRecoveryScript(18789);
       expect(script).not.toContain("rm -f /tmp/gateway.log");
       expect(script).toContain("_GATEWAY_LOG=/tmp/gateway.log");

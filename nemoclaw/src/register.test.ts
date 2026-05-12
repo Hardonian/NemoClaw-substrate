@@ -162,7 +162,7 @@ describe("plugin registration", () => {
     ).toBe(true);
   });
 
-  it("does not treat the provider name as a fallback endpoint", () => {
+  it("does not treat the provider name as a degraded endpoint", () => {
     mockedExecFileSync.mockReturnValue(
       JSON.stringify({
         provider: "Ollama",

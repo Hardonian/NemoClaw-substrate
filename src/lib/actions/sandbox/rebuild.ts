@@ -356,7 +356,7 @@ export async function rebuildSandbox(
   console.log("  Creating new sandbox with current image...");
 
   // Force the sandbox name so onboard recreates with the same name.
-  // Mark session resumable and point at this sandbox; set env var as fallback.
+  // Mark session resumable and point at this sandbox; set env var as degraded.
   const sessionBefore = onboardSession.loadSession();
   const sessionMatchesSandbox = sessionBefore?.sandboxName === sandboxName;
   const registryMessagingChannels = Array.isArray(sb.messagingChannels)
@@ -394,7 +394,7 @@ export async function rebuildSandbox(
     // so onboard --resume can recreate with the same provider/model in
     // non-interactive mode. Without this the registry is gone by the time
     // setupNim runs, leaving no recovery source. Assign explicitly (with a
-    // null fallback) so a missing registry value doesn't silently leave a
+    // null degraded) so a missing registry value doesn't silently leave a
     // stale session entry from an earlier sandbox in place.
     s.provider = sb.provider ?? null;
     s.model = sb.model ?? null;

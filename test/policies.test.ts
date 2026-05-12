@@ -542,7 +542,7 @@ describe("policies", () => {
   });
 
   describe("mergePresetIntoPolicy", () => {
-    // Legacy list-style entries (backward compat — uses text-based fallback)
+    // Legacy list-style entries (backward compat — uses text-based degraded)
     const sampleEntries = "  - host: example.com\n    allow: true";
 
     it("appends network_policies when current policy has content but no version header", () => {

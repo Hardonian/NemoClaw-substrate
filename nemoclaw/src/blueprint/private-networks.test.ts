@@ -117,7 +117,7 @@ describe("private-networks loader", () => {
       // of falling through to cwd.
       seedYaml(
         "private-networks.yaml",
-        "ipv4:\n  - address: 8.8.8.0\n    prefix: 24\n    purpose: cwd fallback\nipv6: []\nnames: []\n",
+        "ipv4:\n  - address: 8.8.8.0\n    prefix: 24\n    purpose: cwd degraded\nipv6: []\nnames: []\n",
       );
       const entries = getNetworkEntries();
       expect(entries.ipv4[0].address).toBe("8.8.8.0");

@@ -311,7 +311,7 @@ function runLocalDeploy(instanceName: string): void {
  * Delete any leftover instance with the same name.
  * This can happen when a previous run's create succeeded on the backend
  * but the CLI got a network error (unexpected EOF) before confirming,
- * then the retry/fallback fails with "duplicate workspace".
+ * then the retry/degraded fails with "duplicate workspace".
  */
 function cleanupLeftoverInstance(elapsed: () => string): void {
   const instanceName = requireInstanceName();

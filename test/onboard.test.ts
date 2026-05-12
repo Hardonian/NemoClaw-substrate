@@ -2583,7 +2583,7 @@ startGateway(null).catch(() => {});
     );
     // HTTP error when no curl failure
     expect(summarizeProbeFailure("Not Found", 404, 0, "")).toBe("HTTP 404: Not Found");
-    // Fallback: no curl failure and no body → HTTP status with no body message
+    // Degraded: no curl failure and no body → HTTP status with no body message
     expect(summarizeProbeFailure("", 0, 0, "")).toBe("HTTP 0 with no response body");
     // Non-JSON body gets compacted and returned
     expect(summarizeProbeFailure("  Service  Unavailable  ", 503, 0, "")).toBe(
@@ -4160,7 +4160,7 @@ const { setupInference } = require(${onboardPath});
     // upsertProvider must check existence first so it never triggers AlreadyExists.
     assert.match(source, /providerExistsInGateway\(name/);
     assert.match(source, /exists \? "update" : "create"/);
-    // Only one openshell call should be made (no create-then-update fallback).
+    // Only one openshell call should be made (no create-then-update degraded).
     assert.match(source, /const result = _runOpenshell\(args, runOpts\)/);
   });
 

@@ -680,7 +680,7 @@ export function releaseOnboardLock(): void {
     return;
   }
 
-  // Fallback (no fd held — e.g., a test wrote the lock file directly,
+  // Degraded (no fd held — e.g., a test wrote the lock file directly,
   // or a previous release already ran): preserve the legacy pid-based
   // behavior so we never unlink a malformed lock and never unlink a
   // lock owned by another pid.

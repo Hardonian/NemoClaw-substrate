@@ -1,6 +1,6 @@
 <!-- SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved. -->
 <!-- SPDX-License-Identifier: Apache-2.0 -->
-# ADR 0003: Deterministic Routing
+# ADR 0003: Heterogeneous Routing
 
 - Status: Proposed
 

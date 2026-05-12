@@ -196,7 +196,7 @@ export interface ExecutionReceipt {
 }
 
 export type OperationalEventCategory =
-  | "receipt" | "policy_outcome" | "fallback" | "degraded_state"
+  | "receipt" | "policy_outcome" | "degraded" | "degraded_state"
   | "scheduler_outcome" | "operator_override" | "runtime_action"
   | "telemetry_probe_started" | "telemetry_probe_succeeded" | "telemetry_probe_failed"
   | "telemetry_parse_succeeded" | "telemetry_parse_partial" | "telemetry_parse_failed"

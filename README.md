@@ -1,27 +1,29 @@
 <!-- SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved. -->
 <!-- SPDX-License-Identifier: Apache-2.0 -->
 
-# NemoClaw Fork: Local Operator-Grade Execution and Governance
+# NemoClaw: Local Operator-Grade Execution and Governance
 
-This fork of NemoClaw is being shaped into a governed heterogeneous execution substrate for local operator-grade AI execution with explicit release-truth boundaries.
+NemoClaw is an open-source reference stack for running OpenClaw always-on assistants inside OpenShell sandboxes more safely. It provides CLI tooling, a plugin for sandbox orchestration, security hardening, and a governed control-plane library for deterministic execution decisions.
 
-## Why this fork exists
+## Why this project exists
 
-The fork prioritizes deterministic and auditable control over opaque autonomy. It focuses on:
+NemoClaw focuses on deterministic and auditable control over opaque autonomy:
 
 - execution plane and control plane separation,
 - truthful degraded-state reporting,
-- execution receipts/provenance,
+- execution receipts and provenance,
 - supervised policy promotion,
-- explainable routing/control decisions.
+- explainable routing and control decisions.
+
+See [Fork Rationale](docs/fork-rationale.md) for detailed background.
 
 ## Current state vs roadmap
 
-- **Implemented:** existing CLI/plugin/sandbox orchestration and inference onboarding flows; control-plane verification gates.
-- **Scaffolded:** remote execution and telemetry adapter seams with explicit degraded-state reporting.
+- **Implemented:** existing CLI/plugin/sandbox orchestration and inference onboarding flows; network policy presets; secret scanning; SSRF validation; shield audit logging.
+- **Library-implemented:** control-plane contracts (policy engine, execution lifecycle, replay, worker trust, device registry, operational memory, probes, telemetry) — tested but not wired into main CLI flow.
 - **Opt-in:** governed routing (`NEMOCLAW_GOVERNED_ROUTING=1`) and heterogeneous bridge (`NEMOCLAW_HETEROGENEOUS_ROUTING=1`).
-- **Planned:** external orchestration adapter integrations after stable local contracts.
-- **Not implemented:** distributed execution, GPU balancing, Dynamo integration, autonomous orchestration/autonomous recovery, automatic policy learning.
+- **Planned:** CLI integration of control-plane library, persistent storage adapters, external orchestration integrations.
+- **Not implemented:** distributed execution, GPU balancing, Dynamo integration, autonomous orchestration/recovery loops, automatic policy learning.
 
 ## Documentation
 

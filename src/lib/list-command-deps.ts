@@ -24,7 +24,7 @@ interface RegistryFallback {
 }
 
 /**
- * #2666 fallback wrapper: if the primary recovery throws (e.g. openshell
+ * #2666 degraded wrapper: if the primary recovery throws (e.g. openshell
  * hangs talking to a foreign port-holder), surface the registry-only
  * listing instead of letting the throw propagate and silence output.
  *
@@ -33,12 +33,12 @@ interface RegistryFallback {
  */
 export async function recoverRegistryEntriesWithFallback(
   primary: () => Promise<RecoveredRegistry>,
-  fallback: () => RegistryFallback,
+  degraded: () => RegistryFallback,
 ): Promise<RecoveredRegistry> {
   try {
     return await primary();
   } catch {
-    const list = fallback();
+    const list = degraded();
     return { ...list, recoveredFromSession: false, recoveredFromGateway: 0 };
   }
 }

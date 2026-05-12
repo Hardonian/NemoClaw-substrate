@@ -506,7 +506,7 @@ class SearchEngine {
             `${query}* ${query}~2`,
             // Individual terms with boost
             query.split(/\s+/).map(term => `${term}*`).join(' '),
-            // Fallback: just the query
+            // Degraded: just the query
             query
         ];
 

@@ -295,7 +295,7 @@ describe("readRecordedNimContainer", () => {
   });
 });
 
-describe("readRecordedProvider — live gateway fallback", () => {
+describe("readRecordedProvider — live gateway degraded", () => {
   // Covers the #2728 captured state: session.provider = null, registry has
   // the entry but with no useful provider field, AND the live gateway still
   // holds the original inference config from before the failure.  We have to

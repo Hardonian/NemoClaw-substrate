@@ -74,7 +74,7 @@ describe("onboard build context cleanup", () => {
     // When fs.rmSync throws (e.g. EBUSY on Windows, permission denied),
     // the 'exit' safety net must remain registered so the temp dir is
     // still removed at process exit. Regression guard for the review
-    // feedback "Don't drop the fallback cleanup after a failed rmSync".
+    // feedback "Don't drop the degraded cleanup after a failed rmSync".
     const result = spawnSync(
       "node",
       [

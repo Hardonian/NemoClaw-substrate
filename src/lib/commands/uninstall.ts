@@ -12,7 +12,7 @@ export default class UninstallCliCommand extends Command {
   static id = "uninstall";
   static strict = false;
   static summary = "Run uninstall.sh";
-  static description = "Run the local uninstall.sh script; remote fallback is disabled.";
+  static description = "Run the local uninstall.sh script; remote degraded is disabled.";
   static usage = ["uninstall [flags]"];
   static examples = ["<%= config.bin %> uninstall --yes"];
   static flags = {

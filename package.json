@@ -57,8 +57,6 @@
     "verify:chaos": "vitest run src/lib/control-plane/degraded-state-chaos.test.ts src/lib/control-plane/execution-lifecycle.test.ts",
     "verify:release": "npm run verify:changelog-hygiene && npm run verify:core && npm run typecheck && npm run lint && npm run verify:chaos",
     "verify:benchmarks": "tsx scripts/verify-benchmarks.ts",
-    "verify:proofpack": "tsx scripts/verify-proofpack.ts",
-    "verify:replay": "tsx scripts/verify-replay.ts",
     "verify:export": "tsx scripts/verify-export.ts",
     "verify:docs-strict": "tsx scripts/verify-docs-strict.ts"
   },

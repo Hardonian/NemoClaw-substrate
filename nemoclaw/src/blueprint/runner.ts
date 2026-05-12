@@ -15,7 +15,7 @@
 import { randomUUID } from "node:crypto";
 import { mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
-import { join, sep } from "node:path";
+import { basename, join, sep } from "node:path";
 
 import { execa } from "execa";
 import YAML from "yaml";
@@ -602,8 +602,9 @@ export async function actionApply(
   // Scope the credential to the subprocess to avoid leaking into later commands.
   const credEnv: Record<string, string> = {};
   if (credential) {
-    credEnv.OPENAI_API_KEY = credential;
-    providerArgs.push("--credential", "OPENAI_API_KEY");
+    const credEnvName = credentialEnv || "OPENAI_API_KEY";
+    credEnv[credEnvName] = credential;
+    providerArgs.push("--credential", credEnvName);
   }
   if (endpoint) {
     providerArgs.push("--config", `OPENAI_BASE_URL=${endpoint}`);
@@ -727,7 +728,7 @@ export function actionStatus(rid?: string): void {
   try {
     log(readFileSync(join(runDir, "plan.json"), "utf-8"));
   } catch {
-    const name = runDir.split("/").pop() ?? "unknown";
+    const name = basename(runDir) || "unknown";
     log(JSON.stringify({ run_id: name, status: "unknown" }));
   }
 }

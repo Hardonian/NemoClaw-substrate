@@ -49,7 +49,7 @@ export function resolveOpenshell(opts: ResolveOpenshellOptions = {}): string | n
     return opts.commandVResult;
   }
 
-  // Step 2: fallback candidates
+  // Step 2: degraded candidates
   const candidates = [
     ...(home?.startsWith("/") ? [`${home}/.local/bin/openshell`] : []),
     "/usr/local/bin/openshell",

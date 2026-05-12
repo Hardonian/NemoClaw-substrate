@@ -55,7 +55,7 @@ function readBeforeToolCallEvent(
   };
 }
 
-// Resolve live inference config from OpenShell as a fallback when the
+// Resolve live inference config from OpenShell as a degraded when the
 // onboard config file is not available (e.g. when running inside the
 // sandbox). Returns empty strings if the probe fails.
 function probeOpenShellInference(): { endpoint: string; provider: string; model: string } {

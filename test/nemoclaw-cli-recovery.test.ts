@@ -11,7 +11,7 @@ import { testTimeoutOptions } from "./helpers/timeouts";
 
 describe("nemoclaw CLI runtime recovery", () => {
   it(
-    "recovers sandbox status when openshell is only available via the resolved fallback path",
+    "recovers sandbox status when openshell is only available via the resolved degraded path",
     testTimeoutOptions(),
     () => {
       const repoRoot = path.join(import.meta.dirname, "..");

@@ -1365,7 +1365,7 @@ const { setupNim } = require(${onboardPath});
     );
     assert.equal(downloadPrompts.length, 2);
     // Each prompt must surface the resolved size — the whole point of #2639 —
-    // either a "<value> <unit>" label or the explicit "size unknown" fallback.
+    // either a "<value> <unit>" label or the explicit "size unknown" degraded.
     const sizePattern = /\((\d+(\.\d+)? (B|KB|MB|GB|TB)( \(estimated\))?|size unknown)\)/;
     for (const prompt of downloadPrompts) {
       assert.match(prompt, sizePattern);
@@ -1479,7 +1479,7 @@ const { setupNim } = require(${onboardPath});
     );
     // The size is still surfaced in the auto-yes path so unattended installs
     // record what was downloaded — assert the "Pulling Ollama model" log line
-    // includes a size label or the "size unknown" fallback.
+    // includes a size label or the "size unknown" degraded.
     const sizePattern = /\((\d+(\.\d+)? (B|KB|MB|GB|TB)( \(estimated\))?|size unknown)\)/;
     const pullingLine = payload.lines.find((line: string) =>
       /Pulling Ollama model 'qwen2.5:7b'/.test(line),
@@ -1967,10 +1967,10 @@ const { setupNim } = require(${onboardPath});
   it("falls back to chat completions for custom OpenAI-compatible endpoints when /responses lacks tool calls", () => {
     const repoRoot = path.join(import.meta.dirname, "..");
     const tmpDir = fs.mkdtempSync(
-      path.join(os.tmpdir(), "nemoclaw-onboard-custom-openai-responses-fallback-"),
+      path.join(os.tmpdir(), "nemoclaw-onboard-custom-openai-responses-degraded-"),
     );
     const fakeBin = path.join(tmpDir, "bin");
-    const scriptPath = path.join(tmpDir, "custom-openai-responses-fallback-check.js");
+    const scriptPath = path.join(tmpDir, "custom-openai-responses-degraded-check.js");
     const onboardPath = JSON.stringify(path.join(repoRoot, "dist", "lib", "onboard.js"));
     const credentialsPath = JSON.stringify(path.join(repoRoot, "dist", "lib", "credentials", "store.js"));
     const runnerPath = JSON.stringify(path.join(repoRoot, "dist", "lib", "runner.js"));
@@ -2157,7 +2157,7 @@ const { setupNim } = require(${onboardPath});
     // correctly handle the developer role used by the Responses API.
     assert.equal(payload.result.preferredInferenceApi, "openai-completions");
     // Verify the wizard selected chat completions (either via our forced
-    // override or via the streaming fallback — both are correct).
+    // override or via the streaming degraded — both are correct).
     assert.ok(payload.lines.some((line: string) => line.includes("openai-completions")));
   });
 
@@ -2257,7 +2257,7 @@ const { setupNim } = require(${onboardPath});
     // forces openai-completions is bypassed: our override check sees the
     // env var and uses validation.api instead. In this test, the mock
     // curl doesn't support SSE streaming, so the probe's streaming
-    // fallback returns openai-completions regardless. A real backend with
+    // degraded returns openai-completions regardless. A real backend with
     // proper streaming would yield openai-responses here.
     // The important thing: the env var is read and the forced-completions
     // override does NOT fire, proving the escape hatch works.
@@ -3858,7 +3858,7 @@ const { setupNim } = require(${onboardPath});
       payload.runCommands.some((cmd: string) =>
         cmd.includes("OLLAMA_HOST=127.0.0.1:11434 ollama serve"),
       ),
-      "Linux install fallback should start Ollama on loopback",
+      "Linux install degraded should start Ollama on loopback",
     );
     assert.ok(
       !payload.runCommands.some((cmd: string) => cmd.includes("OLLAMA_HOST=0.0.0.0:11434")),
@@ -4074,7 +4074,7 @@ const { setupNim } = require(${onboardPath});
       payload.runCommands.some((cmd: string) =>
         cmd.includes("OLLAMA_HOST=127.0.0.1:11434 ollama serve"),
       ),
-      "non-interactive install fallback should start Ollama on loopback",
+      "non-interactive install degraded should start Ollama on loopback",
     );
     assert.ok(
       !payload.runCommands.some((cmd: string) => cmd.includes("OLLAMA_HOST=0.0.0.0:11434")),

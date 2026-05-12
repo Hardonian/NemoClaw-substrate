@@ -326,7 +326,7 @@ describe("snapshot", () => {
 
       moveSync("/xdev-src", "/xdev-dest");
 
-      // cpSync should have been called as fallback
+      // cpSync should have been called as degraded
       expect(mockCp).toHaveBeenCalledWith("/xdev-src", "/xdev-dest", { recursive: true });
     });
 

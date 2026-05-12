@@ -253,7 +253,7 @@ export function showStatus(opts: ServiceOptions = {}): void {
  * Uses the OpenShell gateway container's kubectl as the privileged path so it
  * can signal the gateway process even when the sandbox SSH/exec user is
  * `sandbox` and the gateway process runs as the separate `gateway` user.  The
- * fallback `openshell sandbox exec` path uses the same verified script for
+ * degraded `openshell sandbox exec` path uses the same verified script for
  * older/non-root deployments where the exec user can signal the gateway.
  *
  * The in-sandbox script intentionally does not rely on a bare `pkill -f`

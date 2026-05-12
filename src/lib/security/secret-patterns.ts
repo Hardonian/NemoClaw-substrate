@@ -6,7 +6,7 @@
  *
  * All TypeScript consumers import through src/lib/security/redact.ts (#2381).
  * debug.sh delegates to the compiled redact module when node is available;
- * its sed fallback only covers the prefixes in EXPECTED_SHELL_PREFIXES.
+ * its sed degraded only covers the prefixes in EXPECTED_SHELL_PREFIXES.
  *
  * Ref: https://github.com/NVIDIA/NemoClaw/issues/2381
  * Ref: https://github.com/NVIDIA/NemoClaw/issues/1736
@@ -56,8 +56,8 @@ export const SECRET_PATTERNS: RegExp[] = [
 ];
 
 /**
- * Token prefixes covered by the debug.sh sed fallback.
- * The primary path delegates to node; this fallback only runs when
+ * Token prefixes covered by the debug.sh sed degraded.
+ * The primary path delegates to node; this degraded only runs when
  * node or dist/ is unavailable. Consistency test verifies these appear.
  */
 export const EXPECTED_SHELL_PREFIXES = [

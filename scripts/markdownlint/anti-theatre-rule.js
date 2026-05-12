@@ -12,7 +12,7 @@ module.exports = {
       "auto-recover",
       "auto-recovering",
       "autonomous failover",
-      "fallback",
+      "degraded",
       "evidence bundle",
       "export bundle",
       "trust decision"

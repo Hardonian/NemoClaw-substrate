@@ -7,9 +7,9 @@
  * Only DASHBOARD_PORT is needed by the plugin (runner.ts).
  */
 
-export function parsePort(envVar: string, fallback: number): number {
+export function parsePort(envVar: string, degraded: number): number {
   const raw = process.env[envVar];
-  if (raw === undefined || raw === "") return fallback;
+  if (raw === undefined || raw === "") return degraded;
   const trimmed = raw.trim();
   if (!/^\d+$/.test(trimmed)) {
     throw new Error(`Invalid port: ${envVar}="${raw}" — must be an integer between 1024 and 65535`);
