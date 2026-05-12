@@ -3,9 +3,16 @@
 
 # Known Non-Goals
 
-- No autonomous orchestration loops.
-- No hidden retries or daemon-worker autonomous recovery.
-- No policy learning from prompts.
-- No unsupported distributed execution claims.
-- No runtime claim without verification evidence.
-- No automatic queue workers, lease renewal loops, speculative fanout, GPU balancing, Dynamo integration, or automatic remote execution enablement in the execution lifecycle substrate.
+This fork does not currently implement or claim:
+
+- production readiness;
+- autonomous orchestration loops;
+- hidden retries or recovery daemons;
+- automatic policy learning;
+- distributed execution fabric;
+- GPU balancing;
+- Dynamo integration;
+- cryptographic attestation chain;
+- automatic remote execution enablement.
+
+If a doc implies one of these exists, treat it as a wording bug unless the evidence index links to implementation and tests.

@@ -117,7 +117,7 @@ describe("summarizeProofPack", () => {
       },
     ];
 
-    const summary = summarizeProofPack(results);
+    const summary = summarizeProofPack(results as any);
     expect(summary).toContain("Proof-Pack Benchmark Summary");
     expect(summary).toContain("proofpack-1x-100b");
     expect(summary).toContain("PASS");
@@ -137,7 +137,7 @@ describe("summarizeProofPack", () => {
       },
     ];
 
-    const summary = summarizeProofPack(results);
+    const summary = summarizeProofPack(results as any);
     expect(summary).toContain("FAIL");
   });
 });

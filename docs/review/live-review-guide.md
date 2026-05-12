@@ -3,8 +3,6 @@
 
 # Live Review Guide
 
-1. Validate release claims against capability matrix.
-2. Validate deterministic/runtime boundaries using topology diagrams.
-3. Validate anti-theatre wording and non-goals.
-4. Validate verification command coverage and gates.
-5. Record unresolved ambiguities in the RC report before sign-off.
+For a live review, run the [10-minute review](10-minute-review.md) and keep the [Evidence index](evidence-index.md) open.
+
+Do not sign off on a claim unless it has at least one implementation file and one test reference. If a command fails because the local toolchain is missing or WSL temp paths are incompatible, record that separately from repository behavior.

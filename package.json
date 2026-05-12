@@ -60,7 +60,9 @@
     "verify:proofpack": "tsx scripts/verify-proofpack.ts",
     "verify:replay": "tsx scripts/verify-replay.ts",
     "verify:export": "tsx scripts/verify-export.ts",
-    "verify:docs-strict": "tsx scripts/verify-docs-strict.ts"
+    "verify:docs-strict": "tsx scripts/verify-docs-strict.ts",
+    "review:claims": "node scripts/review/check-claims.mjs",
+    "review:paths": "node scripts/review/list-review-paths.mjs"
   },
   "dependencies": {
     "@oclif/core": "^4.10.5",

@@ -3,11 +3,11 @@ title:
   page: "NVIDIA NemoClaw Developer Guide"
   nav: "NemoClaw"
 description:
-  main: "NemoClaw is an open-source reference stack that simplifies running OpenClaw always-on assistants more safely, with a single command."
-  agent: "Provides an open-source reference stack that simplifies running OpenClaw always-on assistants more safely. Use when setting up NemoClaw, exploring the project, or looking for the landing page."
-keywords: ["nemoclaw open source reference stack", "openclaw always-on assistants", "nvidia openshell", "nvidia nemotron"]
-topics: ["generative_ai", "ai_agents"]
-tags: ["openclaw", "openshell", "sandboxing", "inference_routing", "nemoclaw"]
+  main: "NemoClaw is an alpha reference stack for running OpenClaw inside OpenShell sandboxes, with a forked control-plane review path for receipts, replay, degraded states, and evidence."
+  agent: "Use for NemoClaw setup, architecture review, verification, and local substrate evidence walkthroughs."
+keywords: ["nemoclaw", "openclaw", "openshell", "sandboxing", "verification"]
+topics: ["ai_agents", "sandboxing"]
+tags: ["openclaw", "openshell", "verification", "security"]
 content:
   type: get_started
   difficulty: technical_beginner
@@ -22,264 +22,40 @@ status: published
 
 # NVIDIA NemoClaw
 
-```{include} ../README.md
-:start-after: <!-- start-badges -->
-:end-before: <!-- end-badges -->
+NemoClaw is an alpha reference stack for running OpenClaw inside OpenShell sandboxes. This fork adds reviewable control-plane contracts around execution decisions, receipts, replay checks, degraded states, and proofpack-style evidence.
+
+If you are reviewing the fork, start with the local proof path. If you are trying to run a sandbox, start with the quickstart.
+
+## Review First
+
+| Need | Start here |
+|---|---|
+| Ten-minute repo review | [10-minute review](review/10-minute-review.md) |
+| Claims mapped to implementation and tests | [Evidence index](review/evidence-index.md) |
+| Architecture at a glance | [Decision map](architecture/decision-map.md) |
+| Engineering tradeoffs and current scars | [Tradeoffs](architecture/tradeoffs.md) |
+| Local deterministic proof | [Local proof demo](demo/local-proof.md) |
+| Verification commands | [How to verify](verification/how-to-verify.md) |
+
+## Run NemoClaw
+
+```bash
+npm install
+npm run build:cli
+node ./bin/nemoclaw.js --help
 ```
 
-NVIDIA NemoClaw is an open-source reference stack that simplifies running [OpenClaw](https://openclaw.ai) always-on assistants more safely.
-NemoClaw provides onboarding, lifecycle management, and OpenClaw operations within OpenShell containers.
-It installs the [NVIDIA OpenShell](https://github.com/NVIDIA/OpenShell) runtime, part of NVIDIA Agent Toolkit, an environment designed for executing claws with additional security, and open-source models like [NVIDIA Nemotron](https://build.nvidia.com).
+For the full sandbox flow, continue to [Quickstart with OpenClaw](get-started/quickstart.md).
 
-## Get Started
+```{toctree}
+:caption: Review Path
+:hidden:
 
-Install the CLI and launch a sandboxed OpenClaw instance in a few commands.
-
-```{raw} html
-<style>
-.nc-term {
-  background: #1a1a2e;
-  border-radius: 8px;
-  overflow: hidden;
-  margin: 1.5em 0;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.25);
-  font-family: 'SFMono-Regular', Menlo, Monaco, Consolas, 'Liberation Mono', monospace;
-  font-size: 0.875em;
-  line-height: 1.8;
-}
-.nc-term-bar {
-  background: #252545;
-  padding: 10px 14px;
-  display: flex;
-  gap: 7px;
-  align-items: center;
-}
-.nc-copy-btn {
-  margin-left: auto;
-  position: relative;
-  background: none;
-  border: 0;
-  color: #8a8aa3;
-  cursor: pointer;
-  padding: 4px;
-  line-height: 0;
-}
-.nc-copy-btn:hover, .nc-copy-btn.copied { color: #76b900; }
-.nc-copy-btn svg { width: 16px; height: 16px; fill: currentColor; }
-.nc-copy-btn.copied::after {
-  content: 'Copied';
-  position: absolute;
-  right: 100%;
-  top: 50%;
-  transform: translate(-8px, -50%);
-  font-size: 11px;
-  line-height: 1;
-  white-space: nowrap;
-}
-.nc-term-dot { width: 12px; height: 12px; border-radius: 50%; }
-.nc-term-dot-r { background: #ff5f56; }
-.nc-term-dot-y { background: #ffbd2e; }
-.nc-term-dot-g { background: #27c93f; }
-.nc-term-body { padding: 16px 20px; color: #d4d4d8; }
-.nc-term-body .nc-ps { color: #76b900; user-select: none; }
-.nc-hl { color: #76b900; font-weight: 600; }
-.nc-cursor {
-  display: inline-block;
-  width: 2px;
-  height: 1.1em;
-  background: #d4d4d8;
-  vertical-align: text-bottom;
-  margin-left: 1px;
-  animation: nc-blink 1s step-end infinite;
-}
-@keyframes nc-blink { 50% { opacity: 0; } }
-</style>
-<div class="nc-term">
-  <div class="nc-term-bar">
-    <span class="nc-term-dot nc-term-dot-r"></span>
-    <span class="nc-term-dot nc-term-dot-y"></span>
-    <span class="nc-term-dot nc-term-dot-g"></span>
-    <button
-      class="nc-copy-btn"
-      type="button"
-      aria-label="Copy install command"
-      title="Copy"
-      onclick="
-        const button = this;
-        const text = button.closest('.nc-term').querySelector('.nc-cmd').textContent;
-        const show = (label, copied = false) => {
-          button.classList.toggle('copied', copied);
-          button.setAttribute('aria-label', label);
-          button.title = label;
-          clearTimeout(button._copyResetTimer);
-          button._copyResetTimer = setTimeout(() => {
-            button.classList.remove('copied');
-            button.setAttribute('aria-label', 'Copy install command');
-            button.title = 'Copy';
-            button._copyResetTimer = null;
-          }, 1200);
-        };
-        if (!navigator.clipboard) {
-          show('Copy failed');
-          return;
-        }
-        navigator.clipboard.writeText(text).then(() => show('Copied', true)).catch((err) => {
-          console.error('Failed to copy install command:', err);
-          show('Copy failed');
-        });
-      "
-    >
-      <svg viewBox="0 0 16 16" aria-hidden="true">
-        <path fill-rule="evenodd" d="M4 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2zm2-1a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1zM2 5a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1v-1h1v1a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h1v1z"/>
-      </svg>
-    </button>
-  </div>
-  <div class="nc-term-body">
-    <div><span class="nc-ps">$ </span><span class="nc-cmd">curl -fsSL https://www.nvidia.com/nemoclaw.sh | bash</span></div>
-  </div>
-</div>
-```
-
-Run `nemoclaw --help` in your terminal to view the full CLI reference.
-You can also clone the [NemoClaw repository](https://github.com/NVIDIA/NemoClaw) to explore the plugin source and blueprint.
-
-Proceed to the [Quickstart](get-started/quickstart.md) for step-by-step instructions.
-
----
-
-## Explore
-
-::::{grid} 2 2 3 3
-:gutter: 3
-
-:::{grid-item-card} About NemoClaw
-:link: about/overview
-:link-type: doc
-
-What NemoClaw is: capabilities, benefits, and typical uses.
-
-+++
-{bdg-secondary}`Concept`
-:::
-
-:::{grid-item-card} Ecosystem
-:link: about/ecosystem
-:link-type: doc
-
-How OpenClaw, OpenShell, and NemoClaw form a stack.
-
-+++
-{bdg-secondary}`Concept`
-:::
-
-:::{grid-item-card} Quickstart
-:link: get-started/quickstart
-:link-type: doc
-
-Install the CLI, configure inference, and launch your first sandbox.
-
-+++
-{bdg-secondary}`Tutorial`
-:::
-
-:::{grid-item-card} Architecture & Governance
-:link: architecture/index
-:link-type: doc
-
-Substrate architecture, governance invariants, and trust boundaries.
-
-+++
-{bdg-secondary}`Reference`
-:::
-
-:::{grid-item-card} ADR Index
-:link: adr/index
-:link-type: doc
-
-Architectural Decision Records (ADRs) for the NemoClaw substrate.
-
-+++
-{bdg-secondary}`Reference`
-:::
-
-:::{grid-item-card} Verification Matrix
-:link: verification/index
-:link-type: doc
-
-Release readiness, security hardening, and core verification gates.
-
-+++
-{bdg-secondary}`Reference`
-:::
-
-:::{grid-item-card} Operator Guide
-:link: operator/index
-:link-type: doc
-
-Substrate operation, configuration profiles, and recovery paths.
-
-+++
-{bdg-secondary}`Reference`
-:::
-
-:::{grid-item-card} Commands
-:link: reference/commands
-:link-type: doc
-
-CLI commands for launching and managing sandboxes.
-
-+++
-{bdg-secondary}`Reference`
-:::
-
-:::{grid-item-card} Security Best Practices
-:link: security/best-practices
-:link-type: doc
-
-Controls reference and posture profiles for sandbox security.
-
-+++
-{bdg-secondary}`Concept`
-:::
-
-:::{grid-item-card} How-To Guides
-:link: inference/switch-inference-providers
-:link-type: doc
-
-Task-oriented guides for inference and deployment.
-
-+++
-{bdg-secondary}`How-To`
-:::
-
-:::{grid-item-card} Agent Skills
-:link: resources/agent-skills
-:link-type: doc
-
-Use AI coding assistants with NemoClaw's built-in agent skills.
-
-+++
-{bdg-secondary}`Resource`
-:::
-
-:::{grid-item-card} Network Policies
-:link: reference/network-policies
-:link-type: doc
-
-Egress control and operator approval flow.
-
-+++
-{bdg-secondary}`Reference`
-:::
-
-::::
-
----
-
-```{admonition} Notice and Disclaimer
-:class: warning
-
-This software automatically retrieves, accesses or interacts with external materials. Those retrieved materials are not distributed with this software and are governed solely by separate terms, conditions and licenses. You are solely responsible for finding, reviewing and complying with all applicable terms, conditions, and licenses, and for verifying the security, integrity and suitability of any retrieved materials for your specific use case. This software is provided "AS IS", without warranty of any kind. The author makes no representations or warranties regarding any retrieved materials, and assumes no liability for any losses, damages, liabilities or legal consequences from your use or inability to use this software or any retrieved materials. Use this software and the retrieved materials at your own risk.
+Reviewer Path <review/reviewer-path>
+10-Minute Review <review/10-minute-review>
+Evidence Index <review/evidence-index>
+Naming Audit <review/naming-audit>
+Known Non-Goals <review/known-non-goals>
 ```
 
 ```{toctree}
@@ -290,6 +66,9 @@ Overview <about/overview>
 Architecture Overview <about/how-it-works>
 Ecosystem <about/ecosystem>
 Release Notes <about/release-notes>
+Fork Rationale <fork-rationale>
+Roadmap <roadmap>
+Known Limitations <known-limitations>
 ```
 
 ```{toctree}
@@ -302,24 +81,39 @@ Quickstart with Hermes <get-started/quickstart-hermes>
 ```
 
 ```{toctree}
-:caption: Governance & Architecture
+:caption: Architecture
 :hidden:
 
-Substrate Architecture <architecture/index>
-ADR Index <adr/index>
+Architecture Index <architecture/index>
+Decision Map <architecture/decision-map>
+Tradeoffs <architecture/tradeoffs>
 Capability Matrix <architecture/capability-status-matrix>
 Governance Invariants <architecture/governance-invariants>
 Execution Lifecycle <architecture/execution-lifecycle-substrate>
+Security Boundaries <architecture/security-boundaries>
+ADR Index <adr/index>
 ```
 
 ```{toctree}
-:caption: Verification & Release
+:caption: Verification
 :hidden:
 
+How to Verify <verification/how-to-verify>
 Verification Index <verification/index>
 Verification Matrix <verification/verification-matrix>
 Release Checklist <verification/release-checklist>
 Release Readiness <verification/release-readiness>
+Security Verification Matrix <verification/security-verification-matrix>
+```
+
+```{toctree}
+:caption: Demos
+:hidden:
+
+Local Proof <demo/local-proof>
+Operator Walkthrough <demo/operator-walkthrough>
+Replay Walkthrough <demo/replay-walkthrough>
+Demo Index <demo/index>
 ```
 
 ```{toctree}
@@ -327,6 +121,7 @@ Release Readiness <verification/release-readiness>
 :hidden:
 
 Operator Index <operator/index>
+Operator CLI <operator/operator-cli>
 Local Bootstrap <contributing/local-bootstrap>
 Troubleshooting <reference/troubleshooting>
 ```
@@ -371,13 +166,13 @@ Sandbox Hardening <deployment/sandbox-hardening>
 ```
 
 ```{toctree}
-:caption: Monitoring & Security
+:caption: Security
 :hidden:
 
-Monitor Sandbox Activity <monitoring/monitor-sandbox-activity>
 Security Best Practices <security/best-practices>
 Credential Storage <security/credential-storage>
 OpenClaw Controls <security/openclaw-controls>
+Monitor Sandbox Activity <monitoring/monitor-sandbox-activity>
 ```
 
 ```{toctree}
@@ -387,6 +182,7 @@ OpenClaw Controls <security/openclaw-controls>
 CLI Commands Reference <reference/commands>
 CLI Selection Guide <reference/cli-selection-guide>
 Network Policies <reference/network-policies>
+Reason Codes <reference/reason-codes>
 ```
 
 ```{toctree}
@@ -394,7 +190,6 @@ Network Policies <reference/network-policies>
 :hidden:
 
 Agent Skills <resources/agent-skills>
-Report Vulnerabilities <https://github.com/NVIDIA/NemoClaw/blob/main/SECURITY.md>
 resources/license
-Discord <https://discord.gg/XFpfPv9Uvx>
+Report Vulnerabilities <https://github.com/NVIDIA/NemoClaw/blob/main/SECURITY.md>
 ```
