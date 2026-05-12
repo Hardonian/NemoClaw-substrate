@@ -6,6 +6,7 @@ import crypto from "node:crypto";
 
 import {
   checkAccess,
+  AccessLevel,
   computeIntegrityHash,
   validateIntegrity,
   encryptAtRest,
@@ -44,7 +45,7 @@ describe("checkAccess", () => {
   it("respects resource patterns", () => {
     const config = {
       accessRules: [
-        { role: "reader", allowedActions: ["read"], resourcePattern: "docs/*" },
+        { role: "reader", allowedActions: ["read"] as AccessLevel[], resourcePattern: "docs/*" },
       ],
       integrityAlgorithm: "sha256" as const,
       encryptionAlgorithm: "aes-256-gcm" as const,
@@ -57,7 +58,7 @@ describe("checkAccess", () => {
   it("supports glob patterns in resource matching", () => {
     const config = {
       accessRules: [
-        { role: "reader", allowedActions: ["read"], resourcePattern: "public/*" },
+        { role: "reader", allowedActions: ["read"] as AccessLevel[], resourcePattern: "public/*" },
       ],
       integrityAlgorithm: "sha256" as const,
       encryptionAlgorithm: "aes-256-gcm" as const,
@@ -211,7 +212,7 @@ describe("convenience access checkers", () => {
   it("accepts custom config", () => {
     const config = {
       accessRules: [
-        { role: "custom", allowedActions: ["read", "write"], resourcePattern: "*" },
+        { role: "custom", allowedActions: ["read", "write"] as AccessLevel[], resourcePattern: "*" },
       ],
       integrityAlgorithm: "sha256" as const,
       encryptionAlgorithm: "aes-256-gcm" as const,

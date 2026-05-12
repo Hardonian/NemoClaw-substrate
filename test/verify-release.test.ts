@@ -106,7 +106,7 @@ describe("verify-release script", () => {
           agents: "not_an_array",
         },
       };
-      const result = checkCompatibilityMatrix(manifest);
+      const result = checkCompatibilityMatrix(manifest as any);
       expect(result.passed).toBe(false);
     });
   });

@@ -176,8 +176,8 @@ describe("policy learning manager", () => {
       const reviewResult = manager.reviewProposal(
         createResult.proposal.proposalId,
         "reviewer-1",
-        ReviewDecision.approve,
-        RiskLevel.low,
+        "approve",
+        "low",
         "Approved for testing",
         [evidence.evidenceId],
       );

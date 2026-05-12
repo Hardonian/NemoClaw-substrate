@@ -77,9 +77,9 @@ describe("parseCommits", () => {
 describe("groupByType", () => {
   it("groups entries by type in order", () => {
     const entries = [
-      { type: "fix", description: "fix one", breaking: false, hash: "a" },
-      { type: "feat", description: "feat one", breaking: false, hash: "b" },
-      { type: "fix", description: "fix two", breaking: false, hash: "c" },
+      { type: "fix", subject: "fix one", description: "fix one", breaking: false, hash: "a" },
+      { type: "feat", subject: "feat one", description: "feat one", breaking: false, hash: "b" },
+      { type: "fix", subject: "fix two", description: "fix two", breaking: false, hash: "c" },
     ];
     const sections = groupByType(entries);
     expect(sections).toHaveLength(2);
@@ -90,7 +90,7 @@ describe("groupByType", () => {
 
   it("uses correct section titles", () => {
     const entries = [
-      { type: "perf", description: "improve speed", breaking: false, hash: "a" },
+      { type: "perf", subject: "improve speed", description: "improve speed", breaking: false, hash: "a" },
     ];
     const sections = groupByType(entries);
     expect(sections[0].title).toBe("Performance Improvements");
@@ -98,7 +98,7 @@ describe("groupByType", () => {
 
   it("excludes empty sections", () => {
     const entries = [
-      { type: "feat", description: "new thing", breaking: false, hash: "a" },
+      { type: "feat", subject: "new thing", description: "new thing", breaking: false, hash: "a" },
     ];
     const sections = groupByType(entries);
     expect(sections.every((s) => s.entries.length > 0)).toBe(true);
@@ -108,8 +108,8 @@ describe("groupByType", () => {
 describe("extractBreakingChanges", () => {
   it("returns only breaking entries", () => {
     const entries = [
-      { type: "feat", description: "normal", breaking: false, hash: "a" },
-      { type: "feat", description: "breaking!", breaking: true, hash: "b" },
+      { type: "feat", subject: "normal", description: "normal", breaking: false, hash: "a" },
+      { type: "feat", subject: "breaking!", description: "breaking!", breaking: true, hash: "b" },
     ];
     const breaking = extractBreakingChanges(entries);
     expect(breaking).toHaveLength(1);

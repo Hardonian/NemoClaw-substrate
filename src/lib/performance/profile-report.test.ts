@@ -125,6 +125,10 @@ describe("summarizeProfile", () => {
         overheadPercent: 5,
         withinBudget: true,
         maxOverheadPercent: 10,
+        stats: {
+          baseline: { meanMs: 1, medianMs: 1, p95Ms: 1, p99Ms: 1, minMs: 1, maxMs: 1 },
+          instrumented: { meanMs: 1.05, medianMs: 1.05, p95Ms: 1.05, p99Ms: 1.05, minMs: 1.05, maxMs: 1.05 }
+        }
       },
     ];
 
@@ -143,6 +147,10 @@ describe("summarizeProfile", () => {
         overheadPercent: 400,
         withinBudget: false,
         maxOverheadPercent: 5,
+        stats: {
+          baseline: { meanMs: 1, medianMs: 1, p95Ms: 1, p99Ms: 1, minMs: 1, maxMs: 1 },
+          instrumented: { meanMs: 5, medianMs: 5, p95Ms: 5, p99Ms: 5, minMs: 5, maxMs: 5 }
+        }
       },
     ];
 

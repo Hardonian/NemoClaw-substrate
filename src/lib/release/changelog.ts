@@ -20,6 +20,7 @@ export interface ConventionalCommit {
 export interface ChangelogEntry {
   type: string;
   scope?: string;
+  subject: string;
   description: string;
   breaking: boolean;
   hash: string;
@@ -157,6 +158,7 @@ export function generateChangelog(
   const entries: ChangelogEntry[] = commits.map((commit) => ({
     type: commit.type,
     scope: commit.scope,
+    subject: commit.subject,
     description: commit.scope
       ? `${commit.scope}: ${commit.subject}`
       : commit.subject,
@@ -179,7 +181,7 @@ export function changelogToMarkdown(changelog: Changelog): string {
     for (const entry of changelog.breakingChanges) {
       const hashRef = entry.hash ? ` (${entry.hash.substring(0, 7)})` : "";
       const prefix = entry.scope ? `${entry.scope}: ` : "";
-      lines.push(`- ${prefix}${entry.subject || entry.description}${hashRef}`);
+      lines.push(`- ${prefix}${entry.subject}${hashRef}`);
     }
     lines.push("");
   }
