@@ -91,6 +91,9 @@ export enum OrchestrationReasonCode {
   LEASE_STALE = "lease_stale",
   LEASE_EXPIRED = "lease_expired",
   LEASE_CONFLICT = "lease_conflict",
+  LEASE_RENEWED = "lease_renewed",
+  LEASE_ACQUIRED = "lease_acquired",
+  LEASE_RELEASED = "lease_released",
   HEARTBEAT_MISSED = "heartbeat_missed",
   SCHEDULER_NOT_ENABLED = "scheduler_not_enabled",
 

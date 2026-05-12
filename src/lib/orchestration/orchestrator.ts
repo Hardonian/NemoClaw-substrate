@@ -618,7 +618,7 @@ export class OrchestrationEngine {
       originalPlanId,
       replayedAt: new Date().toISOString(),
       originalReceipts: originalRun.receipts.map((r) => r.receiptId),
-      replayedReceipts,
+      replayedReceipts: replayReceipts,
       driftDetected,
       driftDetails,
       consistent: !driftDetected,
@@ -644,6 +644,7 @@ export class OrchestrationEngine {
         false,
         OrchestrationReasonCode.POLICY_MISSING,
         "Policy is not enabled",
+        { stepId, policyVersion: policy.version, approvalRequired: policy.requiresApproval, approvalGranted },
       );
     }
 
@@ -654,6 +655,7 @@ export class OrchestrationEngine {
         false,
         OrchestrationReasonCode.POLICY_EXPIRED,
         "Policy has expired",
+        { stepId, policyVersion: policy.version, approvalRequired: policy.requiresApproval, approvalGranted },
       );
     }
 
@@ -664,6 +666,7 @@ export class OrchestrationEngine {
         false,
         OrchestrationReasonCode.TRUST_INSUFFICIENT,
         `Trust level ${trustLevel} is below minimum ${policy.minimumTrustLevel}`,
+        { stepId, policyVersion: policy.version, approvalRequired: policy.requiresApproval, approvalGranted, trustLevel },
       );
     }
 
@@ -674,6 +677,7 @@ export class OrchestrationEngine {
         false,
         OrchestrationReasonCode.APPROVAL_REQUIRED,
         "Approval is required but not granted",
+        { stepId, policyVersion: policy.version, approvalRequired: policy.requiresApproval, approvalGranted },
       );
     }
 
@@ -683,6 +687,13 @@ export class OrchestrationEngine {
       true,
       OrchestrationReasonCode.PLAN_STARTED,
       "Policy evaluation passed",
+      {
+        stepId,
+        policyVersion: policy.version,
+        approvalRequired: policy.requiresApproval,
+        approvalGranted,
+        trustLevel,
+      },
     );
   }
 
@@ -724,6 +735,7 @@ export class OrchestrationEngine {
     allowed: boolean,
     reasonCode: OrchestrationReasonCode,
     message: string,
+    extras: Partial<OrchestrationDecision> = {},
   ): OrchestrationDecision {
     const decision: OrchestrationDecision = {
       decisionId: `decision-${planId}-${runId}-${Date.now()}`,
@@ -733,6 +745,8 @@ export class OrchestrationEngine {
       reasonCode,
       message,
       decidedAt: new Date().toISOString(),
+      approvalRequired: extras.approvalRequired ?? false,
+      ...extras,
     };
     this.decisions.push(decision);
     return decision;
