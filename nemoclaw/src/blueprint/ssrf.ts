@@ -52,6 +52,17 @@ export async function validateEndpointUrl(url: string): Promise<ValidatedEndpoin
   if (!hostname) {
     throw new Error(`No hostname found in URL: ${url}`);
   }
+
+  if (parsed.username || parsed.password) {
+    throw new Error(
+      "Endpoint URL must not include username/password credentials. Use `nemoclaw credential` commands instead.",
+    );
+  }
+
+  if (parsed.hash) {
+    throw new Error("Endpoint URL must not include a fragment (#...).");
+  }
+
   if (isPrivateHostname(hostname)) {
     throw new Error(
       `Endpoint URL points to private/internal address ${hostname}. ` +
