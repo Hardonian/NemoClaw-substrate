@@ -108,7 +108,7 @@ describe("hardenConfig", () => {
     const input = JSON.parse('{"nested": {"__proto__": "bad", "ok": "value"}}');
     const result = hardenConfig(input);
     expect(Object.hasOwn(result.config.nested as Record<string, unknown>, "__proto__")).toBe(false);
-    expect(result.config.nested.ok).toBe("value");
+    expect((result.config.nested as any).ok).toBe("value");
   });
 
   it("allows null values", () => {

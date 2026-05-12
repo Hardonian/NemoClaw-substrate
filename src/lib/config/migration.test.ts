@@ -45,25 +45,25 @@ describe("getNestedValue", () => {
 
 describe("setNestedValue", () => {
   it("sets top-level value", () => {
-    const obj: Record<string, unknown> = {};
+    const obj: Record<string, any> = {};
     setNestedValue(obj, "a", 1);
     expect(obj.a).toBe(1);
   });
 
   it("creates intermediate objects", () => {
-    const obj: Record<string, unknown> = {};
+    const obj: Record<string, any> = {};
     setNestedValue(obj, "a.b.c", "deep");
     expect(obj.a).toEqual({ b: { c: "deep" } });
   });
 
   it("overwrites existing value", () => {
-    const obj: Record<string, unknown> = { a: { b: "old" } };
+    const obj: Record<string, any> = { a: { b: "old" } };
     setNestedValue(obj, "a.b", "new");
     expect(obj.a.b).toBe("new");
   });
 
   it("overwrites non-object intermediate with object", () => {
-    const obj: Record<string, unknown> = { a: "string" };
+    const obj: Record<string, any> = { a: "string" };
     setNestedValue(obj, "a.b", 1);
     expect(obj.a).toEqual({ b: 1 });
   });
@@ -71,14 +71,14 @@ describe("setNestedValue", () => {
 
 describe("deleteNestedValue", () => {
   it("deletes top-level key", () => {
-    const obj: Record<string, unknown> = { a: 1 };
+    const obj: Record<string, any> = { a: 1 };
     const result = deleteNestedValue(obj, "a");
     expect(result).toBe(true);
     expect(obj.a).toBeUndefined();
   });
 
   it("deletes nested key", () => {
-    const obj: Record<string, unknown> = { a: { b: 1, c: 2 } };
+    const obj: Record<string, any> = { a: { b: 1, c: 2 } };
     const result = deleteNestedValue(obj, "a.b");
     expect(result).toBe(true);
     expect(obj.a.b).toBeUndefined();
@@ -104,7 +104,7 @@ describe("applyMigrationRule", () => {
       preserveValue: true,
       description: "test",
     };
-    const config = { old: "value" };
+    const config: any = { old: "value" };
     const result = applyMigrationRule(config, rule);
     expect(result).not.toBeNull();
     expect(result?.fromPath).toBe("old");
@@ -120,7 +120,7 @@ describe("applyMigrationRule", () => {
       preserveValue: false,
       description: "removed",
     };
-    const config = { bad: "value" };
+    const config: any = { bad: "value" };
     const result = applyMigrationRule(config, rule);
     expect(result).not.toBeNull();
     expect(result?.preserved).toBe(false);
@@ -135,7 +135,7 @@ describe("applyMigrationRule", () => {
       description: "transform test",
       transform: (v) => (v === true ? "debug" : "info"),
     };
-    const config = { verbose: true };
+    const config: any = { verbose: true };
     applyMigrationRule(config, rule);
     expect(config.level).toBe("debug");
   });
