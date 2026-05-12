@@ -568,7 +568,7 @@ export class OrchestrationEngine {
     }
 
     const driftDetails: ReplayDriftDetail[] = [];
-    const replayReceipts: string[] = [];
+    const replayedReceipts: string[] = [];
 
     for (const originalReceipt of originalRun.receipts) {
       const matchingReplay = this.receipts.find(
@@ -579,7 +579,7 @@ export class OrchestrationEngine {
       );
 
       if (matchingReplay) {
-        replayReceipts.push(matchingReplay.receiptId);
+        replayedReceipts.push(matchingReplay.receiptId);
         if (matchingReplay.reasonCode !== originalReceipt.reasonCode) {
           driftDetails.push({
             receiptId: matchingReplay.receiptId,
@@ -618,7 +618,7 @@ export class OrchestrationEngine {
       originalPlanId,
       replayedAt: new Date().toISOString(),
       originalReceipts: originalRun.receipts.map((r) => r.receiptId),
-      replayedReceipts: replayReceipts,
+      replayedReceipts,
       driftDetected,
       driftDetails,
       consistent: !driftDetected,
@@ -659,13 +659,28 @@ export class OrchestrationEngine {
       );
     }
 
-    if (trustLevel < policy.minimumTrustLevel) {
+    const TRUST_LEVEL_PRIORITY: Record<string, number> = {
+      none: 0,
+      low: 1,
+      medium: 2,
+      high: 3,
+      admin: 4,
+      observed: 1,
+      trusted_remote: 3,
+      untrusted: 0,
+      revoked: -1,
+    };
+
+    const currentTrust = TRUST_LEVEL_PRIORITY[trustLevel.toLowerCase()] ?? 0;
+    const minTrust = TRUST_LEVEL_PRIORITY[policy.minimumTrustLevel.toLowerCase()] ?? 0;
+
+    if (currentTrust < minTrust) {
       return this.makeDecision(
         planId,
         runId,
         false,
         OrchestrationReasonCode.TRUST_INSUFFICIENT,
-        `Trust level ${trustLevel} is below minimum ${policy.minimumTrustLevel}`,
+        `Trust level ${trustLevel} (priority ${currentTrust}) is below minimum ${policy.minimumTrustLevel} (priority ${minTrust})`,
         { stepId, policyVersion: policy.version, approvalRequired: policy.requiresApproval, approvalGranted, trustLevel },
       );
     }

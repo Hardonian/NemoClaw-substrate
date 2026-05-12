@@ -59,7 +59,7 @@ describe("setNestedValue", () => {
   it("overwrites existing value", () => {
     const obj: Record<string, any> = { a: { b: "old" } };
     setNestedValue(obj, "a.b", "new");
-    expect(obj.a.b).toBe("new");
+    expect((obj.a as any).b).toBe("new");
   });
 
   it("overwrites non-object intermediate with object", () => {
@@ -81,8 +81,8 @@ describe("deleteNestedValue", () => {
     const obj: Record<string, any> = { a: { b: 1, c: 2 } };
     const result = deleteNestedValue(obj, "a.b");
     expect(result).toBe(true);
-    expect(obj.a.b).toBeUndefined();
-    expect(obj.a.c).toBe(2);
+    expect((obj.a as any).b).toBeUndefined();
+    expect((obj.a as any).c).toBe(2);
   });
 
   it("returns false for missing key", () => {
@@ -110,7 +110,7 @@ describe("applyMigrationRule", () => {
     expect(result?.fromPath).toBe("old");
     expect(result?.toPath).toBe("new");
     expect(config.old).toBeUndefined();
-    expect(config.new).toBe("value");
+    expect((config as any).new).toBe("value");
   });
 
   it("drops value when preserveValue is false", () => {
@@ -137,7 +137,7 @@ describe("applyMigrationRule", () => {
     };
     const config: any = { verbose: true };
     applyMigrationRule(config, rule);
-    expect(config.level).toBe("debug");
+    expect((config as any).level).toBe("debug");
   });
 
   it("returns null when field not found", () => {

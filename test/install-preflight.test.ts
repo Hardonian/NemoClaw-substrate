@@ -11,6 +11,21 @@ const INSTALLER = path.join(import.meta.dirname, "..", "install.sh");
 const CURL_PIPE_INSTALLER = path.join(import.meta.dirname, "..", "install.sh");
 const INSTALLER_PAYLOAD = path.join(import.meta.dirname, "..", "scripts", "install.sh");
 const GITHUB_INSTALL_URL = "git+https://github.com/NVIDIA/NemoClaw.git";
+
+const BASH_PATH = (() => {
+  if (process.platform !== "win32") return "bash";
+  const commonPaths = [
+    "C:\\Program Files\\Git\\bin\\bash.exe",
+    "C:\\Program Files (x86)\\Git\\bin\\bash.exe",
+    "C:\\Git\\bin\\bash.exe",
+  ];
+  for (const p of commonPaths) {
+    if (fs.existsSync(p)) return p;
+  }
+  return "bash"; // Fallback to PATH
+})();
+
+const pathSeparator = process.platform === "win32" ? ";" : ":";
 /**
  * Build an isolated "system bin" directory used by every test in this file
  * via TEST_SYSTEM_PATH. The directory mirrors /usr/bin and /bin via symlinks
@@ -36,24 +51,37 @@ const GITHUB_INSTALL_URL = "git+https://github.com/NVIDIA/NemoClaw.git";
 function buildIsolatedSystemPath() {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "nemoclaw-preflight-sysbin-"));
   const EXCLUDE = new Set(["node", "npm", "npx"]);
-  for (const sysDir of ["/usr/bin", "/bin"]) {
+  
+  const sysDirs = ["/usr/bin", "/bin"];
+  if (process.platform === "win32") {
+    // On Windows, try to find Git Bash's usr/bin where grep, sed, etc. live.
+    const gitBashUsrBin = "C:\\Program Files\\Git\\usr\\bin";
+    if (fs.existsSync(gitBashUsrBin)) {
+      sysDirs.push(gitBashUsrBin);
+    }
+  }
+
+  for (const sysDir of sysDirs) {
     if (!fs.existsSync(sysDir)) continue;
     for (const name of fs.readdirSync(sysDir)) {
       if (EXCLUDE.has(name)) continue;
       try {
-        fs.symlinkSync(path.join(sysDir, name), path.join(dir, name));
+        fs.symlinkSync(path.join(sysDir, name), path.join(dir, name), process.platform === "win32" ? "file" : undefined);
       } catch (err) {
-        // Only swallow EEXIST — the expected case is when /bin is a symlink
-        // to /usr/bin (modern Linux) and we already linked the same name on
-        // the first pass. Any other error (EPERM, EACCES, EINVAL, ENOENT…)
-        // would leave TEST_SYSTEM_PATH partially populated and turn into a
-        // confusing downstream test failure, so re-throw it.
         const code =
           typeof err === "object" && err !== null && "code" in err ? err.code : undefined;
         if (code === "EEXIST") continue;
+        if (process.platform === "win32") continue;
         throw err;
       }
     }
+  }
+  const linkedCount = fs.readdirSync(dir).length;
+  if (process.platform === "win32" && linkedCount === 0) {
+    // If we couldn't symlink anything (likely permission issue), 
+    // return the original system directories so the installer isn't crippled.
+    // Stubs in fakeBin will still win because they are prepended.
+    return sysDirs.join(pathSeparator);
   }
   return dir;
 }
@@ -174,7 +202,7 @@ run_onboard < "$PROMPT_INPUT_FILE"
         NEMOCLAW_FRESH: "",
         NEMOCLAW_NON_INTERACTIVE: "",
         NON_INTERACTIVE: "",
-        PATH: `${fakeBin}:${TEST_SYSTEM_PATH}`,
+        PATH: `${fakeBin}${pathSeparator}${TEST_SYSTEM_PATH}`,
         INSTALLER_UNDER_TEST: INSTALLER_PAYLOAD,
         NEMOCLAW_ONBOARD_LOG: onboardLog,
         PROMPT_INPUT_FILE: promptInput,
@@ -231,7 +259,7 @@ exit 1
       env: {
         ...process.env,
         HOME: tmp,
-        PATH: `${fakeBin}:${TEST_SYSTEM_PATH}`,
+        PATH: `${fakeBin}${pathSeparator}${TEST_SYSTEM_PATH}`,
         // Bypass the #2671 fail-fast license gate — this test exercises the
         // Node-version-detection / nvm-upgrade path, not the license path.
         NEMOCLAW_ACCEPT_THIRD_PARTY_SOFTWARE: "1",
@@ -339,7 +367,7 @@ exit 98
       env: {
         ...process.env,
         HOME: tmp,
-        PATH: `${fakeBin}:${TEST_SYSTEM_PATH}`,
+        PATH: `${fakeBin}${pathSeparator}${TEST_SYSTEM_PATH}`,
         NEMOCLAW_NON_INTERACTIVE: "1",
         NEMOCLAW_ACCEPT_THIRD_PARTY_SOFTWARE: "1",
         NPM_PREFIX: prefix,
@@ -430,7 +458,7 @@ exit 98
       env: {
         ...process.env,
         HOME: tmp,
-        PATH: `${fakeBin}:${TEST_SYSTEM_PATH}`,
+        PATH: `${fakeBin}${pathSeparator}${TEST_SYSTEM_PATH}`,
         NEMOCLAW_NON_INTERACTIVE: "1",
         NEMOCLAW_ACCEPT_THIRD_PARTY_SOFTWARE: "1",
         NPM_PREFIX: prefix,
@@ -639,7 +667,7 @@ fi`,
       env: {
         ...process.env,
         HOME: tmp,
-        PATH: `${fakeBin}:${TEST_SYSTEM_PATH}`,
+        PATH: `${fakeBin}${pathSeparator}${TEST_SYSTEM_PATH}`,
         NEMOCLAW_NON_INTERACTIVE: "1",
         NEMOCLAW_ACCEPT_THIRD_PARTY_SOFTWARE: "1",
         NPM_PREFIX: prefix,
@@ -735,7 +763,7 @@ fi`,
       env: {
         ...process.env,
         HOME: tmp,
-        PATH: `${fakeBin}:${TEST_SYSTEM_PATH}`,
+        PATH: `${fakeBin}${pathSeparator}${TEST_SYSTEM_PATH}`,
         NEMOCLAW_NON_INTERACTIVE: "1",
         NEMOCLAW_ACCEPT_THIRD_PARTY_SOFTWARE: "1",
         NPM_PREFIX: prefix,
@@ -837,7 +865,7 @@ fi`,
       env: {
         ...process.env,
         HOME: tmp,
-        PATH: `${fakeBin}:${TEST_SYSTEM_PATH}`,
+        PATH: `${fakeBin}${pathSeparator}${TEST_SYSTEM_PATH}`,
         NEMOCLAW_NON_INTERACTIVE: "1",
         NEMOCLAW_ACCEPT_THIRD_PARTY_SOFTWARE: "1",
         NPM_PREFIX: prefix,
@@ -944,7 +972,7 @@ fi`,
       env: {
         ...process.env,
         HOME: tmp,
-        PATH: `${fakeBin}:${TEST_SYSTEM_PATH}`,
+        PATH: `${fakeBin}${pathSeparator}${TEST_SYSTEM_PATH}`,
         NEMOCLAW_NON_INTERACTIVE: "1",
         NEMOCLAW_ACCEPT_THIRD_PARTY_SOFTWARE: "1",
         NPM_PREFIX: prefix,
@@ -1034,7 +1062,7 @@ fi`,
       env: {
         ...process.env,
         HOME: tmp,
-        PATH: `${fakeBin}:${TEST_SYSTEM_PATH}`,
+        PATH: `${fakeBin}${pathSeparator}${TEST_SYSTEM_PATH}`,
         NEMOCLAW_NON_INTERACTIVE: "1",
         NEMOCLAW_ACCEPT_THIRD_PARTY_SOFTWARE: "1",
         NPM_PREFIX: prefix,
@@ -1107,7 +1135,7 @@ exit 0
       env: {
         ...process.env,
         HOME: tmp,
-        PATH: `${fakeBin}:${TEST_SYSTEM_PATH}`,
+        PATH: `${fakeBin}${pathSeparator}${TEST_SYSTEM_PATH}`,
         NEMOCLAW_NON_INTERACTIVE: "1",
         NEMOCLAW_ACCEPT_THIRD_PARTY_SOFTWARE: "1",
         NPM_PREFIX: prefix,
@@ -1184,7 +1212,7 @@ fi`,
       env: {
         ...process.env,
         HOME: tmp,
-        PATH: `${fakeBin}:${TEST_SYSTEM_PATH}`,
+        PATH: `${fakeBin}${pathSeparator}${TEST_SYSTEM_PATH}`,
         NEMOCLAW_ACCEPT_THIRD_PARTY_SOFTWARE: "",
         NPM_PREFIX: prefix,
         NEMOCLAW_ONBOARD_LOG: onboardLog,
@@ -1258,7 +1286,7 @@ fi`,
         env: {
           ...process.env,
           HOME: tmp,
-          PATH: `${fakeBin}:${TEST_SYSTEM_PATH}`,
+          PATH: `${fakeBin}${pathSeparator}${TEST_SYSTEM_PATH}`,
           NPM_PREFIX: prefix,
           NEMOCLAW_ONBOARD_LOG: onboardLog,
         },
@@ -1313,7 +1341,7 @@ fi`,
       env: {
         ...process.env,
         HOME: tmp,
-        PATH: `${fakeBin}:${TEST_SYSTEM_PATH}`,
+        PATH: `${fakeBin}${pathSeparator}${TEST_SYSTEM_PATH}`,
         NEMOCLAW_NON_INTERACTIVE: "1",
         NEMOCLAW_ACCEPT_THIRD_PARTY_SOFTWARE: "1",
         NPM_PREFIX: prefix,
@@ -1437,7 +1465,7 @@ exit 0
       env: {
         ...process.env,
         HOME: tmp,
-        PATH: `${fakeBin}:${TEST_SYSTEM_PATH}`,
+        PATH: `${fakeBin}${pathSeparator}${TEST_SYSTEM_PATH}`,
         NEMOCLAW_NON_INTERACTIVE: "1",
         NEMOCLAW_ACCEPT_THIRD_PARTY_SOFTWARE: "1",
         NPM_PREFIX: prefix,
@@ -1642,7 +1670,7 @@ fi`,
       env: {
         ...process.env,
         HOME: tmp,
-        PATH: `${fakeBin}:${TEST_SYSTEM_PATH}`,
+        PATH: `${fakeBin}${pathSeparator}${TEST_SYSTEM_PATH}`,
         NEMOCLAW_NON_INTERACTIVE: "1",
         NEMOCLAW_ACCEPT_THIRD_PARTY_SOFTWARE: "1",
         NEMOCLAW_SANDBOX_NAME: "my-assistant",
@@ -1688,7 +1716,7 @@ describe("installer release-tag resolution", () => {
       encoding: "utf-8",
       env: {
         HOME: os.tmpdir(),
-        PATH: `${fakeBin}:${TEST_SYSTEM_PATH}`,
+        PATH: `${fakeBin}${pathSeparator}${TEST_SYSTEM_PATH}`,
         ...env,
       },
     });
@@ -1803,7 +1831,7 @@ exit 0`,
       env: {
         ...process.env,
         HOME: tmp,
-        PATH: `${fakeBin}:${TEST_SYSTEM_PATH}`,
+        PATH: `${fakeBin}${pathSeparator}${TEST_SYSTEM_PATH}`,
         NEMOCLAW_NON_INTERACTIVE: "1",
         NEMOCLAW_ACCEPT_THIRD_PARTY_SOFTWARE: "1",
         NPM_PREFIX: prefix,
@@ -1879,7 +1907,7 @@ fi`,
       env: {
         ...process.env,
         HOME: tmp,
-        PATH: `${fakeBin}:${TEST_SYSTEM_PATH}`,
+        PATH: `${fakeBin}${pathSeparator}${TEST_SYSTEM_PATH}`,
         NEMOCLAW_NON_INTERACTIVE: "1",
         NEMOCLAW_ACCEPT_THIRD_PARTY_SOFTWARE: "1",
         NPM_PREFIX: prefix,
@@ -1966,7 +1994,7 @@ INSTALL
       env: {
         HOME: tmp,
         NVM_DIR: path.join(tmp, ".nvm"),
-        PATH: `${fakeBin}:${TEST_SYSTEM_PATH}`,
+        PATH: `${fakeBin}${pathSeparator}${TEST_SYSTEM_PATH}`,
       },
     });
     const output = `${result.stdout}${result.stderr}`;
@@ -2037,7 +2065,7 @@ exit 1
           ...process.env,
           HOME: tmp,
           NEMOCLAW_AGENT: "hermes",
-          PATH: `${fakeBin}:${TEST_SYSTEM_PATH}`,
+          PATH: `${fakeBin}${pathSeparator}${TEST_SYSTEM_PATH}`,
         },
       },
     );
@@ -2512,7 +2540,7 @@ describe("installer runtime checks (sourced)", () => {
         encoding: "utf-8",
         env: {
           HOME: os.tmpdir(),
-          PATH: `${fakeBin}:${TEST_SYSTEM_PATH}`,
+          PATH: `${fakeBin}${pathSeparator}${TEST_SYSTEM_PATH}`,
           ...env,
         },
       },
@@ -2682,7 +2710,7 @@ exit 0`,
           encoding: "utf-8",
           env: {
             HOME: tmp,
-            PATH: `${fakeBin}:${TEST_SYSTEM_PATH}`,
+            PATH: `${fakeBin}${pathSeparator}${TEST_SYSTEM_PATH}`,
             NEMOCLAW_SOURCE_ROOT: sourceRoot,
             ...env,
           },
@@ -2692,7 +2720,7 @@ exit 0`,
           encoding: "utf-8",
           env: {
             HOME: tmp,
-            PATH: `${fakeBin}:${TEST_SYSTEM_PATH}`,
+            PATH: `${fakeBin}${pathSeparator}${TEST_SYSTEM_PATH}`,
             NEMOCLAW_SOURCE_ROOT: sourceRoot,
             ...env,
           },
@@ -2849,7 +2877,7 @@ exit 0`,
       env: {
         ...process.env,
         HOME: tmp,
-        PATH: `${fakeBin}:${TEST_SYSTEM_PATH}`,
+        PATH: `${fakeBin}${pathSeparator}${TEST_SYSTEM_PATH}`,
         NEMOCLAW_NON_INTERACTIVE: "1",
         NEMOCLAW_ACCEPT_THIRD_PARTY_SOFTWARE: "1",
         NPM_PREFIX: prefix,
@@ -2895,7 +2923,7 @@ exit 0`,
       env: {
         ...process.env,
         HOME: tmp,
-        PATH: `${fakeBin}:${TEST_SYSTEM_PATH}`,
+        PATH: `${fakeBin}${pathSeparator}${TEST_SYSTEM_PATH}`,
         NEMOCLAW_NON_INTERACTIVE: "1",
         NEMOCLAW_ACCEPT_THIRD_PARTY_SOFTWARE: "1",
         NPM_PREFIX: prefix,
@@ -2988,7 +3016,7 @@ exit 0`,
       env: {
         ...process.env,
         HOME: tmp,
-        PATH: `${fakeBin}:${TEST_SYSTEM_PATH}`,
+        PATH: `${fakeBin}${pathSeparator}${TEST_SYSTEM_PATH}`,
         NEMOCLAW_INSTALL_TAG: "v0.0.1",
         NEMOCLAW_NON_INTERACTIVE: "1",
         NEMOCLAW_ACCEPT_THIRD_PARTY_SOFTWARE: "1",
@@ -3049,7 +3077,7 @@ exit 0`,
       env: {
         ...process.env,
         HOME: tmp,
-        PATH: `${fakeBin}:${TEST_SYSTEM_PATH}`,
+        PATH: `${fakeBin}${pathSeparator}${TEST_SYSTEM_PATH}`,
         NEMOCLAW_NON_INTERACTIVE: "1",
         NEMOCLAW_ACCEPT_THIRD_PARTY_SOFTWARE: "1",
         NPM_PREFIX: prefix,
@@ -3104,17 +3132,21 @@ exit 0`,
     // even with pipe stdin, which leaves /dev/tty openable and correctly lets
     // the installer prompt instead of fail fast. Use setsid to exercise the
     // headless curl-pipe path where both stdin and /dev/tty are unavailable.
-    const useSetsid = !options.stdinIsTty && process.platform !== "darwin";
+    const useSetsid = !options.stdinIsTty && process.platform !== "darwin" && process.platform !== "win32";
+    const bashBinary = useSetsid ? "setsid" : BASH_PATH;
+    const bashArgs = useSetsid ? [BASH_PATH, INSTALLER_PAYLOAD] : [INSTALLER_PAYLOAD];
+    const pathSeparator = process.platform === "win32" ? ";" : ":";
+
     const result = spawnSync(
-      useSetsid ? "setsid" : "bash",
-      useSetsid ? ["bash", INSTALLER_PAYLOAD] : [INSTALLER_PAYLOAD],
+      bashBinary,
+      bashArgs,
       {
         cwd: tmp,
         encoding: "utf-8",
         input: options.stdinIsTty ? undefined : "",
         env: {
           HOME: tmp,
-          PATH: `${fakeBin}:${TEST_SYSTEM_PATH}`,
+          PATH: `${fakeBin}${pathSeparator}${TEST_SYSTEM_PATH}`,
           ...env,
         },
       },
@@ -3122,6 +3154,8 @@ exit 0`,
     const phases = fs.existsSync(phaseLog) ? fs.readFileSync(phaseLog, "utf-8") : "";
     return { result, phases, tmp };
   }
+
+  const itIfUnix = it.skipIf(process.platform === "win32");
 
   function runInstallerWithTty(
     answer: string,
@@ -3269,7 +3303,7 @@ sys.exit(exit_code)
       killSignal: "SIGKILL",
       env: {
         HOME: tmp,
-        PATH: `${fakeBin}:${TEST_SYSTEM_PATH}`,
+        PATH: `${fakeBin}${pathSeparator}${TEST_SYSTEM_PATH}`,
         ...env,
       },
     });
@@ -3302,7 +3336,7 @@ sys.exit(exit_code)
     expect(phases).toBe("");
   });
 
-  it("piped installs with a controlling TTY prompt before phase 1 and continue after acceptance", () => {
+  itIfUnix("piped installs with a controlling TTY prompt before phase 1 and continue after acceptance", () => {
     const { result, phases, state } = runInstallerWithPipedStdinAndTty("yes\n");
     const output = `${result.stdout}${result.stderr}`;
     const noticeVersion = JSON.parse(
@@ -3320,7 +3354,7 @@ sys.exit(exit_code)
     expect(state).toContain(`"acceptedVersion": "${noticeVersion}"`);
   }, 15_000);
 
-  it("interactive installs with stdin on a TTY prompt before phase 1 and continue after acceptance", () => {
+  itIfUnix("interactive installs with stdin on a TTY prompt before phase 1 and continue after acceptance", () => {
     const { result, phases, state } = runInstallerWithInteractiveStdin("yes\n");
     const output = `${result.stdout}${result.stderr}`;
     const noticeVersion = JSON.parse(
@@ -3338,7 +3372,7 @@ sys.exit(exit_code)
     expect(state).toContain(`"acceptedVersion": "${noticeVersion}"`);
   }, 15_000);
 
-  it("piped installs with a controlling TTY still stop before phase 1 when acceptance is declined", () => {
+  itIfUnix("piped installs with a controlling TTY still stop before phase 1 when acceptance is declined", () => {
     const { result, phases, state } = runInstallerWithPipedStdinAndTty("\n");
     const output = `${result.stdout}${result.stderr}`;
     expect(result.status).not.toBe(0);
@@ -3349,7 +3383,7 @@ sys.exit(exit_code)
     expect(state).toBe("");
   });
 
-  it("interactive installs with stdin on a TTY still stop before phase 1 when acceptance is declined", () => {
+  itIfUnix("interactive installs with stdin on a TTY still stop before phase 1 when acceptance is declined", () => {
     const { result, phases, state } = runInstallerWithInteractiveStdin("\n");
     const output = `${result.stdout}${result.stderr}`;
     expect(result.status).not.toBe(0);
@@ -3360,7 +3394,7 @@ sys.exit(exit_code)
     expect(state).toBe("");
   });
 
-  it("--non-interactive alone with a controlling TTY still stops before phase 1", () => {
+  itIfUnix("--non-interactive alone with a controlling TTY still stops before phase 1", () => {
     const { result, phases, state } = runInstallerWithTty("yes\n", "pipe", {
       NEMOCLAW_NON_INTERACTIVE: "1",
     });

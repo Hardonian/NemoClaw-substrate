@@ -3,6 +3,7 @@
 
 import { describe, it, expect, vi } from "vitest";
 import {
+  TimelinePhase,
   createTimeline,
   startPhase,
   endPhase,
