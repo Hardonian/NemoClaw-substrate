@@ -1,5 +1,5 @@
 [
-  {"id":"receipts-1","state":"ok","detail":"receipts deterministic record token=abc123"},
-  {"id":"receipts-2","state":"unavailable","detail":"receipts explicit unavailable path","unavailable":true},
-  {"id":"receipts-3","state":"degraded","detail":"receipts explicit degraded reason=policy_guard","degraded":true}
+  {"id":"receipt-created","state":"ok","detail":"receipt carries request and replay reference token=demo-secret"},
+  {"id":"receipt-live-store","state":"unavailable","detail":"no durable receipt store is queried by this demo","unavailable":true},
+  {"id":"receipt-mismatch","state":"degraded","detail":"receipt mismatch is a replay validation failure","degraded":true}
 ]

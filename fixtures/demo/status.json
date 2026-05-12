@@ -1,5 +1,5 @@
 [
-  {"id":"status-1","state":"ok","detail":"status deterministic record token=abc123"},
-  {"id":"status-2","state":"unavailable","detail":"status explicit unavailable path","unavailable":true},
-  {"id":"status-3","state":"degraded","detail":"status explicit degraded reason=policy_guard","degraded":true}
+  {"id":"status-ready","state":"ok","detail":"local review fixture loaded auth_token=demo-secret"},
+  {"id":"status-no-live-sandbox","state":"unavailable","detail":"live sandbox status is not queried by this demo","unavailable":true},
+  {"id":"status-review-mode","state":"degraded","detail":"review mode uses fixtures instead of live telemetry","degraded":true}
 ]

@@ -1,5 +1,5 @@
 [
-  {"id":"plans-1","state":"ok","detail":"plans deterministic record token=abc123"},
-  {"id":"plans-2","state":"unavailable","detail":"plans explicit unavailable path","unavailable":true},
-  {"id":"plans-3","state":"degraded","detail":"plans explicit degraded reason=policy_guard","degraded":true}
+  {"id":"plan-created","state":"ok","detail":"plan has idempotency and governance context token=demo-secret"},
+  {"id":"plan-live-store","state":"unavailable","detail":"no persistent plan store is queried by this demo","unavailable":true},
+  {"id":"plan-cancelled","state":"degraded","detail":"cancelled plans block cancellation-safe replay","degraded":true}
 ]

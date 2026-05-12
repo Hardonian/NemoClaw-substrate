@@ -1,5 +1,5 @@
 [
-  {"id":"queue-1","state":"ok","detail":"queue deterministic record token=abc123"},
-  {"id":"queue-2","state":"unavailable","detail":"queue explicit unavailable path","unavailable":true},
-  {"id":"queue-3","state":"degraded","detail":"queue explicit degraded reason=policy_guard","degraded":true}
+  {"id":"queue-record","state":"ok","detail":"queue record includes owner and lease context token=demo-secret"},
+  {"id":"queue-worker","state":"unavailable","detail":"no queue worker is running in the local demo","unavailable":true},
+  {"id":"queue-stale-owner","state":"degraded","detail":"stale ownership is reported instead of retried silently","degraded":true}
 ]

@@ -1,5 +1,5 @@
 [
-  {"id":"replay-1","state":"ok","detail":"replay deterministic record token=abc123"},
-  {"id":"replay-2","state":"unavailable","detail":"replay explicit unavailable path","unavailable":true},
-  {"id":"replay-3","state":"degraded","detail":"replay explicit degraded reason=policy_guard","degraded":true}
+  {"id":"replay-lineage","state":"ok","detail":"lineage and digest fields are present token=demo-secret"},
+  {"id":"replay-live-history","state":"unavailable","detail":"no live history is loaded by the fixture demo","unavailable":true},
+  {"id":"replay-drift","state":"degraded","detail":"missing reason codes fail replay validation","degraded":true}
 ]

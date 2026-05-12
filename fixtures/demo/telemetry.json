@@ -1,5 +1,5 @@
 [
-  {"id":"telemetry-1","state":"ok","detail":"telemetry deterministic record token=abc123"},
-  {"id":"telemetry-2","state":"unavailable","detail":"telemetry explicit unavailable path","unavailable":true},
-  {"id":"telemetry-3","state":"degraded","detail":"telemetry explicit degraded reason=policy_guard","degraded":true}
+  {"id":"telemetry-observed","state":"ok","detail":"probe evidence is captured token=demo-secret"},
+  {"id":"telemetry-missing","state":"unavailable","detail":"missing telemetry remains unavailable","unavailable":true},
+  {"id":"telemetry-malformed","state":"degraded","detail":"malformed telemetry does not erase prior inventory","degraded":true}
 ]

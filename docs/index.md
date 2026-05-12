@@ -56,6 +56,10 @@ Reviewer Path <review/reviewer-path>
 Evidence Index <review/evidence-index>
 Naming Audit <review/naming-audit>
 Known Non-Goals <review/known-non-goals>
+Reviewer Start Here <review/reviewer-start-here>
+Reviewer Navigation Map <review/reviewer-navigation-map>
+Live Review Guide <review/live-review-guide>
+Capability Tour <review/substrate-capability-tour>
 ```
 
 ```{toctree}
@@ -111,6 +115,7 @@ Security Verification Matrix <verification/security-verification-matrix>
 :hidden:
 
 Local Proof <demo/local-proof>
+Control-Plane Demo <demo/governed-substrate-demo>
 Operator Walkthrough <demo/operator-walkthrough>
 Replay Walkthrough <demo/replay-walkthrough>
 Demo Index <demo/index>

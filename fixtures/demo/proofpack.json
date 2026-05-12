@@ -1,5 +1,5 @@
 [
-  {"id":"proofpack-1","state":"ok","detail":"proofpack deterministic record token=abc123"},
-  {"id":"proofpack-2","state":"unavailable","detail":"proofpack explicit unavailable path","unavailable":true},
-  {"id":"proofpack-3","state":"degraded","detail":"proofpack explicit degraded reason=policy_guard","degraded":true}
+  {"id":"proofpack-manifest","state":"ok","detail":"manifest digest is present token=demo-secret"},
+  {"id":"proofpack-live-signature","state":"unavailable","detail":"hardware-backed signing is not part of this fixture","unavailable":true},
+  {"id":"proofpack-tamper-check","state":"degraded","detail":"tampered digest would be reported as proofpack_integrity_mismatch","degraded":true}
 ]

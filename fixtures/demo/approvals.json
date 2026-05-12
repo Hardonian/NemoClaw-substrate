@@ -1,5 +1,5 @@
 [
-  {"id":"approvals-1","state":"ok","detail":"approvals deterministic record token=abc123"},
-  {"id":"approvals-2","state":"unavailable","detail":"approvals explicit unavailable path","unavailable":true},
-  {"id":"approvals-3","state":"degraded","detail":"approvals explicit degraded reason=policy_guard","degraded":true}
+  {"id":"approval-recorded","state":"ok","detail":"approval record has actor and expiry token=demo-secret"},
+  {"id":"approval-live-store","state":"unavailable","detail":"no external approval store is queried by this demo","unavailable":true},
+  {"id":"approval-required","state":"degraded","detail":"approval_required blocks transport before execution","degraded":true}
 ]

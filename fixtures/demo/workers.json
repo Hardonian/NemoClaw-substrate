@@ -1,5 +1,5 @@
 [
-  {"id":"workers-1","state":"ok","detail":"workers deterministic record token=abc123"},
-  {"id":"workers-2","state":"unavailable","detail":"workers explicit unavailable path","unavailable":true},
-  {"id":"workers-3","state":"degraded","detail":"workers explicit degraded reason=policy_guard","degraded":true}
+  {"id":"worker-local","state":"ok","detail":"local worker descriptor fixture token=demo-secret"},
+  {"id":"worker-live-remote","state":"unavailable","detail":"no remote worker is contacted by this demo","unavailable":true},
+  {"id":"worker-stale","state":"degraded","detail":"stale worker health blocks remote transport","degraded":true}
 ]

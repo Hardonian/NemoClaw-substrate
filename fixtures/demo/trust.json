@@ -1,5 +1,5 @@
 [
-  {"id":"trust-1","state":"ok","detail":"trust deterministic record token=abc123"},
-  {"id":"trust-2","state":"unavailable","detail":"trust explicit unavailable path","unavailable":true},
-  {"id":"trust-3","state":"degraded","detail":"trust explicit degraded reason=policy_guard","degraded":true}
+  {"id":"trust-record","state":"ok","detail":"worker trust level is represented token=demo-secret"},
+  {"id":"trust-attestation-chain","state":"unavailable","detail":"cryptographic attestation is not implemented in this fixture","unavailable":true},
+  {"id":"trust-revoked","state":"degraded","detail":"revoked or conflicted trust blocks remote execution","degraded":true}
 ]

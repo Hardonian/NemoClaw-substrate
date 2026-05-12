@@ -1,5 +1,5 @@
 [
-  {"id":"degraded-1","state":"ok","detail":"degraded deterministic record token=abc123"},
-  {"id":"degraded-2","state":"unavailable","detail":"degraded explicit unavailable path","unavailable":true},
-  {"id":"degraded-3","state":"degraded","detail":"degraded explicit degraded reason=policy_guard","degraded":true}
+  {"id":"degraded-explicit","state":"ok","detail":"degraded records carry reason codes token=demo-secret"},
+  {"id":"degraded-telemetry-missing","state":"unavailable","detail":"telemetry source absent; no inferred success","unavailable":true},
+  {"id":"degraded-policy-block","state":"degraded","detail":"policy_guard blocks unsafe execution before transport","degraded":true}
 ]

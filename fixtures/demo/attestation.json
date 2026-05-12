@@ -1,5 +1,5 @@
 [
-  {"id":"attestation-1","state":"ok","detail":"attestation deterministic record token=abc123"},
-  {"id":"attestation-2","state":"unavailable","detail":"attestation explicit unavailable path","unavailable":true},
-  {"id":"attestation-3","state":"degraded","detail":"attestation explicit degraded reason=policy_guard","degraded":true}
+  {"id":"attestation-structural","state":"ok","detail":"attestation status is represented token=demo-secret"},
+  {"id":"attestation-crypto","state":"unavailable","detail":"no cryptographic attestation chain is available","unavailable":true},
+  {"id":"attestation-conflict","state":"degraded","detail":"conflicted attestation blocks remote execution","degraded":true}
 ]

@@ -1,5 +1,5 @@
 [
-  {"id":"policy-1","state":"ok","detail":"policy deterministic record token=abc123"},
-  {"id":"policy-2","state":"unavailable","detail":"policy explicit unavailable path","unavailable":true},
-  {"id":"policy-3","state":"degraded","detail":"policy explicit degraded reason=policy_guard","degraded":true}
+  {"id":"policy-trace","state":"ok","detail":"policy trace has explicit effect token=demo-secret"},
+  {"id":"policy-live-pack","state":"unavailable","detail":"no external policy pack is loaded by this fixture","unavailable":true},
+  {"id":"policy-approval-required","state":"degraded","detail":"approval_required blocks execution until explicit approval","degraded":true}
 ]

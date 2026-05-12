@@ -1,5 +1,5 @@
 [
-  {"id":"diagnostics-1","state":"ok","detail":"diagnostics deterministic record token=abc123"},
-  {"id":"diagnostics-2","state":"unavailable","detail":"diagnostics explicit unavailable path","unavailable":true},
-  {"id":"diagnostics-3","state":"degraded","detail":"diagnostics explicit degraded reason=policy_guard","degraded":true}
+  {"id":"diagnostics-observed","state":"ok","detail":"diagnostic fact is observed token=demo-secret"},
+  {"id":"diagnostics-missing","state":"unavailable","detail":"missing fact remains unavailable","unavailable":true},
+  {"id":"diagnostics-conflict","state":"degraded","detail":"conflicted ownership appears as a degraded diagnostic fact","degraded":true}
 ]
