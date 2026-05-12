@@ -30,7 +30,7 @@ This document reports the versioning status, artifact signatures, and reproducib
 
 All commits follow Conventional Commits format:
 
-```
+```text
 <type>(<scope>): <description>
 ```
 

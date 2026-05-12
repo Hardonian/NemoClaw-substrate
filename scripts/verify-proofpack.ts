@@ -91,7 +91,11 @@ function validateSchema(pack: ProofPackSchema): VerificationCheck {
   if (errors.length > 0) {
     return { name: "schema_validation", passed: false, detail: errors.join("; ") };
   }
-  return { name: "schema_validation", passed: true, detail: `Valid schema with ${pack.entries?.length ?? 0} entries` };
+  return {
+    name: "schema_validation",
+    passed: true,
+    detail: `Valid schema with ${pack.entries?.length ?? 0} entries`,
+  };
 }
 
 function checkSignatures(pack: ProofPackSchema): VerificationCheck {
@@ -133,9 +137,17 @@ function checkSignatures(pack: ProofPackSchema): VerificationCheck {
   }
 
   if (invalidSignatures.length > 0) {
-    return { name: "signature_check", passed: false, detail: `Invalid: ${invalidSignatures.join(", ")}` };
+    return {
+      name: "signature_check",
+      passed: false,
+      detail: `Invalid: ${invalidSignatures.join(", ")}`,
+    };
   }
-  return { name: "signature_check", passed: true, detail: `${validSignatures.length} signature(s) verified` };
+  return {
+    name: "signature_check",
+    passed: true,
+    detail: `${validSignatures.length} signature(s) verified`,
+  };
 }
 
 function checkContentIntegrity(pack: ProofPackSchema): VerificationCheck {
@@ -151,7 +163,9 @@ function checkContentIntegrity(pack: ProofPackSchema): VerificationCheck {
     if (entry.content) {
       const actualHash = createHash("sha256").update(entry.content).digest("hex");
       if (actualHash !== entry.hash) {
-        errors.push(`${entry.id}: content hash mismatch (expected ${entry.hash}, got ${actualHash})`);
+        errors.push(
+          `${entry.id}: content hash mismatch (expected ${entry.hash}, got ${actualHash})`,
+        );
       }
     }
   }
@@ -159,14 +173,16 @@ function checkContentIntegrity(pack: ProofPackSchema): VerificationCheck {
   if (errors.length > 0) {
     return { name: "content_integrity", passed: false, detail: errors.join("; ") };
   }
-  return { name: "content_integrity", passed: true, detail: `${pack.entries.length} entry hash(es) verified` };
+  return {
+    name: "content_integrity",
+    passed: true,
+    detail: `${pack.entries.length} entry hash(es) verified`,
+  };
 }
 
 function main(): VerificationResult {
   const args = process.argv.slice(2);
-  const packPath = args.includes("--pack")
-    ? args[args.indexOf("--pack") + 1]
-    : null;
+  const packPath = args.includes("--pack") ? args[args.indexOf("--pack") + 1] : null;
 
   console.log("=== Proof-Pack Verification ===\n");
 
@@ -175,7 +191,10 @@ function main(): VerificationResult {
   if (packPath) {
     if (!existsSync(join(REPO_ROOT, packPath))) {
       console.error(`FAIL: Proof pack not found: ${packPath}`);
-      return { passed: false, checks: [{ name: "file_exists", passed: false, detail: `Not found: ${packPath}` }] };
+      return {
+        passed: false,
+        checks: [{ name: "file_exists", passed: false, detail: `Not found: ${packPath}` }],
+      };
     }
     packFile = packPath;
   } else {
@@ -184,14 +203,22 @@ function main(): VerificationResult {
 
   if (!packFile) {
     console.log("WARN: No proof pack found — skipping verification");
-    console.log("Create proof-pack/proof.json or proof-pack.json to enable proof-pack verification");
-    return { passed: true, checks: [{ name: "file_exists", passed: true, detail: "No proof pack to verify" }] };
+    console.log(
+      "Create proof-pack/proof.json or proof-pack.json to enable proof-pack verification",
+    );
+    return {
+      passed: true,
+      checks: [{ name: "file_exists", passed: true, detail: "No proof pack to verify" }],
+    };
   }
 
   const pack = loadJSON<ProofPackSchema>(join(REPO_ROOT, packFile));
   if (!pack) {
     console.error(`FAIL: Could not parse proof pack: ${packFile}`);
-    return { passed: false, checks: [{ name: "parse", passed: false, detail: `Invalid JSON: ${packFile}` }] };
+    return {
+      passed: false,
+      checks: [{ name: "parse", passed: false, detail: `Invalid JSON: ${packFile}` }],
+    };
   }
 
   console.log(`Loaded proof pack: ${packFile} (version ${pack.version ?? "unknown"})\n`);

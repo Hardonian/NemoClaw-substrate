@@ -107,8 +107,8 @@ describe("hardenConfig", () => {
   it("deep sanitizes nested objects", () => {
     const input = JSON.parse('{"nested": {"__proto__": "bad", "ok": "value"}}');
     const result = hardenConfig(input);
-    expect(Object.hasOwn(result.config.nested as Record<string, unknown>, "__proto__")).toBe(false);
-    expect(result.config.nested.ok).toBe("value");
+    expect(Object.hasOwn((result.config as any).nested, "__proto__")).toBe(false);
+    expect(((result.config as any).nested as Record<string, unknown>).ok).toBe("value");
   });
 
   it("allows null values", () => {

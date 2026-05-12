@@ -26,11 +26,11 @@ const excludes = [
   "docs\\architecture\\canonical-terminology-index.md",
   "docs/architecture/canonical-terminology-index.md",
   "docs\\architecture\\security-threat-model.md",
-  "docs/architecture/security-threat-model.md" // wait, let's fix it manually there to not mess up shell fallback if needed
+  "docs/architecture/security-threat-model.md", // wait, let's fix it manually there to not mess up shell fallback if needed
 ];
 
 files.forEach((file) => {
-  if (excludes.some(e => file.includes(e))) {
+  if (excludes.some((e) => file.includes(e))) {
     console.log(`Skipping excluded file: ${file}`);
     return;
   }
@@ -47,10 +47,10 @@ files.forEach((file) => {
     { from: /\bFallbacks\b/gi, to: "Degraded States" },
     { from: /\bfallback\b/g, to: "degraded state" },
     { from: /\bFallback\b/g, to: "Degraded State" },
-    { from: /\bFALLBACK\b/g, to: "DEGRADED_STATE" }
+    { from: /\bFALLBACK\b/g, to: "DEGRADED_STATE" },
   ];
 
-  replacePatterns.forEach(({from, to}) => {
+  replacePatterns.forEach(({ from, to }) => {
     if (from.test(content)) {
       content = content.replace(from, to);
       changed = true;

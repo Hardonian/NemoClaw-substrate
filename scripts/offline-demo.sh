@@ -16,28 +16,28 @@ ROOT_DIR="$(dirname "$SCRIPT_DIR")"
 
 # Validate prerequisites
 validate() {
-    if [[ ! -d "$ROOT_DIR" ]]; then
-        echo "ERROR: Project root not found at ${ROOT_DIR}" >&2
-        exit 1
-    fi
+  if [[ ! -d "$ROOT_DIR" ]]; then
+    echo "ERROR: Project root not found at ${ROOT_DIR}" >&2
+    exit 1
+  fi
 }
 
 # Create demo directory structure
 create_structure() {
-    local demo_path="$1"
+  local demo_path="$1"
 
-    mkdir -p "${demo_path}/bin"
-    mkdir -p "${demo_path}/config"
-    mkdir -p "${demo_path}/fixtures"
-    mkdir -p "${demo_path}/ui"
-    mkdir -p "${demo_path}/logs"
+  mkdir -p "${demo_path}/bin"
+  mkdir -p "${demo_path}/config"
+  mkdir -p "${demo_path}/fixtures"
+  mkdir -p "${demo_path}/ui"
+  mkdir -p "${demo_path}/logs"
 }
 
 # Seed fixture data
 seed_fixtures() {
-    local demo_path="$1"
+  local demo_path="$1"
 
-    cat > "${demo_path}/fixtures/sample-config.yaml" << 'FIXTURE_EOF'
+  cat >"${demo_path}/fixtures/sample-config.yaml" <<'FIXTURE_EOF'
 sandbox:
   enabled: true
   network_policy: isolated
@@ -53,7 +53,7 @@ inference:
   endpoint: http://localhost:8080
 FIXTURE_EOF
 
-    cat > "${demo_path}/fixtures/sample-policies.yaml" << 'POLICY_EOF'
+  cat >"${demo_path}/fixtures/sample-policies.yaml" <<'POLICY_EOF'
 policies:
   egress:
     allowed:
@@ -65,7 +65,7 @@ policies:
       - 8080
 POLICY_EOF
 
-    cat > "${demo_path}/fixtures/sample-state.json" << 'STATE_EOF'
+  cat >"${demo_path}/fixtures/sample-state.json" <<'STATE_EOF'
 {
   "version": "1.0.0",
   "state": "initialized",
@@ -81,9 +81,9 @@ STATE_EOF
 
 # Generate embedded UI (self-contained HTML)
 generate_ui() {
-    local demo_path="$1"
+  local demo_path="$1"
 
-    cat > "${demo_path}/ui/index.html" << 'UI_EOF'
+  cat >"${demo_path}/ui/index.html" <<'UI_EOF'
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -122,9 +122,9 @@ UI_EOF
 
 # Generate demo launcher script
 generate_launcher() {
-    local demo_path="$1"
+  local demo_path="$1"
 
-    cat > "${demo_path}/bin/demo.sh" << 'LAUNCHER_EOF'
+  cat >"${demo_path}/bin/demo.sh" <<'LAUNCHER_EOF'
 #!/usr/bin/env bash
 set -euo pipefail
 
@@ -145,14 +145,14 @@ echo "To view the embedded UI, open:"
 echo "  file://${DEMO_DIR}/ui/index.html"
 LAUNCHER_EOF
 
-    chmod +x "${demo_path}/bin/demo.sh"
+  chmod +x "${demo_path}/bin/demo.sh"
 }
 
 # Create version and metadata
 create_metadata() {
-    local demo_path="$1"
+  local demo_path="$1"
 
-    cat > "${demo_path}/README.md" << EOF
+  cat >"${demo_path}/README.md" <<EOF
 # NemoClaw Offline Demo
 
 Version: ${DEMO_VERSION}
@@ -174,29 +174,29 @@ EOF
 
 # Generate checksums
 generate_checksums() {
-    local demo_path="$1"
+  local demo_path="$1"
 
-    (cd "$demo_path" && find . -type f -not -name 'CHECKSUMS' -exec sha256sum {} \; | sort > CHECKSUMS)
+  (cd "$demo_path" && find . -type f -not -name 'CHECKSUMS' -exec sha256sum {} \; | sort >CHECKSUMS)
 }
 
 # Main
 main() {
-    validate
+  validate
 
-    local demo_path="${OUTPUT_DIR}/${DEMO_NAME}-${DEMO_VERSION}"
+  local demo_path="${OUTPUT_DIR}/${DEMO_NAME}-${DEMO_VERSION}"
 
-    echo "Creating offline demo: ${demo_path}"
-    mkdir -p "$OUTPUT_DIR"
+  echo "Creating offline demo: ${demo_path}"
+  mkdir -p "$OUTPUT_DIR"
 
-    create_structure "$demo_path"
-    seed_fixtures "$demo_path"
-    generate_ui "$demo_path"
-    generate_launcher "$demo_path"
-    create_metadata "$demo_path"
-    generate_checksums "$demo_path"
+  create_structure "$demo_path"
+  seed_fixtures "$demo_path"
+  generate_ui "$demo_path"
+  generate_launcher "$demo_path"
+  create_metadata "$demo_path"
+  generate_checksums "$demo_path"
 
-    echo "Offline demo created: ${demo_path}"
-    echo "  Size: $(du -sh "$demo_path" | cut -f1)"
+  echo "Offline demo created: ${demo_path}"
+  echo "  Size: $(du -sh "$demo_path" | cut -f1)"
 }
 
 main "$@"

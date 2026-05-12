@@ -99,7 +99,7 @@ describe("runQueueBenchmark", () => {
 
 describe("summarizeQueue", () => {
   it("produces formatted output", () => {
-    const results = [
+    const results: any[] = [
       {
         burstSize: 100,
         totalMessages: 100,

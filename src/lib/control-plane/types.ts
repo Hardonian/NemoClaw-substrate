@@ -205,4 +205,3 @@ export interface ExecutionReceipt {
   executionLineage?: ExecutionReceiptLineage;
   operatorOverrides: Array<{ at: string; actor: string; reason: string }>;
 }
-

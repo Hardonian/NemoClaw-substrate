@@ -15,33 +15,33 @@ SRC_DIR="${SRC_DIR:-.}"
 
 # Validate inputs
 validate_inputs() {
-    if [[ -z "$BUNDLE_NAME" ]]; then
-        echo "ERROR: BUNDLE_NAME is required" >&2
-        exit 1
-    fi
+  if [[ -z "$BUNDLE_NAME" ]]; then
+    echo "ERROR: BUNDLE_NAME is required" >&2
+    exit 1
+  fi
 
-    if [[ ! -d "$SRC_DIR" ]]; then
-        echo "ERROR: Source directory '$SRC_DIR' does not exist" >&2
-        exit 1
-    fi
+  if [[ ! -d "$SRC_DIR" ]]; then
+    echo "ERROR: Source directory '$SRC_DIR' does not exist" >&2
+    exit 1
+  fi
 }
 
 # Create bundle directory structure
 create_structure() {
-    local bundle_path="$1"
+  local bundle_path="$1"
 
-    mkdir -p "${bundle_path}/bin"
-    mkdir -p "${bundle_path}/config"
-    mkdir -p "${bundle_path}/data"
-    mkdir -p "${bundle_path}/logs"
-    mkdir -p "${bundle_path}/health"
+  mkdir -p "${bundle_path}/bin"
+  mkdir -p "${bundle_path}/config"
+  mkdir -p "${bundle_path}/data"
+  mkdir -p "${bundle_path}/logs"
+  mkdir -p "${bundle_path}/health"
 }
 
 # Generate start script
 generate_start_script() {
-    local bundle_path="$1"
+  local bundle_path="$1"
 
-    cat > "${bundle_path}/bin/start.sh" << 'START_EOF'
+  cat >"${bundle_path}/bin/start.sh" <<'START_EOF'
 #!/usr/bin/env bash
 set -euo pipefail
 
@@ -66,14 +66,14 @@ echo "Starting NemoClaw on port ${NEMO_PORT}..."
 exec node "${ROOT_DIR}/bin/nemoclaw.js" --port "$NEMO_PORT" --log-dir "$NEMO_LOG_DIR" --data-dir "$NEMO_DATA_DIR"
 START_EOF
 
-    chmod +x "${bundle_path}/bin/start.sh"
+  chmod +x "${bundle_path}/bin/start.sh"
 }
 
 # Generate config template
 generate_config_template() {
-    local bundle_path="$1"
+  local bundle_path="$1"
 
-    cat > "${bundle_path}/config/nemoclaw.conf" << 'CONF_EOF'
+  cat >"${bundle_path}/config/nemoclaw.conf" <<'CONF_EOF'
 # NemoClaw Configuration Template
 # Copy to nemoclaw.conf and modify as needed
 
@@ -97,9 +97,9 @@ CONF_EOF
 
 # Generate health check script
 generate_health_check() {
-    local bundle_path="$1"
+  local bundle_path="$1"
 
-    cat > "${bundle_path}/health/check.sh" << 'HEALTH_EOF'
+  cat >"${bundle_path}/health/check.sh" <<'HEALTH_EOF'
 #!/usr/bin/env bash
 set -euo pipefail
 
@@ -115,44 +115,44 @@ echo "HEALTHY: ${response}"
 exit 0
 HEALTH_EOF
 
-    chmod +x "${bundle_path}/health/check.sh"
+  chmod +x "${bundle_path}/health/check.sh"
 }
 
 # Create version file
 create_version_file() {
-    local bundle_path="$1"
+  local bundle_path="$1"
 
-    cat > "${bundle_path}/VERSION" << EOF
+  cat >"${bundle_path}/VERSION" <<EOF
 ${BUNDLE_VERSION}
 EOF
 }
 
 # Generate checksum manifest
 generate_checksums() {
-    local bundle_path="$1"
+  local bundle_path="$1"
 
-    (cd "$bundle_path" && find . -type f -not -name 'CHECKSUMS' -exec sha256sum {} \; | sort > CHECKSUMS)
+  (cd "$bundle_path" && find . -type f -not -name 'CHECKSUMS' -exec sha256sum {} \; | sort >CHECKSUMS)
 }
 
 # Main
 main() {
-    validate_inputs
+  validate_inputs
 
-    local bundle_path="${OUTPUT_DIR}/${BUNDLE_NAME}-${BUNDLE_VERSION}"
+  local bundle_path="${OUTPUT_DIR}/${BUNDLE_NAME}-${BUNDLE_VERSION}"
 
-    echo "Creating bundle: ${bundle_path}"
-    mkdir -p "$OUTPUT_DIR"
+  echo "Creating bundle: ${bundle_path}"
+  mkdir -p "$OUTPUT_DIR"
 
-    create_structure "$bundle_path"
-    generate_start_script "$bundle_path"
-    generate_config_template "$bundle_path"
-    generate_health_check "$bundle_path"
-    create_version_file "$bundle_path"
-    generate_checksums "$bundle_path"
+  create_structure "$bundle_path"
+  generate_start_script "$bundle_path"
+  generate_config_template "$bundle_path"
+  generate_health_check "$bundle_path"
+  create_version_file "$bundle_path"
+  generate_checksums "$bundle_path"
 
-    echo "Bundle created: ${bundle_path}"
-    echo "  Version: ${BUNDLE_VERSION}"
-    echo "  Size: $(du -sh "$bundle_path" | cut -f1)"
+  echo "Bundle created: ${bundle_path}"
+  echo "  Version: ${BUNDLE_VERSION}"
+  echo "  Size: $(du -sh "$bundle_path" | cut -f1)"
 }
 
 main "$@"

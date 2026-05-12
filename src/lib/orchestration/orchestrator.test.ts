@@ -198,7 +198,7 @@ describe("orchestration engine", () => {
         stepId: "step-1",
         planId: "test-plan",
         name: "Test Step",
-        status: "in_progress",
+        status: "in_progress" as any,
         dependsOnStepIds: [],
         payload: {},
         approvalRequired: false,
@@ -224,7 +224,7 @@ describe("orchestration engine", () => {
         stepId: "step-1",
         planId: "test-plan",
         name: "Test Step",
-        status: "in_progress",
+        status: "in_progress" as any,
         dependsOnStepIds: [],
         payload: {},
         approvalRequired: false,
@@ -427,7 +427,7 @@ describe("orchestration engine", () => {
       engine.createPlan(plan);
       engine.startPlan("test-plan", "test-run");
 
-      const step = {
+      const step: OrchestrationStep = {
         stepId: "step-1",
         planId: "test-plan",
         name: "Test Step",

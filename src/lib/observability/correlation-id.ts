@@ -55,7 +55,7 @@ export function generateCorrelationId(): string {
  * All async calls nested inside share the same context.
  */
 export async function runWithCorrelation<T>(context: CorrelationContext, fn: () => Promise<T> | T): Promise<T> {
-  return correlationStorage.run(context, fn);
+  return Promise.resolve(correlationStorage.run(context, fn));
 }
 
 /**

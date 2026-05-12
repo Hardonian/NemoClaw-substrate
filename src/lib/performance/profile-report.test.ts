@@ -117,7 +117,7 @@ describe("profileOperations", () => {
 
 describe("summarizeProfile", () => {
   it("produces formatted output", () => {
-    const results = [
+    const results: any[] = [
       {
         operationName: "test-op",
         baselineMeanMs: 1.0,
@@ -139,7 +139,7 @@ describe("summarizeProfile", () => {
   });
 
   it("shows FAIL when budget exceeded", () => {
-    const results = [
+    const results: any[] = [
       {
         operationName: "slow-op",
         baselineMeanMs: 1.0,

@@ -15,12 +15,12 @@ flowchart TD
     B -- "Evidence-based Scoring" --> C[Capability Attestation]
     C -- "Validated Features" --> D[Execution Eligibility]
     D -- "Policy Match" --> E[Authorized Execution]
-    
+
     subgraph "Verification Layer"
     B
     C
     end
-    
+
     subgraph "Enforcement Layer"
     D
     E

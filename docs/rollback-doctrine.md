@@ -23,7 +23,7 @@ NemoClaw maintains snapshots at three levels:
 
 Snapshots use the following naming convention:
 
-```
+```text
 nemoclaw-snapshot-<type>-<timestamp>
 ```
 

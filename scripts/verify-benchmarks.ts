@@ -150,7 +150,11 @@ function checkAgainstBaselines(
     }
 
     // If no explicit min/max, use higherIsBetter heuristic
-    if (threshold.min === undefined && threshold.max === undefined && threshold.tolerancePct !== undefined) {
+    if (
+      threshold.min === undefined &&
+      threshold.max === undefined &&
+      threshold.tolerancePct !== undefined
+    ) {
       // Use previous run if available
     }
   }
@@ -160,9 +164,7 @@ function checkAgainstBaselines(
 
 function main(): BenchmarkResult {
   const args = process.argv.slice(2);
-  const baselinePath = args.includes("--baseline")
-    ? args[args.indexOf("--baseline") + 1]
-    : null;
+  const baselinePath = args.includes("--baseline") ? args[args.indexOf("--baseline") + 1] : null;
 
   console.log("=== Benchmark Verification ===\n");
 

@@ -120,9 +120,10 @@ function checkEventSequence(original: ExecutionTrace, replay: ExecutionTrace): R
   }
 
   if (mismatches.length > 0) {
-    const display = mismatches.length > 5
-      ? mismatches.slice(0, 5).concat([`... and ${mismatches.length - 5} more`])
-      : mismatches;
+    const display =
+      mismatches.length > 5
+        ? mismatches.slice(0, 5).concat([`... and ${mismatches.length - 5} more`])
+        : mismatches;
     return {
       name: "event_sequence",
       passed: false,
@@ -164,7 +165,10 @@ function checkDeterminism(original: ExecutionTrace, replay: ExecutionTrace): Rep
   }
 
   const origHash = JSON.stringify(origFinalState, Object.keys(origFinalState as object).sort());
-  const replayHash = JSON.stringify(replayFinalState, Object.keys(replayFinalState as object).sort());
+  const replayHash = JSON.stringify(
+    replayFinalState,
+    Object.keys(replayFinalState as object).sort(),
+  );
 
   if (origHash !== replayHash) {
     return {
@@ -178,12 +182,8 @@ function checkDeterminism(original: ExecutionTrace, replay: ExecutionTrace): Rep
 
 function main(): ReplayResult {
   const args = process.argv.slice(2);
-  const tracePath = args.includes("--trace")
-    ? args[args.indexOf("--trace") + 1]
-    : null;
-  const replayPath = args.includes("--replay")
-    ? args[args.indexOf("--replay") + 1]
-    : null;
+  const tracePath = args.includes("--trace") ? args[args.indexOf("--trace") + 1] : null;
+  const replayPath = args.includes("--replay") ? args[args.indexOf("--replay") + 1] : null;
 
   console.log("=== Replay Verification ===\n");
 
@@ -200,13 +200,19 @@ function main(): ReplayResult {
   if (!traceFile) {
     console.log("WARN: No trace found — skipping replay verification");
     console.log("Provide --trace <path> or create test/fixtures/trace.json");
-    return { passed: true, checks: [{ name: "trace_exists", passed: true, detail: "No trace to verify" }] };
+    return {
+      passed: true,
+      checks: [{ name: "trace_exists", passed: true, detail: "No trace to verify" }],
+    };
   }
 
   if (!replayFile) {
     console.log("WARN: No replay found — skipping replay verification");
     console.log("Provide --replay <path> or create test/fixtures/replay.json");
-    return { passed: true, checks: [{ name: "replay_exists", passed: true, detail: "No replay to verify" }] };
+    return {
+      passed: true,
+      checks: [{ name: "replay_exists", passed: true, detail: "No replay to verify" }],
+    };
   }
 
   const trace = loadJSON<ExecutionTrace>(join(REPO_ROOT, traceFile));
@@ -214,11 +220,17 @@ function main(): ReplayResult {
 
   if (!trace) {
     console.error(`FAIL: Could not parse trace: ${traceFile}`);
-    return { passed: false, checks: [{ name: "parse_trace", passed: false, detail: `Invalid JSON: ${traceFile}` }] };
+    return {
+      passed: false,
+      checks: [{ name: "parse_trace", passed: false, detail: `Invalid JSON: ${traceFile}` }],
+    };
   }
   if (!replay) {
     console.error(`FAIL: Could not parse replay: ${replayFile}`);
-    return { passed: false, checks: [{ name: "parse_replay", passed: false, detail: `Invalid JSON: ${replayFile}` }] };
+    return {
+      passed: false,
+      checks: [{ name: "parse_replay", passed: false, detail: `Invalid JSON: ${replayFile}` }],
+    };
   }
 
   console.log(`Trace: ${traceFile} (${trace.events?.length ?? 0} events)`);
@@ -244,7 +256,14 @@ function main(): ReplayResult {
   return { passed: failures.length === 0, checks };
 }
 
-export { checkEventCount, checkEventSequence, checkOutput, checkDeterminism, hashTraceEvent, findTraces };
+export {
+  checkEventCount,
+  checkEventSequence,
+  checkOutput,
+  checkDeterminism,
+  hashTraceEvent,
+  findTraces,
+};
 export type { ExecutionTrace, TraceEvent, ReplayCheck, ReplayResult };
 
 if (

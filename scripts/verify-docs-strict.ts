@@ -34,20 +34,27 @@ function runDocsStrict(): { status: number | null; stdout: string; stderr: strin
     return { status: 0, stdout: output, stderr: "" };
   } catch (error) {
     const errorObj = typeof error === "object" && error !== null ? error : {};
-    const stdout = typeof (errorObj as { stdout?: string }).stdout === "string"
-      ? (errorObj as { stdout: string }).stdout
-      : "";
-    const stderr = typeof (errorObj as { stderr?: string }).stderr === "string"
-      ? (errorObj as { stderr: string }).stderr
-      : "";
-    const status = typeof (errorObj as { status?: number }).status === "number"
-      ? (errorObj as { status: number }).status
-      : 1;
+    const stdout =
+      typeof (errorObj as { stdout?: string }).stdout === "string"
+        ? (errorObj as { stdout: string }).stdout
+        : "";
+    const stderr =
+      typeof (errorObj as { stderr?: string }).stderr === "string"
+        ? (errorObj as { stderr: string }).stderr
+        : "";
+    const status =
+      typeof (errorObj as { status?: number }).status === "number"
+        ? (errorObj as { status: number }).status
+        : 1;
     return { status, stdout, stderr };
   }
 }
 
-function checkDocsBuildResult(result: { status: number | null; stdout: string; stderr: string }): DocsCheck {
+function checkDocsBuildResult(result: {
+  status: number | null;
+  stdout: string;
+  stderr: string;
+}): DocsCheck {
   if (result.status === 0) {
     return { name: "docs_build", passed: true, detail: "Sphinx build completed with no warnings" };
   }
@@ -90,7 +97,11 @@ function checkBrokenLinks(): DocsCheck {
 
   // Check for Sphinx's "broken internal link" markers
   if (content.includes("reference not found") || content.includes("undefined label")) {
-    return { name: "broken_links", passed: false, detail: "Found broken internal link markers in index.html" };
+    return {
+      name: "broken_links",
+      passed: false,
+      detail: "Found broken internal link markers in index.html",
+    };
   }
 
   return { name: "broken_links", passed: true, detail: "No broken link markers found" };
@@ -99,7 +110,11 @@ function checkBrokenLinks(): DocsCheck {
 function checkDocsFrontmatter(): DocsCheck {
   const docsDir = join(REPO_ROOT, "docs");
   if (!existsSync(docsDir)) {
-    return { name: "docs_frontmatter", passed: true, detail: "Docs directory not found — skipping" };
+    return {
+      name: "docs_frontmatter",
+      passed: true,
+      detail: "Docs directory not found — skipping",
+    };
   }
 
   const mdFiles: string[] = [];
@@ -133,7 +148,11 @@ function checkDocsFrontmatter(): DocsCheck {
       detail: `${missingFrontmatter.length} file(s) missing frontmatter: ${missingFrontmatter.slice(0, 3).join(", ")}${missingFrontmatter.length > 3 ? "..." : ""}`,
     };
   }
-  return { name: "docs_frontmatter", passed: true, detail: `All ${mdFiles.length} doc files have frontmatter` };
+  return {
+    name: "docs_frontmatter",
+    passed: true,
+    detail: `All ${mdFiles.length} doc files have frontmatter`,
+  };
 }
 
 function checkSpdxHeaders(): DocsCheck {
@@ -159,7 +178,10 @@ function checkSpdxHeaders(): DocsCheck {
   const missingSpdx: string[] = [];
   for (const file of mdFiles) {
     const content = readFileSync(file, "utf-8");
-    if (!content.includes("SPDX-License-Identifier") && !content.includes("SPDX-FileCopyrightText")) {
+    if (
+      !content.includes("SPDX-License-Identifier") &&
+      !content.includes("SPDX-FileCopyrightText")
+    ) {
       const relativePath = file.replace(REPO_ROOT + "/", "");
       missingSpdx.push(relativePath);
     }
@@ -172,7 +194,11 @@ function checkSpdxHeaders(): DocsCheck {
       detail: `${missingSpdx.length} file(s) missing SPDX header: ${missingSpdx.slice(0, 3).join(", ")}${missingSpdx.length > 3 ? "..." : ""}`,
     };
   }
-  return { name: "docs_spdx", passed: true, detail: `All ${mdFiles.length} doc files have SPDX headers` };
+  return {
+    name: "docs_spdx",
+    passed: true,
+    detail: `All ${mdFiles.length} doc files have SPDX headers`,
+  };
 }
 
 function main(): DocsResult {
@@ -222,7 +248,14 @@ function main(): DocsResult {
   return { passed: failures.length === 0, checks };
 }
 
-export { runDocsStrict, checkDocsBuildResult, checkDocsOutputExists, checkBrokenLinks, checkDocsFrontmatter, checkSpdxHeaders };
+export {
+  runDocsStrict,
+  checkDocsBuildResult,
+  checkDocsOutputExists,
+  checkBrokenLinks,
+  checkDocsFrontmatter,
+  checkSpdxHeaders,
+};
 export type { DocsCheck, DocsResult };
 
 if (

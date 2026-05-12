@@ -101,7 +101,7 @@ describe("verify-release script", () => {
     });
 
     it("detects non-array entries", () => {
-      const manifest = {
+      const manifest: any = {
         compatibility: {
           agents: "not_an_array",
         },

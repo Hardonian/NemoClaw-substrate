@@ -47,7 +47,7 @@ describe("setNestedValue", () => {
   it("sets top-level value", () => {
     const obj: Record<string, unknown> = {};
     setNestedValue(obj, "a", 1);
-    expect(obj.a).toBe(1);
+    expect((obj as any).a).toBe(1);
   });
 
   it("creates intermediate objects", () => {
@@ -59,7 +59,7 @@ describe("setNestedValue", () => {
   it("overwrites existing value", () => {
     const obj: Record<string, unknown> = { a: { b: "old" } };
     setNestedValue(obj, "a.b", "new");
-    expect(obj.a.b).toBe("new");
+    expect((obj.a as Record<string, unknown>).b).toBe("new");
   });
 
   it("overwrites non-object intermediate with object", () => {
@@ -81,8 +81,8 @@ describe("deleteNestedValue", () => {
     const obj: Record<string, unknown> = { a: { b: 1, c: 2 } };
     const result = deleteNestedValue(obj, "a.b");
     expect(result).toBe(true);
-    expect(obj.a.b).toBeUndefined();
-    expect(obj.a.c).toBe(2);
+    expect((obj.a as Record<string, unknown>).b).toBeUndefined();
+    expect((obj.a as Record<string, unknown>).c).toBe(2);
   });
 
   it("returns false for missing key", () => {
@@ -109,8 +109,8 @@ describe("applyMigrationRule", () => {
     expect(result).not.toBeNull();
     expect(result?.fromPath).toBe("old");
     expect(result?.toPath).toBe("new");
-    expect(config.old).toBeUndefined();
-    expect(config.new).toBe("value");
+    expect((config as any).old).toBeUndefined();
+    expect((config as any).new).toBe("value");
   });
 
   it("drops value when preserveValue is false", () => {
@@ -137,7 +137,7 @@ describe("applyMigrationRule", () => {
     };
     const config = { verbose: true };
     applyMigrationRule(config, rule);
-    expect(config.level).toBe("debug");
+    expect((config as any).level).toBe("debug");
   });
 
   it("returns null when field not found", () => {

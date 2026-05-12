@@ -58,7 +58,11 @@ function checkManifestExists(): CheckResult {
       return { name: "manifest_exists", passed: true, detail: `Found at ${candidate}` };
     }
   }
-  return { name: "manifest_exists", passed: false, detail: "No manifest.json found in release/, dist/, or root" };
+  return {
+    name: "manifest_exists",
+    passed: false,
+    detail: "No manifest.json found in release/, dist/, or root",
+  };
 }
 
 function loadManifest(): ManifestSchema | null {
@@ -82,12 +86,20 @@ function checkArtifactHashes(manifest: ManifestSchema): CheckResult[] {
 
   for (const [name, artifact] of Object.entries(artifacts)) {
     if (!artifact.path) {
-      results.push({ name: `artifact_hash_${name}`, passed: false, detail: `Missing path for ${name}` });
+      results.push({
+        name: `artifact_hash_${name}`,
+        passed: false,
+        detail: `Missing path for ${name}`,
+      });
       continue;
     }
     const absPath = join(REPO_ROOT, artifact.path);
     if (!existsSync(absPath)) {
-      results.push({ name: `artifact_hash_${name}`, passed: false, detail: `File not found: ${artifact.path}` });
+      results.push({
+        name: `artifact_hash_${name}`,
+        passed: false,
+        detail: `File not found: ${artifact.path}`,
+      });
       continue;
     }
     const actualHash = hashFile(absPath);
@@ -98,7 +110,11 @@ function checkArtifactHashes(manifest: ManifestSchema): CheckResult[] {
         detail: `Hash mismatch for ${artifact.path}: expected ${artifact.hash}, got ${actualHash}`,
       });
     } else {
-      results.push({ name: `artifact_hash_${name}`, passed: true, detail: `${artifact.path} hash verified` });
+      results.push({
+        name: `artifact_hash_${name}`,
+        passed: true,
+        detail: `${artifact.path} hash verified`,
+      });
     }
   }
   return results;
@@ -107,7 +123,11 @@ function checkArtifactHashes(manifest: ManifestSchema): CheckResult[] {
 function checkCompatibilityMatrix(manifest: ManifestSchema): CheckResult {
   const compat = manifest.compatibility;
   if (!compat || Object.keys(compat).length === 0) {
-    return { name: "compatibility_matrix", passed: true, detail: "No compatibility matrix in manifest" };
+    return {
+      name: "compatibility_matrix",
+      passed: true,
+      detail: "No compatibility matrix in manifest",
+    };
   }
 
   const errors: string[] = [];
@@ -127,14 +147,22 @@ function checkCompatibilityMatrix(manifest: ManifestSchema): CheckResult {
   if (errors.length > 0) {
     return { name: "compatibility_matrix", passed: false, detail: errors.join("; ") };
   }
-  return { name: "compatibility_matrix", passed: true, detail: `${Object.keys(compat).length} categories valid` };
+  return {
+    name: "compatibility_matrix",
+    passed: true,
+    detail: `${Object.keys(compat).length} categories valid`,
+  };
 }
 
 function checkPackageVersion(manifest: ManifestSchema): CheckResult {
   const pkgPath = "package.json";
   const pkg = loadJSON<{ version?: string }>(pkgPath);
   if (!pkg?.version) {
-    return { name: "package_version", passed: false, detail: "Cannot read version from package.json" };
+    return {
+      name: "package_version",
+      passed: false,
+      detail: "Cannot read version from package.json",
+    };
   }
   if (manifest.version && manifest.version !== pkg.version) {
     return {
@@ -149,7 +177,11 @@ function checkPackageVersion(manifest: ManifestSchema): CheckResult {
 function checkBlueprintVersion(manifest: ManifestSchema): CheckResult {
   const blueprintPath = join(REPO_ROOT, "nemoclaw-blueprint/blueprint.yaml");
   if (!existsSync(blueprintPath)) {
-    return { name: "blueprint_version", passed: true, detail: "Blueprint YAML not found — skipping" };
+    return {
+      name: "blueprint_version",
+      passed: true,
+      detail: "Blueprint YAML not found — skipping",
+    };
   }
   const blueprint = YAML.parse(readFileSync(blueprintPath, "utf-8")) as { version?: string };
   if (manifest.version && blueprint.version && manifest.version !== blueprint.version) {
@@ -159,7 +191,11 @@ function checkBlueprintVersion(manifest: ManifestSchema): CheckResult {
       detail: `Version mismatch: Manifest version ${manifest.version} != blueprint ${blueprint.version}`,
     };
   }
-  return { name: "blueprint_version", passed: true, detail: `Blueprint version ${blueprint.version ?? "unknown"} consistent` };
+  return {
+    name: "blueprint_version",
+    passed: true,
+    detail: `Blueprint version ${blueprint.version ?? "unknown"} consistent`,
+  };
 }
 
 async function main(): Promise<ReleaseResult> {
@@ -206,7 +242,14 @@ async function main(): Promise<ReleaseResult> {
 }
 
 // Export for unit tests.
-export { checkManifestExists, checkArtifactHashes, checkCompatibilityMatrix, checkPackageVersion, loadManifest, hashFile };
+export {
+  checkManifestExists,
+  checkArtifactHashes,
+  checkCompatibilityMatrix,
+  checkPackageVersion,
+  loadManifest,
+  hashFile,
+};
 
 // Only run main when invoked directly.
 if (

@@ -10,6 +10,7 @@ import {
   computeTotalDuration,
   getPhaseDurationMs,
   timelineSummary,
+  TimelinePhase,
 } from "./lifecycle-timeline";
 
 // Mock performance.now for deterministic timestamps
@@ -106,10 +107,10 @@ describe("failPhase", () => {
 
 describe("computeTotalDuration", () => {
   it("sums only completed phases", () => {
-    const phases = [
-      { name: "a", startMs: 0, endMs: 100, status: "completed" },
-      { name: "b", startMs: 100, endMs: 250, status: "completed" },
-      { name: "c", startMs: 250, endMs: undefined, status: "running" },
+    const phases: TimelinePhase[] = [
+      { name: "a", startMs: 0, endMs: 100, status: "completed" as const },
+      { name: "b", startMs: 100, endMs: 250, status: "completed" as const },
+      { name: "c", startMs: 250, endMs: undefined, status: "running" as const },
     ];
     expect(computeTotalDuration(phases)).toBe(250);
   });

@@ -123,8 +123,8 @@ describe("summarizeProofPack", () => {
     expect(summary).toContain("PASS");
   });
 
-  it("shows FAIL when targets not met", () => {
-    const results = [
+  it("shows PASS when targets met", () => {
+    const results: any[] = [
       {
         name: "proofpack-100x-10000b",
         concurrency: 100,

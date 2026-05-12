@@ -32,13 +32,31 @@ type ScanTarget = {
 // Patterns that indicate potential unauthorized data egress
 const EGRESS_PATTERNS = [
   // Outbound network calls to unknown hosts
-  { pattern: /https?:\/\/(?!localhost|127\.0\.0\.1|0\.0\.0\.0|docs\.nvidia\.com|github\.com|npmjs\.com|pypi\.org|huggingface\.co|api\.openai\.com)[a-z0-9.-]+\//gi, name: "external_url", severity: "warning" as const },
+  {
+    pattern:
+      /https?:\/\/(?!localhost|127\.0\.0\.1|0\.0\.0\.0|docs\.nvidia\.com|github\.com|npmjs\.com|pypi\.org|huggingface\.co|api\.openai\.com)[a-z0-9.-]+\//gi,
+    name: "external_url",
+    severity: "warning" as const,
+  },
   // Hardcoded secrets/tokens in source
-  { pattern: /(api[_-]?key|secret[_-]?key|access[_-]?token|auth[_-]?token)\s*[=:]\s*['"][A-Za-z0-9+/=]{16,}['"]/gi, name: "hardcoded_secret", severity: "error" as const },
+  {
+    pattern:
+      /(api[_-]?key|secret[_-]?key|access[_-]?token|auth[_-]?token)\s*[=:]\s*['"][A-Za-z0-9+/=]{16,}['"]/gi,
+    name: "hardcoded_secret",
+    severity: "error" as const,
+  },
   // Data exfiltration patterns (base64 encoding + outbound)
-  { pattern: /base64.*(?:fetch|http|curl|axios|request)/gi, name: "encoded_exfiltration", severity: "error" as const },
+  {
+    pattern: /base64.*(?:fetch|http|curl|axios|request)/gi,
+    name: "encoded_exfiltration",
+    severity: "error" as const,
+  },
   // DNS tunneling patterns
-  { pattern: /(?:dns|resolve)\s*\(\s*`[^`]*\$\{.*\}[^`]*\.(?:exfil|tunnel|data|log)/gi, name: "dns_tunnel", severity: "error" as const },
+  {
+    pattern: /(?:dns|resolve)\s*\(\s*`[^`]*\$\{.*\}[^`]*\.(?:exfil|tunnel|data|log)/gi,
+    name: "dns_tunnel",
+    severity: "error" as const,
+  },
   // Writing to /dev/tcp or similar
   { pattern: /\/dev\/tcp\//gi, name: "dev_tcp_redirect", severity: "error" as const },
 ];
@@ -96,7 +114,8 @@ function walkDir(dir: string, extensions: string[]): ScanTarget[] {
 
 function scanForHardcodedSecrets(targets: ScanTarget[]): EgressCheck[] {
   const findings: EgressCheck[] = [];
-  const secretPattern = /(api[_-]?key|secret[_-]?key|access[_-]?token|auth[_-]?token)\s*[=:]\s*['"][A-Za-z0-9+/=]{16,}['"]/gi;
+  const secretPattern =
+    /(api[_-]?key|secret[_-]?key|access[_-]?token|auth[_-]?token)\s*[=:]\s*['"][A-Za-z0-9+/=]{16,}['"]/gi;
 
   for (const target of targets) {
     const relativePath = target.path.replace(REPO_ROOT + "/", "");
@@ -104,7 +123,11 @@ function scanForHardcodedSecrets(targets: ScanTarget[]): EgressCheck[] {
 
     for (let i = 0; i < lines.length; i++) {
       // Skip comments and test fixtures
-      if (lines[i].trim().startsWith("//") || lines[i].trim().startsWith("#") || lines[i].trim().startsWith("*")) {
+      if (
+        lines[i].trim().startsWith("//") ||
+        lines[i].trim().startsWith("#") ||
+        lines[i].trim().startsWith("*")
+      ) {
         continue;
       }
       if (target.path.includes("test/fixtures") || target.path.includes("__fixtures__")) {
@@ -115,7 +138,12 @@ function scanForHardcodedSecrets(targets: ScanTarget[]): EgressCheck[] {
       for (const match of matches) {
         // Skip example/placeholder values
         const value = match[0];
-        if (value.includes("YOUR_") || value.includes("xxx") || value.includes("CHANGE_ME") || value.includes("<your")) {
+        if (
+          value.includes("YOUR_") ||
+          value.includes("xxx") ||
+          value.includes("CHANGE_ME") ||
+          value.includes("<your")
+        ) {
           continue;
         }
         findings.push({
@@ -141,7 +169,11 @@ function scanForUnauthorizedEgress(targets: ScanTarget[]): EgressCheck[] {
 
     for (let i = 0; i < lines.length; i++) {
       // Skip comments, docs, and test fixtures
-      if (lines[i].trim().startsWith("//") || lines[i].trim().startsWith("#") || lines[i].trim().startsWith("*")) {
+      if (
+        lines[i].trim().startsWith("//") ||
+        lines[i].trim().startsWith("#") ||
+        lines[i].trim().startsWith("*")
+      ) {
         continue;
       }
       if (target.path.includes("test/fixtures") || target.path.includes("__fixtures__")) {
@@ -189,7 +221,7 @@ function scanNetworkPolicies(): EgressCheck {
   const relativePath = policyPath.replace(REPO_ROOT + "/", "");
 
   // Check for overly permissive policies
-  if (content.includes("host: '*'") || content.includes("host: \"*\"")) {
+  if (content.includes("host: '*'") || content.includes('host: "*"')) {
     return {
       name: "network_policy",
       passed: false,
@@ -233,7 +265,12 @@ function main(): EgressResult {
   // 1. Hardcoded secrets
   const secretFindings = scanForHardcodedSecrets(allTargets);
   if (secretFindings.length === 0) {
-    checks.push({ name: "hardcoded_secrets", passed: true, detail: "No hardcoded secrets found", severity: "error" });
+    checks.push({
+      name: "hardcoded_secrets",
+      passed: true,
+      detail: "No hardcoded secrets found",
+      severity: "error",
+    });
   } else {
     checks.push(...secretFindings);
   }
@@ -241,7 +278,12 @@ function main(): EgressResult {
   // 2. Unauthorized egress URLs
   const egressFindings = scanForUnauthorizedEgress(allTargets);
   if (egressFindings.length === 0) {
-    checks.push({ name: "unauthorized_egress", passed: true, detail: "No unauthorized egress URLs", severity: "warning" });
+    checks.push({
+      name: "unauthorized_egress",
+      passed: true,
+      detail: "No unauthorized egress URLs",
+      severity: "warning",
+    });
   } else {
     checks.push(...egressFindings);
   }
@@ -271,7 +313,13 @@ function main(): EgressResult {
   };
 }
 
-export { scanForHardcodedSecrets, scanForUnauthorizedEgress, scanNetworkPolicies, walkDir, ALLOWED_EGRESS };
+export {
+  scanForHardcodedSecrets,
+  scanForUnauthorizedEgress,
+  scanNetworkPolicies,
+  walkDir,
+  ALLOWED_EGRESS,
+};
 export type { EgressCheck, EgressResult, ScanTarget };
 
 if (
