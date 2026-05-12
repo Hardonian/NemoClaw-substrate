@@ -27,4 +27,4 @@ customRules:
   - "./scripts/markdownlint/anti-theatre-rule.js"
 
 ignores:
-  - "node_modules/**"
+  - "**/node_modules/**"
