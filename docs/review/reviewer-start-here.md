@@ -3,10 +3,12 @@
 
 # Reviewer Start Here
 
-## Audience map
+This page is kept for existing links. The canonical review entrypoint is [Reviewer Path](reviewer-path.md).
 
-- Enterprise reviewer: start with `docs/verification/go-live-checklist.md`.
-- OSS maintainer: start with `docs/adr/index.md` and `docs/architecture/capability-status-matrix.md`.
-- Security reviewer: start with `docs/architecture/security-boundaries.md` and `docs/verification/security-verification-matrix.md`.
-- Operator reviewer: start with `docs/architecture/operator-truth-model.md`.
-- Procurement reviewer: start with `docs/verification/release-candidate-report.md`.
+Recommended order:
+
+1. [10-minute review](10-minute-review.md)
+2. [Evidence index](evidence-index.md)
+3. [Decision map](../architecture/decision-map.md)
+4. [Tradeoffs](../architecture/tradeoffs.md)
+5. [How to verify](../verification/how-to-verify.md)

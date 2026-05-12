@@ -1,25 +1,34 @@
 <!-- SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved. -->
 <!-- SPDX-License-Identifier: Apache-2.0 -->
-# ADR 0003: Deterministic Routing
 
-- Status: Proposed
+# ADR 0003: Opt-In Heterogeneous Routing
+
+- Status: Accepted for opt-in routing
 
 ## Context
 
-Opaque or ad hoc routing weakens operator trust and reproducibility.
+The fork needs to reason about local and remote candidates, but default local execution should not change just because routing helpers exist.
 
 ## Decision
 
-Require deterministic scheduler behavior from explicit inputs with stable tie-break rules and explainable rationale.
+Heterogeneous routing stays behind explicit environment flags and policy checks. Candidate selection must be deterministic from the provided registry, policy, and request context.
+
+## Why We Did Not Make Routing Automatic
+
+Automatic routing would change runtime behavior before the trust, telemetry, and policy surfaces are mature enough. It would also make a local CLI review depend on hardware state.
 
 ## Consequences
 
-Equivalent inputs should produce equivalent outcomes, enabling replay and incident forensics.
+Reviewers must enable the path deliberately. The cost is extra configuration; the benefit is stable default local behavior.
 
-## Alternatives considered
+## Implementation Links
 
-Probabilistic or prompt-driven "best route" selection; rejected due to non-reproducibility.
+- `src/lib/control-plane/governed-provider-routing.ts`
+- `src/lib/control-plane/heterogeneous-routing.ts`
+- `src/lib/control-plane/runtime-dispatch-integration.ts`
+- `docs/architecture/heterogeneous-routing.md`
 
-## Verification implications
+## Verification
 
-Add deterministic ordering/property tests and receipt assertions for candidate acceptance/rejection reasons.
+- `npm run verify:governed-routing`
+- `npm run verify:core`

@@ -3,37 +3,12 @@
 
 # Reviewer Navigation Map
 
-Welcome to NemoClaw. Depending on your role, use this map to navigate the documentation efficiently.
+Use [Reviewer Path](reviewer-path.md) for the default route. Use this role map only when you need a narrower review.
 
-## 1. OSS Maintainers & Core Contributors
-
-Focus: Architecture, invariants, and implementation status.
-
-- Start: `docs/adr/index.md`
-- Status: `docs/architecture/capability-status-matrix.md`
-- Rules: `docs/contributing/control-plane-rules.md`
-
-## 2. Security & Compliance Auditors
-
-Focus: Threat models, redaction, and boundary policies.
-
-- Start: `docs/architecture/security-threat-model.md`
-- Boundaries: `docs/architecture/security-boundaries.md`
-- Redaction: `docs/architecture/secret-redaction-doctrine.md`
-- Verification: `docs/verification/security-hardening.md`
-
-## 3. Procurement & Release Managers
-
-Focus: Release readiness, capabilities, and governance.
-
-- Start: `docs/verification/release-candidate-report.md`
-- Matrix: `docs/verification/verification-matrix.md`
-- Checklists: `docs/verification/go-live-checklist.md`
-
-## 4. End Users & Operators
-
-Focus: Installation, policy management, and observability.
-
-- Start: `docs/get-started/index.md`
-- Monitoring: `docs/monitoring/index.md`
-- Reference: `docs/reference/commands.md`
+| Reviewer | Start with | Then inspect |
+|---|---|---|
+| Architecture | [Decision map](../architecture/decision-map.md) | ADR index, execution lifecycle, capability matrix |
+| Security | [Evidence index](evidence-index.md) | security policy, redaction, remote execution tests |
+| Verification | [How to verify](../verification/how-to-verify.md) | release gate, changelog hygiene, docs build |
+| Operator/demo | [Local proof](../demo/local-proof.md) | operator CLI, fixtures, redaction formatting |
+| Roadmap | [Tradeoffs](../architecture/tradeoffs.md) | known limitations, non-goals, roadmap |

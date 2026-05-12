@@ -3,19 +3,20 @@
 
 # Capability Status Matrix
 
-| Capability | Status | Verification | Runtime Areas | ADRs | Residual Risk | Future Dependency |
-|---|---|---|---|---|---|---|
-| Governed dispatch + deterministic routing | implemented | `verify:core`, `verify:all` | `src/lib/control-plane/runtime-dispatch-integration.ts`, `governed-provider-routing.ts` | 0002, 0003 | policy misconfiguration | stricter policy lint rules |
-| Replay + receipts + degraded-state truth | implemented | `verify:core`, `verify:chaos` | `replay.ts`, `execution/receipts.ts` | 0005 | retention drift | archival policy automation |
-| Policy engine + supervised promotion | implemented | `verify:core` | `policy-engine.ts`, `policy-promotion.ts` | 0004, 0007 | operator error in promotion | richer approval workflows |
-| Worker trust + capability attestation | scaffolded | targeted unit tests | `worker-trust.ts`, `device-registry.ts`, `worker-probes.ts` | 0006 | attestation depth limited | formal attest provider integration |
-| Heterogeneous routing (local/remote) | implemented | `verify:core` | `heterogeneous-routing.ts`, `remote-execution.ts` | 0003 | provider parity gaps | broader provider matrices |
-| Execution lifecycle substrate | implemented | `verify:execution-lifecycle`, `verify:chaos` | `control-plane/execution-lifecycle.ts` | 0002, 0005 | durable storage is caller-owned | persistence adapter |
-| Queue + lease governance | implemented | `verify:execution-lifecycle`, unit tests in `src/lib/execution/*.test.ts` | `execution/queue.ts`, `execution/lease.ts`, `control-plane/execution-lifecycle.ts` | 0002 | queue starvation edge cases | adaptive queue sizing |
-| Autonomous orchestration loops | intentionally-not-implemented | n/a | n/a | 0001 | expectation mismatch | none (by design) |
-| Distributed execution fabric | planned (bounded) | n/a | adapters only | 0002 | implied-claim confusion | governance-defined scope |
-| GPU balancing/scheduling | scaffolded | probe and scheduler tests | `scheduler.ts`, `gpu-telemetry.md` docs | 0006 | fairness assumptions | registry-backed constraints |
-| Dynamo integration | planned | n/a | none in runtime | none | roadmap ambiguity | explicit ADR before implementation |
-| Autonomous recovery daemons/retries | intentionally-not-implemented | degraded-state tests prove explicit failures | degraded-state path | 0005 | operator assumptions | explicit docs guardrails |
-| Policy learning | intentionally-not-implemented | n/a | none | 0007 | AI-theatre interpretation | keep policy declarative |
-| Cryptographic attestation chain | scaffolded | security verification matrix | trust/capability docs + worker trust modules | 0006 | no cryptographic implementation exists; structural trust/attestation separation only | formal signer/integrity stack |
+Use this table for status. Use the [evidence index](../review/evidence-index.md) for claim-level proof links.
+
+| Capability | Status | Primary verification | Limitation |
+|---|---|---|---|
+| Execution lifecycle records | Implemented | `npm run verify:execution-lifecycle` | In-process records only |
+| Replay drift rejection | Implemented | `npm run verify:chaos` | Local validation, not distributed consensus |
+| Proofpack and evidence export helpers | Implemented | `npm run verify:proofpack`, `npm run verify:export` | No hardware-backed signing |
+| Secret redaction | Implemented | `npm run verify:core` | Pattern-based, not full DLP |
+| Governed provider routing | Opt-in implementation | `npm run verify:governed-routing` | Not a distributed scheduler |
+| Remote execution adapter | Opt-in guarded boundary | `npm run verify:remote-probes`, `npm run verify:chaos` | No worker fleet |
+| Worker trust and attestation model | Structural implementation | `npm run verify:remote-probes` | No cryptographic attestation chain |
+| Operator inspection CLI | Fixture-backed implementation | `npm run build:cli && node ./bin/nemoclaw.js operator status --json` | Not live telemetry |
+| Durable queue storage | Deferred | n/a | Persistence adapter required |
+| GPU balancing | Deferred | n/a | Requires registry-backed scheduling ADR |
+| Dynamo integration | Deferred | n/a | Requires dedicated ADR and proof plan |
+| Autonomous orchestration or recovery loops | Not implemented by design | n/a | Out of scope |
+| Automatic policy learning | Not implemented by design | n/a | Policy changes stay explicit |

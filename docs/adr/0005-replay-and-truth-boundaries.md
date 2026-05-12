@@ -1,31 +1,36 @@
 <!-- SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved. -->
 <!-- SPDX-License-Identifier: Apache-2.0 -->
-# ADR 0005: Receipts And Degraded-State Truth
+
+# ADR 0005: Replay And Evidence Boundaries
 
 - Status: Accepted
 
 ## Context
 
-Operators need evidence trails and explicit degraded semantics to trust outcomes.
+Logs are useful but too loose for replay. A reviewer needs to know whether the recorded request, policy context, trust context, ownership, lease, receipts, and reason codes still match.
 
 ## Decision
 
-Make structured execution receipts and degraded-state reason codes mandatory control-path artifacts.
+Replay validation must reject drift and missing evidence. Proofpack validation must reject digest mismatch and hidden degraded-state triggers.
 
-The execution lifecycle substrate extends this decision to plan, queue, lease, replay, proofpack, and diagnostics records. Each governed transition must produce explicit state and reason-code evidence when it is represented in a lifecycle proofpack.
+## Why We Did Not Use Best-Effort Logs
+
+Best-effort logs can explain what a process printed. They cannot prove that a replayed record preserved lineage or that a proofpack was not tampered with.
 
 ## Consequences
 
-Audits, replay, and incident diagnosis can rely on explicit machine-readable evidence.
+The validation path is strict and can block incomplete evidence. That cost is intentional: partial evidence should not look authoritative.
 
-The substrate must reject hidden recovery, hidden retry, replay drift, receipt mismatch, lease mismatch, ownership mismatch, trust drift, governance metadata loss, and degraded states without reasons.
+## Implementation Links
 
-## Alternatives considered
+- `src/lib/control-plane/replay.ts`
+- `src/lib/control-plane/execution-lifecycle.ts`
+- `src/lib/control-plane/evidence-export.ts`
+- `src/lib/control-plane/execution-lifecycle.test.ts`
+- `src/lib/control-plane/evidence-export.test.ts`
 
-Best-effort logs without receipt schema; rejected as insufficient for trust and replayability.
+## Verification
 
-## Verification implications
-
-Control-path tests must assert receipt generation and degraded-state taxonomy correctness.
-
-`npm run verify:execution-lifecycle` validates deterministic lifecycle receipts, proofpack integrity, replay lineage, and degraded-state propagation. `npm run verify:chaos` includes these lifecycle assertions alongside degraded-state chaos coverage.
+- `npm run verify:execution-lifecycle`
+- `npm run verify:chaos`
+- `npm run verify:proofpack`

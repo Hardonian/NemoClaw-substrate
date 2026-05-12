@@ -1,96 +1,118 @@
 <!-- SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved. -->
 <!-- SPDX-License-Identifier: Apache-2.0 -->
 
-# NemoClaw Fork: Local Operator-Grade Execution and Governance
+# NemoClaw Substrate Fork
 
-This fork of NemoClaw is being shaped into a governed heterogeneous execution substrate for local operator-grade AI execution with explicit release-truth boundaries.
+This fork keeps the NemoClaw CLI, OpenShell blueprint, and local sandbox workflow, then adds a reviewable control layer for execution decisions, receipts, replay checks, degraded states, and proofpack-style evidence.
 
-## Why this fork exists
+It is alpha software. The useful part today is not a distributed runtime. It is a set of small, testable contracts that make local and opt-in remote execution paths easier to inspect before more orchestration is added.
 
-The fork prioritizes deterministic and auditable control over opaque autonomy. It focuses on:
+## Why This Exists
 
-- execution plane and control plane separation,
-- truthful degraded-state reporting,
-- execution receipts/provenance,
-- supervised policy promotion,
-- explainable routing/control decisions.
+Always-on assistant stacks tend to blur three things: what was requested, what policy allowed, and what actually happened. This fork separates those concerns enough that a reviewer can inspect a decision path without trusting console prose or hidden retries.
 
-## Current state vs roadmap
+The practical problem is narrow:
 
-- **Implemented:** existing CLI/plugin/sandbox orchestration and inference onboarding flows; control-plane verification gates.
-- **Scaffolded:** remote execution and telemetry adapter seams with explicit degraded-state reporting.
-- **Opt-in:** governed routing (`NEMOCLAW_GOVERNED_ROUTING=1`) and heterogeneous bridge (`NEMOCLAW_HETEROGENEOUS_ROUTING=1`).
-- **Planned:** external orchestration adapter integrations after stable local contracts.
-- **Not implemented:** distributed execution, GPU balancing, Dynamo integration, autonomous orchestration/autonomous recovery, automatic policy learning.
+- keep default local behavior boring and compatible;
+- make opt-in routing, remote execution, and proof flows explicit;
+- reject replay drift and missing reason codes;
+- preserve enough evidence that a future distributed worker cannot silently change the story.
 
-## Documentation
+## Design Bias
 
-- **[NemoClaw Developer Guide](docs/index.md):** Main documentation portal.
-- **[Architecture & Governance Index](docs/architecture/index.md):** Substrate architecture, trust boundaries, and invariants.
-- **[ADR Index](docs/adr/index.md):** Architectural Decision Records (ADRs).
-- **[Verification Matrix](docs/verification/index.md):** Release readiness and security hardening gates.
-- **[Operator Guide](docs/operator/index.md):** Substrate operation and configuration.
-- **[Roadmap & Dependencies](docs/roadmap.md):** Planned features and implemented truth.
+- Prefer explicit records over inferred success.
+- Keep remote execution off unless a caller opts in and supplies the required policy context.
+- Treat telemetry as evidence, not authority.
+- Let replay fail closed when lineage, digests, ownership, or reason codes do not match.
+- Build deterministic helpers first; defer daemons, automatic retries, and distributed scheduling until the contracts are worth depending on.
 
-## Security Hardening Doctrine
+## What Works Today
 
-- **[Security Threat Model](docs/architecture/security-threat-model.md)**
-- **[Security Policy Model](docs/architecture/security-policy-model.md)**
-- **[Transport Security](docs/architecture/transport-security.md)**
-- **[Secret Redaction Doctrine](docs/architecture/secret-redaction-doctrine.md)**
-- **[Command Execution Safety](docs/architecture/command-execution-safety.md)**
-- **[Local-Stack Security Profiles](docs/architecture/local-stack-security-profiles.md)**
-- **[Security Verification Matrix](docs/verification/security-verification-matrix.md)**
+| Capability | Current proof | Main files |
+|---|---|---|
+| Execution lifecycle records for plans, queue items, leases, receipts, replay checks, proofpacks, and diagnostics | `npm run verify:execution-lifecycle` | `src/lib/control-plane/execution-lifecycle.ts`, `src/lib/control-plane/execution-lifecycle.test.ts` |
+| Replay envelope validation and drift rejection | `npm run verify:chaos` | `src/lib/control-plane/replay.ts`, `src/lib/control-plane/degraded-state-chaos.test.ts` |
+| Opt-in governed provider routing | `npm run verify:governed-routing` | `src/lib/control-plane/governed-provider-routing.ts`, `src/lib/control-plane/runtime-dispatch-integration.ts` |
+| Guarded remote execution seam with trust, approval, transport, and command checks | `npm run verify:remote-probes`, `npm run verify:chaos` | `src/lib/control-plane/remote-execution.ts`, `src/lib/control-plane/remote-execution.test.ts` |
+| Evidence export and proofpack integrity helpers | `npm run verify:proofpack`, `npm run verify:export` | `src/lib/control-plane/evidence-export.ts`, `src/lib/control-plane/evidence-export.test.ts` |
+| Secret redaction and export-boundary checks | `npm run verify:core` | `src/lib/security/security-policy.ts`, `src/lib/security/redaction-audit.test.ts`, `test/secret-redaction.test.ts` |
+| Fixture-backed operator inspection surfaces | `npm run build:cli && node ./bin/nemoclaw.js operator status --json` | `src/lib/commands/operator.ts`, `fixtures/demo/`, `test/operator/operator.test.ts` |
 
-## Control-plane discipline
+For a fuller claim map, see [docs/review/evidence-index.md](docs/review/evidence-index.md).
 
-Control-plane discipline means decisions are governed by inspectable contracts, policy artifacts, and verifiable receipts; not by hidden fallbacks or prompt-only instructions.
+## What Is Deliberately Boring Here
 
-## Contribution guidance
+The strongest parts are ordinary on purpose: typed records, deterministic serialization, table-driven reason codes, explicit feature flags, fixture-backed demos, and tests that mutate evidence to make sure validation rejects it. That is the point. A future scheduler or worker fabric should inherit boring contracts, not invent trust at runtime.
 
-When contributing:
+## What This Does Not Claim
 
-1. Distinguish current repository truth from target-state design.
-2. Avoid implementation claims unless backed by code and tests in the same PR.
-3. Include verification commands and observed outcomes in PR descriptions.
+This repository does not claim production readiness, autonomous orchestration, GPU balancing, Dynamo integration, cryptographic attestation, automatic policy learning, durable distributed queues, daemon workers, or automatic recovery loops.
 
-## Not implemented yet (explicitly not implemented in this checkpoint)
+Some files describe target states. The implemented review path is the evidence in source, tests, and verification commands.
 
-Unless specifically added and verified in code:
+## Fast Local Proof
 
-- no dedicated deterministic scheduler,
-- no dedicated device registry,
-- no dedicated policy-promotion engine,
-- no unified execution receipt framework,
-- no Dynamo-style orchestration integration,
-- no distributed execution handoff,
-- no GPU balancing,
-- no autonomous orchestration or autonomous recovery loops,
-- no automatic policy learning.
-
-## Local bootstrap recovery path
-
-If lifecycle scripts fail in restricted environments, contributors can use `npm install --ignore-scripts` for local verification only, then run typecheck/tests manually. Production/release flows should keep normal install behavior.
-
-## Verification & Release Readiness
-
-The substrate enforces a deterministic verification chain before release. See the **[Verification Index](docs/verification/index.md)** for detailed gates.
+These commands do not require a live GPU, live worker, or networked inference endpoint:
 
 ```bash
-npm run verify:changelog-hygiene
-npm run verify:core
-npm run verify:release
+npm run build:cli
+node ./bin/nemoclaw.js operator status --json
+node ./bin/nemoclaw.js operator degraded --json
+npm run verify:execution-lifecycle
+npm run verify:chaos
+npm run review:claims
 ```
 
-- `verify:core` reports deterministic `PASS/WARN/FAIL` status across changelog hygiene, typecheck, lint, and targeted control-plane suites.
-- `verify:release` is the primary release gate for local and CI readiness checks.
-- `verify:all` is a strict-mode variant that fails if any required toolchain or dependency is missing.
-- In restricted environments, `npm install --ignore-scripts` is a local diagnosis recovery path only.
+Expected shape:
 
-### Residual matrix closure status (2026-05-09)
+- operator output is fixture-backed and redacts demo tokens;
+- lifecycle tests accept legal state transitions and reject illegal ones;
+- chaos tests reject replay tampering and blocked remote-execution paths;
+- the review claim checker verifies that major docs claims point to code and tests.
 
-The governed substrate closure pass is verification-focused: direct branch assertions, replay/diagnostics truth hardening, and status-document coherence. It does not add orchestration, distributed execution, GPU balancing, Dynamo integration, autonomous routing, or automatic policy/trust mutation.
+See [docs/demo/local-proof.md](docs/demo/local-proof.md) for a 10-minute walkthrough.
 
-## Operator substrate
+## How To Run
 
-Added deterministic operator CLI, profiles, and demo fixtures.
+```bash
+npm install
+npm run build:cli
+node ./bin/nemoclaw.js --help
+```
+
+For a full sandbox flow, use the user docs under [docs/get-started/quickstart.md](docs/get-started/quickstart.md). The substrate review path above is intentionally local and fixture-backed.
+
+## How To Verify
+
+```bash
+npm run verify:release
+npm run verify:core
+npm run verify:changelog-hygiene
+npm run typecheck
+npm run lint
+git diff --check
+```
+
+`verify:release` aggregates changelog hygiene, core verification, typecheck, lint, and degraded-state chaos coverage. Docs builds are available with `npm run docs:strict` when the Python/Sphinx toolchain is installed.
+
+## Reviewer Path
+
+Start here if you have limited time:
+
+1. [10-minute review](docs/review/10-minute-review.md)
+2. [Evidence index](docs/review/evidence-index.md)
+3. [Architecture decision map](docs/architecture/decision-map.md)
+4. [Tradeoffs](docs/architecture/tradeoffs.md)
+5. [How to verify](docs/verification/how-to-verify.md)
+
+## Known Limitations
+
+- Most control-plane state is in-process. Durable storage and crash recovery are not implemented here.
+- Remote execution is a guarded seam, not a worker fleet.
+- Trust and attestation are represented structurally; there is no cryptographic attestation chain yet.
+- Operator CLI output is currently fixture-backed for review/demo use.
+- Some older docs remain as historical detail. The canonical review docs are linked above.
+
+## What Comes Next
+
+The next useful work is not more terminology. It is persistence adapters for lifecycle records, narrower policy linting, better fixture generation, and one real opt-in remote worker proof that keeps the same fail-closed replay and evidence contracts.
