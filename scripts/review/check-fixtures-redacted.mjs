@@ -25,7 +25,7 @@ async function checkFixturesRedacted(targetDir) {
       }
     }
   }
-  
+
   try {
     await fs.access(targetDir);
     await walk(targetDir);
@@ -33,7 +33,7 @@ async function checkFixturesRedacted(targetDir) {
     console.warn(`[check-fixtures-redacted] Directory ${targetDir} not found. Skipping.`);
     return;
   }
-  
+
   if (issues > 0) {
     console.error(`[check-fixtures-redacted] Found ${issues} issues.`);
     process.exit(1);

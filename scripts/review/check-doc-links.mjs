@@ -19,7 +19,7 @@ async function checkDocLinks(dir) {
         while ((match = linkRegex.exec(content)) !== null) {
           const link = match[2];
           if (link.startsWith('http') || link.startsWith('#') || link.startsWith('mailto:')) continue;
-          
+
           try {
             const targetPath = path.resolve(path.dirname(fullPath), link.split('#')[0]);
             await fs.access(targetPath);

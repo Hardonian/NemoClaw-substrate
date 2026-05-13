@@ -9,7 +9,7 @@ async function checkDocIndex() {
     'docs/site-map.md',
     'docs/navigation-map.md'
   ];
-  
+
   let issues = 0;
   for (const file of expectedFiles) {
     try {
@@ -19,12 +19,12 @@ async function checkDocIndex() {
       issues++;
     }
   }
-  
+
   if (issues > 0) {
     console.error(`[check-doc-index] Found ${issues} issues.`);
     process.exit(1);
   }
-  
+
   console.log('[check-doc-index] All required doc indexes are present.');
 }
 
