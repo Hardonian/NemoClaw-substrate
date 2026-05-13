@@ -91,6 +91,11 @@
         "urlencode",
         "userinfo",
         "venv",
+        "programmatic",
+        "remediation",
+        "shfmt",
+        "shellcheck",
+        "unreachable",
         "vllm",
         "workstreams",
         "wslinfo"

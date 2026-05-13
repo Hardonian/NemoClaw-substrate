@@ -974,7 +974,7 @@ describe("service environment", () => {
           "--require",
           wsFixPath,
           "-e",
-          `require("${wsFixPath}"); console.log(require('https').request.name)`,
+          `require(${JSON.stringify(wsFixPath)}); console.log(require('https').request.name)`,
         ],
         {
           encoding: "utf-8",
