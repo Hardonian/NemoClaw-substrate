@@ -3,6 +3,7 @@
 
 import { promises as fs } from 'fs';
 import path from 'path';
+import { fileURLToPath } from 'url';
 
 const SECRET_REGEX = /(sk-[a-zA-Z0-9]{48}|gh[pousr]_[a-zA-Z0-9]{36}|xox[baprs]-[a-zA-Z0-9]{10,48}|nvapi-[a-zA-Z0-9_-]{40,}|AKIA[0-9A-Z]{16}|\b(?![a-f0-9]{40}\b)[a-zA-Z0-9+/]{40}\b)/g;
 
@@ -27,11 +28,11 @@ async function checkFixturesRedacted(dir) {
   return issues;
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (process.argv[1] && (path.resolve(process.argv[1]) === fileURLToPath(import.meta.url))) {
   const fixturesDir = path.resolve(process.argv[2] || './fixtures');
   checkFixturesRedacted(fixturesDir).catch(() => {}).then(issues => {
     if (issues > 0) process.exit(1);
-    console.log('[check-fixtures-redacted] All checks passed.');
+    console.log('[check-fixtures-redacted] Fixtures redaction check complete.');
   });
 }
 export { checkFixturesRedacted };

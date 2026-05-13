@@ -3,6 +3,7 @@
 
 import { promises as fs } from 'fs';
 import path from 'path';
+import { fileURLToPath } from 'url';
 
 const ALLOWED_LABELS = ['stable', 'beta', 'alpha', 'experimental', 'deprecated', 'planned', 'fixture', 'demo', 'opt-in'];
 
@@ -20,14 +21,23 @@ async function checkStatusMatrix(dir) {
       const lines = content.split('\n');
       for (let i = 0; i < lines.length; i++) {
         const line = lines[i];
-        if (line.includes('|') && line.toLowerCase().includes('status')) {
-          const statusMatch = line.match(/Status: (\w+)/i);
-          if (statusMatch) {
-             const label = statusMatch[1].toLowerCase();
-             if (!ALLOWED_LABELS.includes(label)) {
-                 console.error(`[check-status-matrix] FAIL: Invalid status label in ${res} at line ${i+1}: ${label}`);
+        if (line.includes('|')) {
+          const cells = line.split('|').map(c => c.trim()).filter(Boolean);
+          for (const cell of cells) {
+            const label = cell.toLowerCase();
+            // Match "Status: label" or just "| label |" in a Status column
+            const statusMatch = cell.match(/^Status:?\s*(\w+)$/i);
+            const foundLabel = statusMatch ? statusMatch[1].toLowerCase() : label;
+            
+            // We only check if the label looks like a status term
+            // To avoid false positives on every table cell, we check if it's in a list of suspicious words
+            // OR if it's explicitly prefixed with Status:
+            if (statusMatch || (i > 0 && lines[i-1].toLowerCase().includes('status'))) {
+               if (foundLabel && !ALLOWED_LABELS.includes(foundLabel) && !foundLabel.match(/^[---]+$/)) {
+                 console.error(`[check-status-matrix] FAIL: Invalid status label in ${res} at line ${i + 1}: ${foundLabel}`);
                  issues++;
-             }
+               }
+            }
           }
         }
       }
@@ -36,7 +46,7 @@ async function checkStatusMatrix(dir) {
   return issues;
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (process.argv[1] && (path.resolve(process.argv[1]) === fileURLToPath(import.meta.url))) {
   const docsDir = path.resolve(process.argv[2] || './docs');
   checkStatusMatrix(docsDir).catch(() => {}).then(issues => {
     if (issues > 0) process.exit(1);

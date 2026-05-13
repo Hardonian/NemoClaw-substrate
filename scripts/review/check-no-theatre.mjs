@@ -3,6 +3,7 @@
 
 import { promises as fs } from 'fs';
 import path from 'path';
+import { fileURLToPath } from 'url';
 
 const THEATRE_TERMS = [
   /\bmilitary-grade\b/gi,
@@ -33,10 +34,10 @@ async function checkNoTheatre(dir) {
   return issues;
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (process.argv[1] && (path.resolve(process.argv[1]) === fileURLToPath(import.meta.url))) {
   const docsDir = path.resolve(process.argv[2] || './docs');
   checkNoTheatre(docsDir).catch(() => {}).then(issues => {
     if (issues > 0) process.exit(1);
-    console.log('[check-no-theatre] All checks passed.');
+    console.log('[check-no-theatre] Security theatre check complete.');
   });
 }

@@ -3,6 +3,7 @@
 
 import { promises as fs } from 'fs';
 import path from 'path';
+import { fileURLToPath } from 'url';
 
 async function checkSpdxDocs(dir) {
   let issues = 0;
@@ -24,10 +25,10 @@ async function checkSpdxDocs(dir) {
   return issues;
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (process.argv[1] && (path.resolve(process.argv[1]) === fileURLToPath(import.meta.url))) {
   const docsDir = path.resolve(process.argv[2] || './docs');
   checkSpdxDocs(docsDir).catch(() => {}).then(issues => {
     if (issues > 0) process.exit(1);
-    console.log('[check-spdx-docs] All checks passed.');
+    console.log('[check-spdx-docs] SPDX docs check complete.');
   });
 }

@@ -3,6 +3,7 @@
 
 import { promises as fs } from 'fs';
 import path from 'path';
+import { fileURLToPath, pathToFileURL } from 'url';
 
 const UNSUPPORTED_CLAIMS = [
   /\b100%\b/g,
@@ -34,11 +35,11 @@ async function checkClaims(dir) {
   return issues;
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (process.argv[1] && (path.resolve(process.argv[1]) === fileURLToPath(import.meta.url))) {
   const docsDir = path.resolve(process.argv[2] || './docs');
   checkClaims(docsDir).catch(() => {}).then(issues => {
     if (issues > 0) process.exit(1);
-    console.log('[check-claims] All checks passed.');
+    console.log('[check-claims] No forbidden claims found.');
   });
 }
 export { checkClaims };

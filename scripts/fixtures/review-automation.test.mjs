@@ -4,9 +4,11 @@
 import assert from 'assert';
 import { checkClaims } from '../scripts/review/check-claims.mjs';
 import { checkStatusMatrix, ALLOWED_LABELS } from '../scripts/review/check-status-matrix.mjs';
-import { promises as fs } from 'fs';
+import { promises as fs, existsSync } from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import Ajv from 'ajv/dist/2020.js';
+import ajvFormats from 'ajv-formats';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -26,6 +28,34 @@ async function runTests() {
   assert.strictEqual(issues, 1, 'Status checker should reject invalid labels');
 
   assert.ok(ALLOWED_LABELS.includes('stable'));
+
+  console.log('Checking generated fixtures against JSON schemas...');
+  const ajv = new Ajv({ strict: false, allErrors: true });
+  const addFormats = ajvFormats.default || ajvFormats;
+  addFormats(ajv);
+
+  const schemasDir = path.resolve(__dirname, '../../schemas');
+  const fixturesDir = path.resolve(__dirname, '../../fixtures/generated');
+
+  const schemasToTest = [
+    { schema: 'receipt.schema.json', fixture: 'receipt.json' },
+    { schema: 'replay-envelope.schema.json', fixture: 'replay-envelope.json' },
+    { schema: 'proofpack.schema.json', fixture: 'proofpack.json' }
+  ];
+
+  for (const { schema, fixture } of schemasToTest) {
+    const schemaPath = path.join(schemasDir, schema);
+    const fixturePath = path.join(fixturesDir, fixture);
+
+    if (existsSync(schemaPath) && existsSync(fixturePath)) {
+      const schemaData = JSON.parse(await fs.readFile(schemaPath, 'utf8'));
+      const fixtureData = JSON.parse(await fs.readFile(fixturePath, 'utf8'));
+      const validate = ajv.compile(schemaData);
+      const valid = validate(fixtureData);
+      assert.ok(valid, `Fixture ${fixture} failed schema ${schema} validation: ${JSON.stringify(validate.errors)}`);
+      console.log(`  - ${fixture} conforms to ${schema}`);
+    }
+  }
 
   await fs.rm(testDocsDir, { recursive: true, force: true });
   console.log('All tests passed.');
