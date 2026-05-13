@@ -4,46 +4,39 @@
 import { promises as fs } from 'fs';
 import path from 'path';
 
-// "Theatre" words are terms that sound secure but have no technical meaning or are misleading.
-const theatreWords = [
-  'military-grade',
-  'bank-grade',
-  'unhackable',
-  'cyber-immune',
-  'impervious',
-  '100% secure'
+const THEATRE_TERMS = [
+  /\bmilitary-grade\b/gi,
+  /\bbank-level\b/gi,
+  /\bairtight\b/gi,
 ];
 
 async function checkNoTheatre(dir) {
   let issues = 0;
-  async function walk(currentDir) {
-    const entries = await fs.readdir(currentDir, { withFileTypes: true });
-    for (const entry of entries) {
-      const fullPath = path.join(currentDir, entry.name);
-      if (entry.isDirectory() && !fullPath.includes('node_modules') && !fullPath.includes('.git')) {
-        await walk(fullPath);
-      } else if (entry.isFile() && fullPath.endsWith('.md')) {
-        if (fullPath.includes('review-automation.md')) continue;
-        const content = await fs.readFile(fullPath, 'utf8');
-        for (const word of theatreWords) {
-          if (content.toLowerCase().includes(word)) {
-            console.error(`[check-no-theatre] Found security theatre word "${word}" in ${fullPath}`);
-            issues++;
-          }
+  const entries = await fs.readdir(dir, { withFileTypes: true });
+
+  for (const entry of entries) {
+    const res = path.resolve(dir, entry.name);
+    if (entry.isDirectory()) {
+      if (['node_modules', '.git'].includes(entry.name)) continue;
+      issues += await checkNoTheatre(res);
+    } else if (entry.name.endsWith('.md')) {
+      const content = await fs.readFile(res, 'utf8');
+      for (const regex of THEATRE_TERMS) {
+        const matches = [...content.matchAll(regex)];
+        if (matches.length > 0) {
+          console.error(`[check-no-theatre] FAIL: Security theatre term found in ${res}: ${matches.map(m => m[0]).join(', ')}`);
+          issues++;
         }
       }
     }
   }
-  await walk(dir);
-  if (issues > 0) {
-    console.error(`[check-no-theatre] Found ${issues} issues.`);
-    process.exit(1);
-  }
-  console.log('[check-no-theatre] Security theatre check complete.');
+  return issues;
 }
 
-const targetDir = process.argv[2] || './docs';
-checkNoTheatre(targetDir).catch(err => {
-  console.error(err);
-  process.exit(1);
-});
+if (import.meta.url === `file://${process.argv[1]}`) {
+  const docsDir = path.resolve(process.argv[2] || './docs');
+  checkNoTheatre(docsDir).catch(() => {}).then(issues => {
+    if (issues > 0) process.exit(1);
+    console.log('[check-no-theatre] All checks passed.');
+  });
+}

@@ -9,6 +9,14 @@ All notable changes to this fork are documented in this file.
 
 ### Added
 
+- **Review Check Tooling:** Lightweight scripts (`check-claims.mjs`, `check-doc-links.mjs`, `check-status-matrix.mjs`, `check-no-theatre.mjs`, `check-fixtures-redacted.mjs`, `check-spdx-docs.mjs`, `review-all.mjs`) to verify documentation integrity and security posture.
+- **Schema Snapshot Tooling:** Added baseline JSON schemas for schemas review and snapshot tooling framework.
+- **Deterministic Fixtures:** Added `generate-fixtures.mjs` script to produce reproducible, stable, and redacted JSON fixtures without requiring a live network or GPU.
+- **Operator CLI Smoke Harness:** Verified the existence of the operator CLI smoke test script `operator-cli-smoke.mjs` to validate table outputs and JSON parsing in demo mode.
+- **Evidence/Proofpack Helper:** Confirmed review helper script `check-proofpack.mjs` and verification checks documentation exist.
+- **Docs Navigation Indexer:** Validated doc index verification in `check-doc-index.mjs` ensuring site map and navigation map remain intact.
+- **Verification Integration:** Added basic test suite `tests/review-automation.test.mjs` for testing review automation tools.
+
 - **Phase 1 — Persist Lifecycle Records:** `FileOperationalMemoryStore` in `src/lib/control-plane/operational-memory.ts` — zero-dependency, append-only JSONL persistence adapter with atomic writes, crash-recovery replay, malformed-line tolerance, and explicit compaction. Configurable via constructor (file path, flush interval, max file size). 18 unit tests cover append, replay, malformed-line tolerance, and compaction.
 - **Phase 2 — Add Policy Linting:** `nemoclaw policy lint` CLI command with schema validation (AJV draft-2020-12), semantic correctness checks (wildcard detection, shell injection, unrestricted access, root process, unreachable branches, permissive filesystem), and CI gate (non-zero exit on violations). Lints YAML and JSON policy files with line-accurate error reports. 17 unit tests.
 - **Phase 3 — Improve Fixture Generation:** Unified deterministic fixture generator at `scripts/generate-fixtures.ts` with `--seed` flag for reproducible output. Idempotent — two runs with same seed produce bitwise-identical fixtures. Validates all output after generation. CI gate at `.github/workflows/fixture-check.yaml` and `npm run check-fixtures` script. `npm run generate-fixtures` regenerates all fixtures under `fixtures/generated/`.

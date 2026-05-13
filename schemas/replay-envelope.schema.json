@@ -1,60 +1,15 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://nemoclaw.ai/schemas/replay-envelope.schema.json",
-  "title": "Replay Envelope",
-  "description": "A container for a replayed execution session, including original and replayed receipts and drift analysis.",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ReplayEnvelope",
+  "description": "Container for replay validation results.",
   "type": "object",
   "properties": {
-    "replayId": {
-      "type": "string"
-    },
-    "originalRunId": {
-      "type": "string"
-    },
-    "originalPlanId": {
-      "type": "string"
-    },
-    "replayedAt": {
-      "type": "string",
-      "format": "date-time"
-    },
-    "originalReceipts": {
-      "type": "array",
-      "items": { "type": "string" },
-      "description": "List of original receipt IDs."
-    },
-    "replayedReceipts": {
-      "type": "array",
-      "items": { "type": "string" },
-      "description": "List of newly generated receipt IDs from the replay session."
-    },
-    "driftDetected": {
-      "type": "boolean"
-    },
-    "driftDetails": {
-      "type": "array",
-      "items": {
-        "$ref": "#/definitions/ReplayDriftDetail"
-      }
-    },
-    "consistent": {
-      "type": "boolean",
-      "description": "True if replayed execution exactly matches the original deterministic state."
-    }
+    "envelopeId": { "type": "string" },
+    "type": { "type": "string", "const": "ReplayEnvelope" },
+    "timestamp": { "type": "string", "format": "date-time" },
+    "redacted": { "type": "boolean" },
+    "receiptId": { "type": "string" },
+    "verified": { "type": "boolean" }
   },
-  "required": ["replayId", "originalRunId", "originalPlanId", "replayedAt", "originalReceipts", "replayedReceipts", "driftDetected", "consistent"],
-  "definitions": {
-    "ReplayDriftDetail": {
-      "type": "object",
-      "properties": {
-        "receiptId": { "type": "string" },
-        "expectedReasonCode": { "type": "string" },
-        "actualReasonCode": { "type": "string" },
-        "expectedData": { "type": "object" },
-        "actualData": { "type": "object" },
-        "description": { "type": "string" }
-      },
-      "required": ["receiptId", "expectedReasonCode", "actualReasonCode", "expectedData", "actualData", "description"]
-    }
-  }
+  "required": ["envelopeId", "type", "timestamp", "receiptId", "verified"]
 }

@@ -1,52 +1,24 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://nemoclaw.ai/schemas/receipt.schema.json",
-  "title": "Orchestration Receipt",
-  "description": "An immutable record of a discrete event or decision within the NemoClaw substrate.",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ExecutionReceipt",
+  "description": "Immutable record of discrete events.",
   "type": "object",
   "properties": {
-    "receiptId": {
-      "type": "string",
-      "description": "Unique identifier for the receipt."
-    },
-    "type": {
-      "type": "string",
-      "description": "The category of the event recorded in this receipt."
-    },
-    "runId": {
-      "type": "string",
-      "description": "Identifier of the orchestration run this receipt belongs to."
-    },
-    "planId": {
-      "type": "string",
-      "description": "Identifier of the plan this receipt belongs to."
-    },
-    "stepId": {
-      "type": "string",
-      "description": "Identifier of the step this receipt belongs to, if applicable."
-    },
-    "timestamp": {
-      "type": "string",
-      "format": "date-time",
-      "description": "The precise time the event occurred."
-    },
-    "reasonCode": {
-      "type": "string",
-      "description": "Machine-readable code explaining the reason for this receipt."
-    },
-    "data": {
-      "type": "object",
-      "description": "Structured payload containing event-specific details.",
-      "additionalProperties": true
-    },
-    "correlationId": {
-      "type": "string",
-      "description": "Identifier used to link this receipt to external events or parent processes."
-    },
-    "signature": {
-      "type": "string",
-      "description": "Cryptographic signature ensuring the integrity and authenticity of the receipt."
+    "receiptId": { "type": "string" },
+    "type": { "type": "string", "const": "ExecutionReceipt" },
+    "timestamp": { "type": "string", "format": "date-time" },
+    "redacted": { "type": "boolean" },
+    "steps": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "stepId": { "type": "string" },
+          "status": { "type": "string" }
+        },
+        "required": ["stepId", "status"]
+      }
     }
   },
-  "required": ["receiptId", "type", "runId", "planId", "timestamp", "reasonCode", "data"]
+  "required": ["receiptId", "type", "timestamp", "steps"]
 }
