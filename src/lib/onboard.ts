@@ -615,7 +615,7 @@ function streamGatewayStart(
   env: NodeJS.ProcessEnv = process.env,
 ): Promise<{ status: number; output: string }> {
   const [shell, shellArgs] = runner.getShell(true);
-  
+
   const child = spawn(shell, [...shellArgs, command], {
     cwd: ROOT,
     env,

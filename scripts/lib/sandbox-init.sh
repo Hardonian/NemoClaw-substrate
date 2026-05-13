@@ -86,6 +86,41 @@ emit_sandbox_sourced_file() {
   fi
 }
 
+# Create a log file with restricted permissions.
+# Usage:
+#   emit_restricted_log /path/to/log [owner] [mode]
+#
+# Root mode:  chown [owner] and chmod [mode].
+# Non-root:   chmod [mode] only (owner is current user).
+#
+# SECURITY: Uses atomic rename to prevent symlink-following attacks.
+emit_restricted_log() {
+  local path="$1"
+  local owner="${2:-}"
+  local mode="${3:-600}"
+  local dir base tmp
+
+  dir="$(dirname "$path")"
+  base="$(basename "$path")"
+  tmp="$(mktemp "${dir}/.${base}.tmp.XXXXXX")" || return 1
+  : >"$tmp" || {
+    rm -f "$tmp"
+    return 1
+  }
+  if [ "$(id -u)" -eq 0 ] && [ -n "$owner" ] && ! chown "$owner" "$tmp"; then
+    rm -f "$tmp"
+    return 1
+  fi
+  if ! chmod "$mode" "$tmp"; then
+    rm -f "$tmp"
+    return 1
+  fi
+  if ! mv -f "$tmp" "$path"; then
+    rm -f "$tmp"
+    return 1
+  fi
+}
+
 # Verify that trust-boundary files in /tmp have the expected permissions
 # BEFORE handing off to the sandbox user. Call this after all init work
 # and before launching services. Defence-in-depth: catches regressions
