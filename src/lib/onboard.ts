@@ -1577,7 +1577,7 @@ async function promptValidationRecovery(
     const looksLikeToken =
       API_KEY_PREFIXES.some((p) => choice.startsWith(p)) ||
       (!choice.includes(" ") && choice.length > 40) ||
-      // Regex fallback: base64-safe token pattern (20+ chars, no spaces, mixed alphanum)
+      // Secondary regex pattern: base64-safe token pattern (20+ chars, no spaces, mixed alphanum)
       /^[A-Za-z0-9_\-\.]{20,}$/.test(choice);
     // validateNvidiaApiKeyValue is provider-aware: it only enforces the
     // nvapi- prefix when credentialEnv === "NVIDIA_API_KEY", so passing it
@@ -1718,7 +1718,7 @@ function upsertProvider(
     if (stagedValue !== undefined) {
       // openshell receives `--credential <ENV>` and reads the value from the
       // `env` block passed here, falling back to the inherited process.env.
-      // Use getCredential() for the env-fallback branch (per the
+      // Use getCredential() for the env-recovery branch (per the
       // direct credential env guard from PR #2306) — it mirrors
       // openshell's resolution order while the staging contract has
       // already populated the same value into process.env.
@@ -6252,7 +6252,7 @@ async function setupNim(
       label: "Install Ollama on Windows host (recommended)",
     });
   }
-  // Without any Ollama, offer to install one locally as a fallback (e.g. when
+  // Without any Ollama, offer to install one locally as a recovery path (e.g. when
   // the NVIDIA API server is down and cloud keys are unavailable).
   if (!hasOllama && !ollamaRunning && !hasWindowsOllama) {
     if (process.platform === "darwin") {
@@ -6487,7 +6487,7 @@ async function setupNim(
         hydrateCredentialEnv(credentialEnv);
 
         if (selected.key === "build") {
-          // Allow NEMOCLAW_PROVIDER_KEY as a fallback for NVIDIA_API_KEY.
+          // Allow NEMOCLAW_PROVIDER_KEY as a defaultVal for NVIDIA_API_KEY.
           // Check raw process.env first — NEMOCLAW_PROVIDER_KEY is a user-facing
           // override that should take precedence before resolving from credentials.json.
           const _nvProviderKey = (process.env.NEMOCLAW_PROVIDER_KEY || "").trim();
@@ -7408,7 +7408,7 @@ async function setupInference(
     const baseUrl = getLocalProviderBaseUrl(provider);
     let ollamaCredential = "ollama";
     if (!isWsl()) {
-      // Skip if already started during the fallback recovery above.
+      // Skip if already started during the recovery path above.
       if (!proxyReady) ensureOllamaAuthProxy();
       const proxyToken = getOllamaProxyToken();
       if (!proxyToken) {
