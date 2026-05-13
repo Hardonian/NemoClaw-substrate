@@ -58,7 +58,7 @@ let warnings = 0;
 console.log(`verify-core (${strictMode ? "strict" : "relaxed"} mode)`);
 for (const check of checks) {
   const [cmd, ...cmdArgs] = check.command;
-  const result = spawnSync(cmd, cmdArgs, { stdio: "pipe", encoding: "utf8" });
+  const result = spawnSync(cmd, cmdArgs, { stdio: "pipe", encoding: "utf8", shell: true });
   if (result.status === 0) {
     console.log(`PASS ${check.label}`);
     continue;
