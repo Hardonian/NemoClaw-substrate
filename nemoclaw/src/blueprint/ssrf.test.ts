@@ -3,7 +3,7 @@
 
 // Tests for SSRF validation (PSIRT bug 6002763).
 
-import { describe, it, expect, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 type LookupResult = Array<{ address: string; family: number }>;
 const mockLookup = vi.fn<(hostname: string, options: { all: true }) => Promise<LookupResult>>();

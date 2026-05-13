@@ -4,11 +4,11 @@
 import { promises as dnsPromises } from "node:dns";
 import { isIP } from "node:net";
 
-import { isPrivateIp, isPrivateHostname } from "./private-networks.js";
+import { isPrivateHostname, isPrivateIp } from "./private-networks.js";
 
 // Re-export so consumers can pick the narrower IP-only check (for
 // post-DNS addresses) or the broader name-aware check (for user input).
-export { isPrivateIp, isPrivateHostname };
+export { isPrivateHostname, isPrivateIp };
 
 const ALLOWED_SCHEMES = new Set(["https:", "http:"]);
 

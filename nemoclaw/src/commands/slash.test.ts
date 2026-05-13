@@ -1,9 +1,9 @@
 // SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-import { describe, it, expect, beforeEach, vi } from "vitest";
-import type { PluginCommandContext, OpenClawPluginApi } from "../index.js";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { NemoClawState } from "../blueprint/state.js";
+import type { OpenClawPluginApi, PluginCommandContext } from "../index.js";
 import type { NemoClawOnboardConfig } from "../onboard/config.js";
 
 vi.mock("../blueprint/state.js", () => ({
@@ -24,13 +24,13 @@ vi.mock("./config-show.js", () => ({
   slashConfigShow: vi.fn(() => ({ text: "**NemoClaw Config**" })),
 }));
 
-import { handleSlashCommand } from "./slash.js";
 import { loadState } from "../blueprint/state.js";
 import {
-  loadOnboardConfig,
   describeOnboardEndpoint,
   describeOnboardProvider,
+  loadOnboardConfig,
 } from "../onboard/config.js";
+import { handleSlashCommand } from "./slash.js";
 
 const mockedLoadState = vi.mocked(loadState);
 const mockedLoadOnboardConfig = vi.mocked(loadOnboardConfig);

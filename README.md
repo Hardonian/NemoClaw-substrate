@@ -95,6 +95,18 @@ git diff --check
 
 `verify:release` aggregates changelog hygiene, core verification, typecheck, lint, and degraded-state chaos coverage. Docs builds are available with `npm run docs:strict` when the Python/Sphinx toolchain is installed.
 
+## Fixture Generation
+
+All fixtures under `fixtures/generated/` are produced by a single deterministic generator:
+
+```bash
+npm run generate-fixtures          # regenerate with pinned seed (42)
+npx tsx scripts/generate-fixtures.ts --seed 99  # regenerate with custom seed
+npm run check-fixtures             # CI gate: verify committed fixtures match generator output
+```
+
+Two consecutive runs with the same seed produce bitwise-identical output. The CI build fails if committed fixtures diverge from the generator. Do not hand-edit files under `fixtures/generated/`.
+
 ## Reviewer Path
 
 Start here if you have limited time:
@@ -107,7 +119,7 @@ Start here if you have limited time:
 
 ## Known Limitations
 
-- Most control-plane state is in-process. Durable storage and crash recovery are not implemented here.
+- `FileOperationalMemoryStore` provides JSONL persistence with crash recovery; compaction is an explicit operator action, not automatic.
 - Remote execution is a guarded seam, not a worker fleet.
 - Trust and attestation are represented structurally; there is no cryptographic attestation chain yet.
 - Operator CLI output is currently fixture-backed for review/demo use.

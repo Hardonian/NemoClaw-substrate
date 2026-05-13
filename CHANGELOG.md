@@ -9,6 +9,10 @@ All notable changes to this fork are documented in this file.
 
 ### Added
 
+- **Phase 1 — Persist Lifecycle Records:** `FileOperationalMemoryStore` in `src/lib/control-plane/operational-memory.ts` — zero-dependency, append-only JSONL persistence adapter with atomic writes, crash-recovery replay, malformed-line tolerance, and explicit compaction. Configurable via constructor (file path, flush interval, max file size). 18 unit tests cover append, replay, malformed-line tolerance, and compaction.
+- **Phase 2 — Add Policy Linting:** `nemoclaw policy lint` CLI command with schema validation (AJV draft-2020-12), semantic correctness checks (wildcard detection, shell injection, unrestricted access, root process, unreachable branches, permissive filesystem), and CI gate (non-zero exit on violations). Lints YAML and JSON policy files with line-accurate error reports. 17 unit tests.
+- **Phase 3 — Improve Fixture Generation:** Unified deterministic fixture generator at `scripts/generate-fixtures.ts` with `--seed` flag for reproducible output. Idempotent — two runs with same seed produce bitwise-identical fixtures. Validates all output after generation. CI gate at `.github/workflows/fixture-check.yaml` and `npm run check-fixtures` script. `npm run generate-fixtures` regenerates all fixtures under `fixtures/generated/`.
+- **Phase 4 — Wire Opt-in Remote Worker Proof:** SSH and signed HTTPS transport implementations in `src/lib/control-plane/remote-execution.ts`. `executeSshCommand` uses native `ssh` CLI (zero dependencies). `executeSignedHttps` includes request signing and signature verification. `computeOutputHash` and `verifyResultHash` for result verification. All failures recorded in lifecycle store. Remote proof disabled by default (opt-in via `NEMOCLAW_REMOTE_EXECUTION=1`). No background workers, daemons, or retry loops. 21 unit tests.
 - Review automation scripts (`check-claims.mjs`, `check-doc-links.mjs`, `check-status-matrix.mjs`, `check-no-theatre.mjs`, `check-fixtures-redacted.mjs`, `check-spdx-docs.mjs`, `check-proofpack.mjs`, `check-doc-index.mjs`) and the `npm run review:all` aggregate script.
 - Deterministic fixture generation for receipts, replay envelopes, and diagnostics.
 - Operator CLI smoke test harness using generated fixtures in demo mode.
@@ -26,6 +30,7 @@ All notable changes to this fork are documented in this file.
 
 ### Changed
 
+- **Phase 5 — Narrow and Consolidate Documentation:** Merged `supportability-doctrine.md`, `upgrade-doctrine.md`, and `rollback-doctrine.md` into single `operational-doctrine.md`. Updated all cross-references across docs. Added last-reviewed dates and code/test links to new document.
 - Rewrote the README as a concrete review entrypoint with design bias, non-claims, fast local proof, reviewer path, and limitations.
 - Consolidated docs navigation around review, architecture, verification, and demo entrypoints.
 - Reworked ADRs so each decision has concrete context, alternatives, costs, implementation links, and verification commands.

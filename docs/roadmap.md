@@ -5,7 +5,7 @@
 
 The near-term roadmap is intentionally small. The repo needs fewer claims and stronger proof before it needs more orchestration.
 
-For the full phased evolution plan, see [evolution-roadmap.md](../strategy/evolution-roadmap.md).
+For the full phased evolution plan, see [evolution-roadmap.md](strategy/evolution-roadmap.md).
 
 ## Next Useful Work
 
@@ -32,4 +32,4 @@ Each deferred item needs a specific ADR and verification plan before implementat
 
 ## Phase Status
 
-See [capability-status-matrix.md](../architecture/capability-status-matrix.md) for the per-capability classification and [gap-radar.md](../strategy/gap-radar.md) for unmet needs analysis.
+See [capability-status-matrix.md](architecture/capability-status-matrix.md) for the per-capability classification and [gap-radar.md](strategy/gap-radar.md) for unmet needs analysis.

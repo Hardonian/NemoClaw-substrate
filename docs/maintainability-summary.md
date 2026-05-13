@@ -60,7 +60,7 @@ Dead code is identified through the following methods:
 
 - NemoClaw is in alpha status.
 - Interfaces may change without notice.
-- Breaking changes follow the [Upgrade Doctrine](upgrade-doctrine.md).
+- Breaking changes follow the [Operational Doctrine](operational-doctrine.md).
 - Security changes require extra review.
 
 ## Dependency Hygiene

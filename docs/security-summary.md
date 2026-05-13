@@ -127,5 +127,5 @@ See [Redaction Guarantees](redaction-guarantees.md) for complete details.
 ## Next Steps
 
 - See [Redaction Guarantees](redaction-guarantees.md) for detailed redaction mechanisms.
-- See [Supportability Doctrine](supportability-doctrine.md) for escalation paths.
+- See [Operational Doctrine](operational-doctrine.md) for escalation paths.
 - See [Known Limitations](known-limitations.md) for security-related limitations.

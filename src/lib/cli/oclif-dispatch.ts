@@ -129,6 +129,12 @@ export function resolveGlobalOclifDispatch(cmd: string, args: string[]): Dispatc
     return oclif("root:version", []);
   }
 
+  if (cmd === "policy") {
+    const sub = args[0];
+    if (sub === "lint") return oclif("policy:lint", args.slice(1));
+    return { kind: "usageError", lines: ["policy lint [--schema sandbox-policy|policy-preset] [--policy-file <path>]"] };
+  }
+
   return { kind: "usageError", lines: [] };
 }
 

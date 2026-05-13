@@ -363,6 +363,9 @@ function cleanupTempDir(filePath: string, expectedPrefix: string): void {
 const EXPERIMENTAL = process.env.NEMOCLAW_EXPERIMENTAL === "1";
 const USE_COLOR = !process.env.NO_COLOR && !!process.stdout.isTTY;
 const DIM = USE_COLOR ? "\x1b[2m" : "";
+const BOLD = USE_COLOR ? "\x1b[1m" : "";
+const GREEN = USE_COLOR ? "\x1b[1;32m" : "";
+const YELLOW = USE_COLOR ? "\x1b[1;33m" : "";
 const RESET = USE_COLOR ? "\x1b[0m" : "";
 let OPENSHELL_BIN: string | null = null;
 const GATEWAY_NAME = "nemoclaw";
@@ -421,6 +424,7 @@ import type {
 
 type OnboardOptions = {
   nonInteractive?: boolean;
+  quick?: boolean;
   recreateSandbox?: boolean;
   resume?: boolean;
   fresh?: boolean;
@@ -436,6 +440,7 @@ type OnboardOptions = {
 // Non-interactive mode: set by --non-interactive flag or env var.
 // When active, all prompts use env var overrides or sensible defaults.
 let NON_INTERACTIVE = false;
+let QUICK_MODE = false;
 let RECREATE_SANDBOX = false;
 let PROGRAMMATIC_YES = false;
 // Set by onboard() before preflight() when --control-ui-port is specified.
@@ -456,6 +461,10 @@ function computeTelegramRequireMention(): boolean | null {
 
 function isNonInteractive(): boolean {
   return NON_INTERACTIVE || process.env.NEMOCLAW_NON_INTERACTIVE === "1";
+}
+
+function isQuickMode(): boolean {
+  return QUICK_MODE || process.env.NEMOCLAW_QUICK === "1";
 }
 
 function isRecreateSandbox(): boolean {
@@ -4752,22 +4761,35 @@ function formatOnboardConfigSummary({
   const webSearch =
     webSearchConfig && webSearchConfig.fetchEnabled === true ? "enabled" : "disabled";
   const apiKeyLine = credentialEnv
-    ? `  API key:       ${credentialEnv} (staged for OpenShell gateway registration)`
-    : `  API key:       (not required for ${provider ?? "this provider"})`;
+    ? `  ✓  API key:       ${credentialEnv} (staged for gateway)`
+    : `  ✓  API key:       not required for this provider`;
+  const providerLine = provider
+    ? `  ✓  Provider:      ${provider}`
+    : `  ⚠ Provider:      (unset)`;
+  const modelLine = model
+    ? `  ✓  Model:         ${model}`
+    : `  ⚠ Model:         (unset)`;
+  const sandboxLine = sandboxName
+    ? `  ✓  Sandbox name:  ${sandboxName}`
+    : `  ⚠ Sandbox name:  (unset)`;
+  const webLine = `  ✓  Web search:    ${webSearch}`;
+  const msgLine = messaging !== "none"
+    ? `  ✓  Messaging:     ${messaging}`
+    : `     Messaging:     ${messaging}`;
   const noteLines = (Array.isArray(notes) ? notes : [])
     .filter((n) => typeof n === "string" && n.length > 0)
-    .map((n) => `  Note:          ${n}`);
+    .map((n) => `  ⚠ Note:          ${n}`);
   return [
     "",
     bar,
-    "  Review configuration",
+    `  ${BOLD}Review your configuration${RESET}`,
     bar,
-    `  Provider:      ${provider ?? "(unset)"}`,
-    `  Model:         ${model ?? "(unset)"}`,
+    providerLine,
+    modelLine,
     apiKeyLine,
-    `  Web search:    ${webSearch}`,
-    `  Messaging:     ${messaging}`,
-    `  Sandbox name:  ${sandboxName}`,
+    sandboxLine,
+    webLine,
+    msgLine,
     ...noteLines,
     bar,
   ].join("\n");
@@ -9485,6 +9507,7 @@ function skippedStepMessage(
 async function onboard(opts: OnboardOptions = {}): Promise<void> {
   setOnboardBrandingAgent(opts.agent || process.env.NEMOCLAW_AGENT || null);
   NON_INTERACTIVE = opts.nonInteractive || process.env.NEMOCLAW_NON_INTERACTIVE === "1";
+  QUICK_MODE = opts.quick || process.env.NEMOCLAW_QUICK === "1";
   RECREATE_SANDBOX = opts.recreateSandbox || process.env.NEMOCLAW_RECREATE_SANDBOX === "1";
   PROGRAMMATIC_YES = opts.programmaticYes === true || process.env.NEMOCLAW_YES === "1";
   _preflightDashboardPort = opts.controlUiPort || null;
@@ -10084,7 +10107,14 @@ async function onboard(opts: OnboardOptions = {}): Promise<void> {
     }
 
     const webSearchSupportProbePath = fromDockerfile ? path.resolve(fromDockerfile) : null;
-    const webSearchSupported = agentSupportsWebSearch(agent, webSearchSupportProbePath);
+    let webSearchSupported = false;
+    if (isQuickMode()) {
+      note("  [quick mode] Skipping optional features — web search, messaging, and network presets.");
+      selectedMessagingChannels = [];
+      webSearchConfig = null;
+    } else {
+      webSearchSupported = agentSupportsWebSearch(agent, webSearchSupportProbePath);
+    }
     if (webSearchConfig && !webSearchSupported) {
       note(
         `  Web search is not yet supported by ${agent?.displayName ?? "this sandbox image"}. Clearing stale config.`,
@@ -10174,7 +10204,10 @@ async function onboard(opts: OnboardOptions = {}): Promise<void> {
         }
       }
       let nextWebSearchConfig = webSearchConfig;
-      if (nextWebSearchConfig) {
+      if (isQuickMode()) {
+        nextWebSearchConfig = null;
+        selectedMessagingChannels = [];
+      } else if (nextWebSearchConfig) {
         note("  [resume] Revalidating Brave Search configuration for sandbox recreation.");
         const braveApiKey = await ensureValidatedBraveSearchCredential();
         nextWebSearchConfig = braveApiKey ? { fetchEnabled: true } : null;
@@ -10315,7 +10348,13 @@ async function onboard(opts: OnboardOptions = {}): Promise<void> {
     );
     const resumePolicies =
       resume && sandboxName && arePolicyPresetsApplied(sandboxName, recordedPolicyPresetsForSupport);
-    if (resumePolicies) {
+    if (isQuickMode()) {
+      note("  [quick mode] Skipping network policy presets.");
+      onboardSession.markStepComplete(
+        "policies",
+        toSessionUpdates({ sandboxName, provider, model, policyPresets: [] }),
+      );
+    } else if (resumePolicies) {
       skippedStepMessage("policies", recordedPolicyPresetsForSupport.join(", "));
       onboardSession.markStepComplete(
         "policies",

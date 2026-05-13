@@ -158,6 +158,6 @@ $ cd nemoclaw-blueprint && uv sync && cd ..
 
 ## Next Steps
 
-- See [Upgrade Doctrine](upgrade-doctrine.md) for upgrade procedures.
+- See [Operational Doctrine](operational-doctrine.md) for upgrade and rollback procedures.
 - See [Known Limitations](known-limitations.md) for platform constraints.
 - See [Operator UX Summary](operator-ux-summary.md) for CLI command details.

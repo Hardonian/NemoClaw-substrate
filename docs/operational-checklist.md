@@ -95,6 +95,4 @@ This document defines the operational verification steps for NemoClaw go-live re
 
 ## Next Steps
 
-- See [Rollback Doctrine](rollback-doctrine.md) for revert procedures.
-- See [Upgrade Doctrine](upgrade-doctrine.md) for version progression.
-- See [Supportability Doctrine](supportability-doctrine.md) for monitoring and escalation.
+- See [Operational Doctrine](operational-doctrine.md) for rollback, upgrade, monitoring, and escalation procedures.

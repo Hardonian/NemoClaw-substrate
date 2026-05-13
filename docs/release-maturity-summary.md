@@ -122,4 +122,4 @@ Coverage thresholds are tracked in `ci/coverage-threshold-*.json`. New code must
 
 - See [Operational Readiness Report](operational-readiness-report.md) for the full readiness template.
 - See [Packaging Summary](packaging-summary.md) for deployment bundle details.
-- See [Upgrade Doctrine](upgrade-doctrine.md) for version progression procedures.
+- See [Operational Doctrine](operational-doctrine.md) for version progression procedures.

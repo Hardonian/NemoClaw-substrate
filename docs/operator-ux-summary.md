@@ -114,17 +114,17 @@ To audit network policy enforcement:
 1. Capture diagnostics: `nemoclaw diagnostics`.
 2. Check known limitations and troubleshooting guide.
 3. Attempt rollback if needed.
-4. Escalate per the [Supportability Doctrine](supportability-doctrine.md).
+4. Escalate per the [Operational Doctrine](operational-doctrine.md).
 
 ### Upgrade Operations
 
 1. Create pre-upgrade snapshot: `nemoclaw config-snapshot --pre-upgrade`.
-2. Perform upgrade per [Upgrade Doctrine](upgrade-doctrine.md).
+2. Perform upgrade per [Operational Doctrine](operational-doctrine.md).
 3. Validate post-upgrade: `nemoclaw diagnostics`.
 4. Rollback if validation fails.
 
 ## Next Steps
 
 - See [Operational Checklist](operational-checklist.md) for pre-flight and launch checks.
-- See [Supportability Doctrine](supportability-doctrine.md) for monitoring and escalation.
+- See [Operational Doctrine](operational-doctrine.md) for monitoring, escalation, and upgrade procedures.
 - See [Packaging Summary](packaging-summary.md) for deployment bundle details.

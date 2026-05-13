@@ -17,7 +17,7 @@ NemoClaw is in alpha status. The following features are incomplete or under deve
 |---------|--------|-------|
 | Multi-agent manifests | Partial | OpenClaw and Hermes have separate wrappers; shared multi-agent manifests are not yet supported |
 | Supervised policy promotion | Planned | Repeated operator decisions can inform policy evolution, but only through visible reviewable promotion paths |
-| Blue-green upgrades | Documented only | Procedure is defined in [Upgrade Doctrine](upgrade-doctrine.md) but not fully automated |
+| Blue-green upgrades | Documented only | Procedure is defined in [Operational Doctrine](operational-doctrine.md) but not fully automated |
 | Offline mode | Partial | Some features require network access for inference providers and dependency installation |
 | Hermes agent support | Partial | Hermes env parsing and config construction are under development |
 
@@ -95,6 +95,6 @@ NemoClaw is in alpha status. The following features are incomplete or under deve
 
 ## Next Steps
 
-- See [Supportability Doctrine](supportability-doctrine.md) for monitoring and escalation procedures.
+- See [Operational Doctrine](operational-doctrine.md) for monitoring, escalation, and upgrade procedures.
 - See [Non-Goals](non-goals.md) for items deliberately out of scope.
 - See [Roadmap](roadmap.md) for planned improvements.
