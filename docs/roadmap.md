@@ -5,6 +5,8 @@
 
 The near-term roadmap is intentionally small. The repo needs fewer claims and stronger proof before it needs more orchestration.
 
+For the full phased evolution plan, see [evolution-roadmap.md](../strategy/evolution-roadmap.md).
+
 ## Next Useful Work
 
 | Work | Why it matters | Constraint |
@@ -14,6 +16,8 @@ The near-term roadmap is intentionally small. The repo needs fewer claims and st
 | Improve fixture generation | Review demos should be concrete and easy to refresh. | Fixtures must remain deterministic. |
 | Wire one real opt-in remote worker proof | The guarded adapter needs one end-to-end live proof eventually. | No background workers, no hidden retries, no default remote execution. |
 | Narrow old docs | Reviewers should not have to read overlapping doctrine pages. | Preserve important evidence links and historical context. |
+| Constitutional invariant enforcement | Types exist but invariants are not wired into execution paths. | Must not break existing fail-closed behavior. |
+| Institutional memory persistence | Event log is append-only but not durable across restarts. | Must preserve replay lineage on restore. |
 
 ## Deferred
 
@@ -25,3 +29,7 @@ The near-term roadmap is intentionally small. The repo needs fewer claims and st
 - cryptographic attestation chain.
 
 Each deferred item needs a specific ADR and verification plan before implementation.
+
+## Phase Status
+
+See [capability-status-matrix.md](../architecture/capability-status-matrix.md) for the per-capability classification and [gap-radar.md](../strategy/gap-radar.md) for unmet needs analysis.
