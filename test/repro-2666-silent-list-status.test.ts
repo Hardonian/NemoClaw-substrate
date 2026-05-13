@@ -29,8 +29,8 @@ import {
   type ListSandboxesCommandDeps,
   getSandboxInventory,
   renderSandboxInventoryText,
-} from "../dist/lib/inventory-commands.js";
-import { recoverRegistryEntriesWithStaticRecovery } from "../dist/lib/list-command-deps.js";
+} from "../src/lib/inventory-commands.js";
+import { recoverRegistryEntriesWithStaticRecovery } from "../src/lib/list-command-deps.js";
 
 const CLI = path.join(import.meta.dirname, "..", "bin", "nemoclaw.js");
 

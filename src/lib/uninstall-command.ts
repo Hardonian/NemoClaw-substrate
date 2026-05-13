@@ -80,7 +80,7 @@ export function runUninstallCommand(deps: RunUninstallCommandDeps): never {
   }
 
   error("  Local uninstall script not found.");
-  error("  Remote uninstall fallback is disabled for security.");
+  error("  Remote uninstall recovery is disabled for security.");
   error(`  Download and review manually: ${deps.remoteScriptUrl}`);
   error("  Then run: bash uninstall.sh [flags]");
   return exit(1);
