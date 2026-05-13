@@ -24,8 +24,21 @@ export interface PolicyLintResult {
 
 export type PolicySchemaType = "sandbox-policy" | "policy-preset";
 
+function findProjectRoot(startDir = __dirname): string {
+  let current = startDir;
+  for (let i = 0; i < 10; i++) {
+    if (fs.existsSync(path.join(current, "schemas", "sandbox-policy.schema.json"))) {
+      return current;
+    }
+    const parent = path.dirname(current);
+    if (parent === current) break;
+    current = parent;
+  }
+  return process.cwd();
+}
+
 export function resolveSchemaPath(schemaType: PolicySchemaType): string {
-  const projectRoot = path.resolve(__dirname, "..", "..", "..", "..");
+  const projectRoot = findProjectRoot();
   const schemasDir = path.join(projectRoot, "schemas");
   switch (schemaType) {
     case "sandbox-policy":
