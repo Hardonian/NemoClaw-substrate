@@ -7,6 +7,7 @@ This directory contains schemas and schema snapshots for NemoClaw data structure
 These schemas are used for review, validation, and documentation.
 
 ## Targets
+
 - Receipts
 - Replay Envelopes
 - Diagnostics Snapshots
@@ -16,6 +17,7 @@ These schemas are used for review, validation, and documentation.
 - Proofpack/Evidence Bundles
 
 ## Rules
+
 - Schemas are derived from current structures.
 - No unsupported fields are invented.
 - Experimental/scaffolded fields are explicitly marked.
