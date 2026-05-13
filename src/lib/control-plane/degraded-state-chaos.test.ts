@@ -46,8 +46,8 @@ function fakeProbe(status: WorkerProbeResult["status"], overrides: Partial<Worke
 describe("degraded state chaos coverage", () => {
   it("proves no hidden degradedStateTrigger and no denied candidate execution", () => {
     const empty = createDeviceRegistry();
-    expect(() => routeProviderWithGovernance({ requestId: "chaos-no-candidate", nowIso: "2026-05-09T00:00:00.000Z", provider: "openai-api", model: "gpt-5", registry: empty, policyBundle: allowPolicy, config: { enabled: true, source: "env", allowDegradedStateTrigger: false } })).toThrow(/no eligible candidate/);
-    expect(() => routeProviderWithGovernance({ requestId: "chaos-deny", nowIso: "2026-05-09T00:00:00.000Z", provider: "openai-api", model: "gpt-5", registry: fakeRegistry(), policyBundle: denyPolicy, config: { enabled: true, source: "env", allowDegradedStateTrigger: true } })).toThrow(/denied/);
+    expect(() => routeProviderWithGovernance({ requestId: "chaos-no-candidate", nowIso: "2026-05-09T00:00:00.000Z", provider: "openai-api", model: "gpt-5", registry: empty, policyBundle: allowPolicy, config: { enabled: true, source: "env", allowDegradedState: false } })).toThrow(/no eligible candidate/);
+    expect(() => routeProviderWithGovernance({ requestId: "chaos-deny", nowIso: "2026-05-09T00:00:00.000Z", provider: "openai-api", model: "gpt-5", registry: fakeRegistry(), policyBundle: denyPolicy, config: { enabled: true, source: "env", allowDegradedState: true } })).toThrow(/denied/);
   });
 
   it("blocks remote execution for disabled flag, deny, approval_required, and stale registry", async () => {

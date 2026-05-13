@@ -49,7 +49,7 @@ export interface HeterogeneousRoutingResult {
 
 export async function routeHeterogeneous(input: {
   requestId: string; nowIso: string; provider: string; model: string; registry: DeviceRegistry; policyBundle: PolicyBundle;
-  governedEnabled: boolean; allowDegradedStateTrigger: boolean; routingConfig: HeterogeneousRoutingConfig; remoteConfig: RemoteExecutionConfig;
+  governedEnabled: boolean; allowDegradedState: boolean; routingConfig: HeterogeneousRoutingConfig; remoteConfig: RemoteExecutionConfig;
   remoteTransport?: RemoteExecutionTransport; approved?: boolean; operationalMemory?: OperationalMemoryLog; executionPlan?: ExecutionPlan; executionApproval?: ExecutionApproval; executionPlanRequired?: boolean;
 }): Promise<HeterogeneousRoutingResult> {
   const degradedStateTriggerProvider = { provider: input.provider, model: input.model };
@@ -104,7 +104,7 @@ export async function routeHeterogeneous(input: {
     remoteStatus = remote.status;
     if (remote.status !== "succeeded") {
       degradedStateTriggers.push({ at: input.nowIso, reason: `remote_${remote.status}`, target: `${degradedStateTriggerProvider.provider}/${degradedStateTriggerProvider.model}` });
-      if (input.allowDegradedStateTrigger && policyEval.allowed) {
+      if (input.allowDegradedState && policyEval.allowed) {
         provider = degradedStateTriggerProvider.provider;
         model = degradedStateTriggerProvider.model;
       }

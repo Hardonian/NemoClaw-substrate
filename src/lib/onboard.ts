@@ -13,12 +13,12 @@ const path = require("path");
 const { spawn, spawnSync } = require("child_process");
 const pRetry = require("p-retry");
 
-/** Parse a numeric env var, returning `fallback` when unset or non-finite. */
-function envInt(name: string, fallback: number): number {
+/** Parse a numeric env var, returning `defaultValue` when unset or non-finite. */
+function envInt(name: string, defaultValue: number): number {
   const raw = process.env[name];
-  if (raw === undefined || raw === "") return fallback;
+  if (raw === undefined || raw === "") return defaultValue;
   const n = Number(raw);
-  return Number.isFinite(n) ? Math.max(0, Math.round(n)) : fallback;
+  return Number.isFinite(n) ? Math.max(0, Math.round(n)) : defaultValue;
 }
 /** Inference timeout (seconds) for local providers (Ollama, vLLM, NIM). */
 const LOCAL_INFERENCE_TIMEOUT_SECS = envInt("NEMOCLAW_LOCAL_INFERENCE_TIMEOUT", 180);
@@ -8083,7 +8083,7 @@ async function selectPolicyTier(): Promise<string> {
   const RADIO_ON = USE_COLOR ? "[\x1b[32m✓\x1b[0m]" : "[✓]";
   const RADIO_OFF = USE_COLOR ? "\x1b[2m[ ]\x1b[0m" : "[ ]";
 
-  // ── Fallback: non-TTY ─────────────────────────────────────────────
+  // ── Execution: programmatic / non-TTY ──────────────────────────────
   if (!process.stdin.isTTY || !process.stdout.isTTY) {
     console.log("");
     console.log("  Policy tier — controls which network presets are enabled:");
@@ -8260,7 +8260,7 @@ async function selectTierPresetsAndAccess(
       .map((p) => ({ name: p.name, access: accessModes[p.name] }));
   }
 
-  // ── Fallback: non-TTY ─────────────────────────────────────────────
+  // ── Execution: programmatic / non-TTY ──────────────────────────────
   if (!process.stdin.isTTY || !process.stdout.isTTY) {
     console.log("");
     console.log(label);
@@ -8415,7 +8415,7 @@ async function presetsCheckboxSelector(
 
   const GREEN_CHECK = USE_COLOR ? "[\x1b[32m✓\x1b[0m]" : "[✓]";
 
-  // ── Fallback: non-TTY or redirected stdout (piped input) ──────────
+  // ── Execution: programmatic / non-TTY / redirected ─────────────────
   if (!process.stdin.isTTY || !process.stdout.isTTY) {
     console.log("");
     console.log("  Available policy presets:");

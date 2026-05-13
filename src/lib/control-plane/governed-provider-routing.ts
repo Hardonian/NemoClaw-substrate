@@ -11,13 +11,13 @@ import type { DegradedState, ExecutionReceipt } from "./types";
 export interface GovernedRoutingConfig {
   enabled: boolean;
   source: "env" | "default";
-  allowDegradedStateTrigger: boolean;
+  allowDegradedState: boolean;
 }
 
 export function parseGovernedRoutingConfig(env: NodeJS.ProcessEnv): GovernedRoutingConfig {
   const enabled = env.NEMOCLAW_GOVERNED_ROUTING === "1";
-  const allowDegradedStateTrigger = env.NEMOCLAW_GOVERNED_ROUTING_ALLOW_DEGRADED_STATE_TRIGGER === "1";
-  return { enabled, allowDegradedStateTrigger, source: enabled || allowDegradedStateTrigger ? "env" : "default" };
+  const allowDegradedState = env.NEMOCLAW_GOVERNED_ROUTING_ALLOW_DEGRADED_STATE === "1";
+  return { enabled, allowDegradedState, source: enabled || allowDegradedState ? "env" : "default" };
 }
 
 export interface ProviderRouteInput {
@@ -57,7 +57,7 @@ export function routeProviderWithGovernance(input: ProviderRouteInput): { provid
   const degradedStates: DegradedState[] = [];
   if (!selected) {
     degradedStates.push({ category: "degraded", reason: "no governed candidate", affectedSubsystem: "provider-routing", severity: "warning", reasonCode: "constraint_unsatisfied", explanation: "No eligible governed routing candidate.", sourceComponent: "governed-provider-routing", timestamp: input.nowIso });
-    if (!input.config.allowDegradedStateTrigger) throw new Error("Governed provider routing has no eligible candidate (degraded state trigger disabled)");
+    if (!input.config.allowDegradedState) throw new Error("Governed provider routing has no eligible candidate (degraded state trigger disabled)");
   }
 
   const routedProvider = selected ? selected.nodeId.replace(/^provider:/, "").split(":")[0] : input.provider;
@@ -94,7 +94,7 @@ export function routeProviderWithGovernance(input: ProviderRouteInput): { provid
 export function summarizeGovernedRoutingDiagnostics(config: GovernedRoutingConfig, routed?: { provider: string; model: string; receiptId?: string }): string[] {
   return [
     `Governed routing: ${config.enabled ? "enabled" : "disabled"} (${config.source})`,
-    `Degraded state trigger: ${config.allowDegradedStateTrigger ? "enabled" : "disabled"}`,
+    `Degraded state trigger: ${config.allowDegradedState ? "enabled" : "disabled"}`,
     `Selected provider/model: ${routed ? `${routed.provider}/${routed.model}` : "not selected"}`,
     `Receipt: ${routed?.receiptId ?? "none"}`,
   ];

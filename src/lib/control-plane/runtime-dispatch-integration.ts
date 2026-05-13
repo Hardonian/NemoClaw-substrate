@@ -12,7 +12,7 @@ import type { ExecutionApproval, ExecutionPlan } from "./execution-plans";
 export interface DispatchIntegrationConfig {
   hetero: HeterogeneousRoutingConfig;
   governedEnabled: boolean;
-  allowDegradedStateTrigger: boolean;
+  allowDegradedState: boolean;
   remote: RemoteExecutionConfig;
 }
 
@@ -75,7 +75,7 @@ export async function dispatchWithHeterogeneousRouting<T>(input: {
     registry: input.registry,
     policyBundle: input.policyBundle,
     governedEnabled: input.config.governedEnabled,
-    allowDegradedStateTrigger: input.config.allowDegradedStateTrigger,
+    allowDegradedState: input.config.allowDegradedState,
     routingConfig: input.config.hetero,
     remoteConfig: input.config.remote,
     remoteTransport: input.remoteTransport,
