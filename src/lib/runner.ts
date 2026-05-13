@@ -98,10 +98,37 @@ function run(cmd: readonly string[], opts: RunnerOptions = {}): SpawnResult {
  * Run an explicit shell command string through bash -c.
  * Exits the process on failure unless opts.ignoreError is true.
  */
+/**
+ * Get the preferred shell and its base arguments.
+ * @param login If true, requests a login shell (e.g., -lc instead of -c for bash).
+ */
+function getShell(login = false): [string, string[]] {
+  const isWin = process.platform === "win32";
+  const flag = isWin ? "/c" : login ? "-lc" : "-c";
+
+  if (isWin) {
+    // Try bash first (Git Bash / WSL), fall back to cmd
+    try {
+      // Use --version to check for bash existence
+      spawnSync("bash", ["--version"], { stdio: "ignore" });
+      const bashFlag = login ? "-lc" : "-c";
+      return ["bash", [bashFlag]];
+    } catch {
+      return ["cmd", ["/c"]];
+    }
+  }
+  return ["bash", [flag]];
+}
+
+/**
+ * Run an explicit shell command string through bash -c (or cmd /c on Windows).
+ * Exits the process on failure unless opts.ignoreError is true.
+ */
 function runShell(cmd: string, opts: RunnerOptions = {}): SpawnResult {
   const shellCmd = String(cmd);
   const stdio = opts.stdio ?? ["ignore", "pipe", "pipe"];
-  return spawnAndHandle("bash", ["-c", shellCmd], opts, stdio, shellCmd);
+  const [shell, shellArgs] = getShell();
+  return spawnAndHandle(shell, [...shellArgs, shellCmd], opts, stdio, shellCmd);
 }
 
 /**
@@ -171,7 +198,8 @@ function runInteractive(cmd: readonly string[], opts: RunnerOptions = {}): Spawn
  */
 function runInteractiveShell(cmd: string, opts: RunnerOptions = {}): SpawnResult {
   const stdio = opts.stdio ?? ["inherit", "pipe", "pipe"];
-  return spawnAndHandle("bash", ["-c", cmd], opts, stdio, cmd);
+  const [shell, shellArgs] = getShell();
+  return spawnAndHandle(shell, [...shellArgs, cmd], opts, stdio, cmd);
 }
 
 /**
@@ -285,6 +313,7 @@ export {
   runFile,
   runInteractive,
   runInteractiveShell,
+  getShell,
   shellQuote,
   validateName,
 };

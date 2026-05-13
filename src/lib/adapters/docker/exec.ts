@@ -11,19 +11,31 @@ export function dockerExecFileSync(
   args: readonly string[],
   opts: DockerExecFileSyncOptions = {},
 ): string {
-  return String(execFileSync("docker", [...args], { encoding: "utf-8", ...opts }));
+  return String(
+    execFileSync("docker", [...args], {
+      encoding: "utf-8",
+      shell: process.platform === "win32",
+      ...opts,
+    }),
+  );
 }
 
 export function dockerSpawnSync(
   args: readonly string[],
   opts: DockerSpawnSyncOptions = {},
 ): DockerSpawnSyncResult {
-  return spawnSync("docker", [...args], opts);
+  return spawnSync("docker", [...args], {
+    shell: process.platform === "win32",
+    ...opts,
+  });
 }
 
 export function dockerSpawn(
   args: readonly string[],
   opts: Parameters<typeof spawn>[2] = {},
 ): ReturnType<typeof spawn> {
-  return spawn("docker", [...args], opts);
+  return spawn("docker", [...args], {
+    shell: process.platform === "win32",
+    ...opts,
+  });
 }
