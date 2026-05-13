@@ -145,6 +145,7 @@ export function executeSandboxExecCommand(
         env: process.env,
         stdio: ["ignore", "pipe", "pipe"],
         timeout: effectiveTimeout,
+        shell: process.platform === "win32",
       },
     );
     if (result.error) return null;

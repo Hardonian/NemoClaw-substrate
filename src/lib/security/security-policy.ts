@@ -328,7 +328,15 @@ export function redactSecurityPayload<T>(
 }
 
 export function payloadContainsSecrets(payload: unknown, policy: SecretRedactionPolicy = DEFAULT_SECURITY_POLICY.secretRedaction): boolean {
-  return JSON.stringify(payload) !== JSON.stringify(redactSecurityPayload(payload, policy));
+  const walk = (value: unknown, depth: number, parentKey?: string): boolean => {
+    if (parentKey && isSensitiveKey(parentKey, policy)) return true;
+    if (depth > policy.maxDepth) return false;
+    if (typeof value === "string") return value !== redactSecurityString(value, policy);
+    if (value === null || typeof value !== "object") return false;
+    if (Array.isArray(value)) return value.some((item) => walk(item, depth + 1));
+    return Object.entries(value as Record<string, unknown>).some(([key, item]) => walk(item, depth + 1, key));
+  };
+  return walk(payload, 0);
 }
 
 export function validateCommandDescriptor(

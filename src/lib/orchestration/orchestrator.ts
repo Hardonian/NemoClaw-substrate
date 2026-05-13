@@ -34,6 +34,21 @@ import {
   validateOrchestrationDecision,
 } from "./types";
 
+function numericTrustLevel(level: string): number {
+  const trustMap: Record<string, number> = {
+    minimal: 0,
+    low: 1,
+    medium: 2,
+    high: 3,
+    critical: 4,
+  };
+  if (Object.prototype.hasOwnProperty.call(trustMap, level)) {
+    return trustMap[level];
+  }
+  const parsed = Number.parseInt(level, 10);
+  return Number.isNaN(parsed) ? 0 : parsed;
+}
+
 // ============================================================================
 // Store interfaces
 // ============================================================================
@@ -659,7 +674,7 @@ export class OrchestrationEngine {
       );
     }
 
-    if (trustLevel < policy.minimumTrustLevel) {
+    if (numericTrustLevel(trustLevel) < numericTrustLevel(policy.minimumTrustLevel)) {
       return this.makeDecision(
         planId,
         runId,
@@ -738,7 +753,7 @@ export class OrchestrationEngine {
     extras: Partial<OrchestrationDecision> = {},
   ): OrchestrationDecision {
     const decision: OrchestrationDecision = {
-      decisionId: `decision-${planId}-${runId}-${Date.now()}`,
+      decisionId: `decision-${planId}-${runId}-${crypto.randomUUID()}`,
       runId,
       planId,
       allowed,
@@ -760,7 +775,7 @@ export class OrchestrationEngine {
     data: Record<string, unknown>,
   ): OrchestrationReceipt {
     const receipt: OrchestrationReceipt = {
-      receiptId: `receipt-${planId}-${runId}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      receiptId: `receipt-${planId}-${runId}-${crypto.randomUUID()}`,
       type,
       runId,
       planId,

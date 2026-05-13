@@ -6,11 +6,11 @@ import type {
   SpawnSyncOptionsWithStringEncoding,
   SpawnSyncReturns,
 } from "node:child_process";
+import { spawnSync } from "node:child_process";
+import path from "node:path";
 import { NAME_ALLOWED_FORMAT } from "./name-validation";
-
-const { spawnSync } = require("child_process");
-const path = require("path");
-const { detectDockerHost } = require("./platform");
+import { detectDockerHost } from "./platform";
+import { redact, redactError, writeRedactedResult } from "./security/redact";
 
 const ROOT = path.resolve(__dirname, "..", "..");
 const SCRIPTS = path.join(ROOT, "scripts");
@@ -62,7 +62,7 @@ function spawnAndHandle(
     env: { ...process.env, ...opts.env },
   });
   if (!opts.suppressOutput) {
-    writeRedactedResult(result, stdio);
+    writeRedactedResult(result, stdio as string[]);
   }
   if (result.error && !opts.ignoreError) {
     console.error(
@@ -136,7 +136,7 @@ function runArrayCmd(
     env: { ...process.env, ...extraEnv },
   });
   if (!suppressOutput) {
-    writeRedactedResult(result, stdio);
+    writeRedactedResult(result, (Array.isArray(stdio) ? stdio.map(s => String(s)) : []) as string[]);
   }
   // Check result.error first — spawnSync sets this (with status === null) when
   // the executable is missing (ENOENT), the call times out, or the spawn fails.
@@ -238,15 +238,13 @@ function runCapture(cmd: readonly string[], opts: CaptureOptions = {}): string {
     }
 
     const stdout = result.stdout || "";
-    return (typeof stdout === "string" ? stdout : stdout.toString("utf-8")).trim();
+    return stdout.trim();
   } catch (err) {
     if (ignoreError) return "";
     throw redactError(err);
   }
 }
 
-// Unified redaction — see redact.ts (#2381).
-const { redact, redactError, writeRedactedResult } = require("./security/redact");
 
 /**
  * Shell-quote a value for safe interpolation into bash -c strings.
