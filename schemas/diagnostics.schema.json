@@ -1,0 +1,47 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://nemoclaw.ai/schemas/diagnostics.schema.json",
+  "title": "Diagnostics Snapshot",
+  "description": "A machine-readable snapshot of the system health and component status.",
+  "type": "object",
+  "properties": {
+    "diagId": {
+      "type": "string",
+      "description": "Unique identifier for the diagnostic snapshot."
+    },
+    "systemHealth": {
+      "type": "string",
+      "enum": ["ok", "degraded", "failed"],
+      "description": "Overall health status of the system."
+    },
+    "components": {
+      "type": "object",
+      "description": "Status of individual system components.",
+      "additionalProperties": {
+        "type": "string",
+        "enum": ["active", "inactive", "error", "unknown"]
+      }
+    },
+    "memoryUsageMb": {
+      "type": "integer",
+      "description": "Current memory usage in Megabytes."
+    },
+    "cpuPercent": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 100,
+      "description": "Current CPU usage percentage."
+    },
+    "uptimeSecs": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "System uptime in seconds."
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "The time the snapshot was captured."
+    }
+  },
+  "required": ["diagId", "systemHealth", "components", "timestamp"]
+}

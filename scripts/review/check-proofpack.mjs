@@ -5,11 +5,9 @@ import { promises as fs, existsSync } from 'fs';
 import path from 'path';
 import crypto from 'crypto';
 
-const SECRET_PATTERNS = [
-  { name: 'NVIDIA API key', re: /nvapi-[a-zA-Z0-9_-]{20,}/ },
-  { name: 'OpenAI key', re: /sk-[a-zA-Z0-9]{20,}/ },
-  { name: 'GitHub token', re: /gh[pousr]_[a-zA-Z0-9]{20,}/ },
-];
+// Check for common secret patterns like "sk-...", "ghp_...", "nvapi-...", AWS keys, etc.
+// The 40-char generic match is hardened with word boundaries and hex exclusion to avoid SHA-1/digest false positives.
+const SECRET_REGEX = /(sk-[a-zA-Z0-9]{48}|gh[p|u|s|r]_[a-zA-Z0-9]{36}|nvapi-[a-zA-Z0-9_-]{40,}|AKIA[0-9A-Z]{16}|\b(?![a-f0-9]{40}\b)[a-zA-Z0-9+/]{40}\b|xox[baprs]-[0-9]{10,13}-[a-zA-Z0-9]{24,32}|SG\.[a-zA-Z0-9_-]{22,23}\.[a-zA-Z0-9_-]{37,44})/g;
 
 function computeHash(data) {
   return crypto.createHash('sha256').update(JSON.stringify(data)).digest('hex').substring(0, 16);
@@ -62,11 +60,9 @@ async function checkProofpack(targetDir) {
 
       // 3. Redaction check — scan all string values for secret patterns
       const rawContent = JSON.stringify(entry);
-      for (const pattern of SECRET_PATTERNS) {
-        const match = rawContent.match(pattern.re);
-        if (match) {
-          issues.push(`Proofpack ${id}: potential unredacted ${pattern.name} found`);
-        }
+      const matches = rawContent.match(SECRET_REGEX);
+      if (matches) {
+        issues.push(`Proofpack ${id}: potential unredacted secret found: ${matches.join(', ')}`);
       }
 
       // 4. Redaction marker check — degraded/unavailable entries should be explicit

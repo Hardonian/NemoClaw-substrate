@@ -1,0 +1,38 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://nemoclaw.ai/schemas/queue-lease.schema.json",
+  "title": "Queue Lease Record",
+  "description": "A machine-readable record of a task queue lease.",
+  "type": "object",
+  "properties": {
+    "queueId": {
+      "type": "string",
+      "description": "Identifier for the task queue."
+    },
+    "runId": {
+      "type": "string",
+      "description": "Identifier for the run associated with this queue."
+    },
+    "leases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "leaseId": { "type": "string" },
+          "stepId": { "type": "string" },
+          "status": { "type": "string", "enum": ["acquired", "released", "expired"] },
+          "acquiredAt": { "type": "string", "format": "date-time" },
+          "releasedAt": { "type": "string", "format": "date-time" },
+          "expiresAt": { "type": "string", "format": "date-time" }
+        },
+        "required": ["leaseId", "status", "acquiredAt"]
+      }
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "The time the record was generated."
+    }
+  },
+  "required": ["queueId", "leases", "timestamp"]
+}

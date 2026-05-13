@@ -32,11 +32,69 @@ async function checkSpdxDocs(dir) {
         if (EXEMPT_NAMES.some((n) => fullPath.includes(n))) continue;
 
         const content = await fs.readFile(fullPath, 'utf8');
+        const lines = content.split('\n');
+
+        // Check for SPDX header
         if (!content.includes('SPDX-License-Identifier:')) {
           missing.push(fullPath);
           issues++;
+          continue;
+        }
+
+        // Check for content before first heading (H1)
+        let foundHeading = false;
+        let foundNonSpdxContent = false;
+        let inSpdxComment = false;
+        let inFrontmatter = false;
+
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (trimmed === '') continue;
+
+          // Handle SPDX comment blocks
+          if (trimmed.startsWith('<!--')) {
+            inSpdxComment = true;
+            if (trimmed.includes('SPDX')) {
+               // already found it
+            }
+            if (trimmed.endsWith('-->')) {
+              inSpdxComment = false;
+            }
+            continue;
+          }
+          if (inSpdxComment) {
+            if (trimmed.endsWith('-->')) {
+              inSpdxComment = false;
+            }
+            continue;
+          }
+
+          // Handle YAML frontmatter
+          if (trimmed === '---') {
+            inFrontmatter = !inFrontmatter;
+            continue;
+          }
+          if (inFrontmatter) {
+            continue;
+          }
+
+          // Check for H1
+          if (trimmed.startsWith('# ')) {
+            foundHeading = true;
+            break;
+          }
+
+          // If we reach here, it's non-empty, non-SPDX comment, non-frontmatter, and not H1
+          foundNonSpdxContent = true;
+          break;
+        }
+
+        if (foundNonSpdxContent && !foundHeading) {
+          console.error(`[check-spdx-docs] Found non-SPDX content before title in ${fullPath}`);
+          issues++;
         }
       }
+
     }
   }
 

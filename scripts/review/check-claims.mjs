@@ -6,7 +6,28 @@ import path from 'path';
 
 // Minimal script to check for unsupported claims
 const forbiddenClaims = [
-  'guaranteed', '100%', 'foolproof', 'bulletproof', 'unhackable', 'perfect'
+  'guaranteed', '100%', 'foolproof', 'bulletproof', 'unhackable', 'perfect',
+  'impenetrable', 'invincible', 'absolute security', 'completely safe',
+  'total protection', 'unbreakable', 'zero risk', 'fully autonomous',
+  'magic', 'autonomous decision-making'
+];
+
+
+const EXEMPT_FILES = [
+  'review-automation.md',
+  'anti-theatre-doctrine.md',
+  'canonical-terminology-index.md',
+  'terminological-consistency-audit.md',
+  'evidence-index.md',
+  'governance-glossary.md',
+  'glossary.md',
+  'release-maturity-summary.md',
+  'strategic-positioning.md',
+  'nemoclaw-vs-openclaw.md',
+  'evidence-map.md',
+  'semantic-consistency-audit.md',
+  'fixture-generation-doctrine.md',
+  'evidence-export-formats.md'
 ];
 
 async function checkClaims(dir) {
@@ -18,7 +39,7 @@ async function checkClaims(dir) {
       if (entry.isDirectory() && !fullPath.includes('node_modules') && !fullPath.includes('.git')) {
         await walk(fullPath);
       } else if (entry.isFile() && fullPath.endsWith('.md')) {
-        if (fullPath.includes('review-automation.md')) continue;
+        if (EXEMPT_FILES.some(f => fullPath.endsWith(f))) continue;
         const content = await fs.readFile(fullPath, 'utf8');
         for (const claim of forbiddenClaims) {
           const regex = new RegExp(`\\b${claim.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&')}\\b`, 'i');

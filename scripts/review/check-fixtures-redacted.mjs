@@ -4,8 +4,10 @@
 import { promises as fs } from 'fs';
 import path from 'path';
 
-// Check for common secret patterns like "sk-...", "ghp_...", "nvapi-..."
-const secretRegex = /(sk-[a-zA-Z0-9]{48}|gh[p|u|s|r]_[a-zA-Z0-9]{36}|nvapi-[a-zA-Z0-9_-]{40,})/g;
+// Check for common secret patterns like "sk-...", "ghp_...", "nvapi-...", AWS keys, etc.
+// The 40-char generic match is hardened with word boundaries and hex exclusion to avoid SHA-1/digest false positives.
+const secretRegex = /(sk-[a-zA-Z0-9]{48}|gh[p|u|s|r]_[a-zA-Z0-9]{36}|nvapi-[a-zA-Z0-9_-]{40,}|AKIA[0-9A-Z]{16}|\b(?![a-f0-9]{40}\b)[a-zA-Z0-9+/]{40}\b|xox[baprs]-[0-9]{10,13}-[a-zA-Z0-9]{24,32}|SG\.[a-zA-Z0-9_-]{22,23}\.[a-zA-Z0-9_-]{37,44})/g;
+
 
 async function checkFixturesRedacted(targetDir) {
   let issues = 0;

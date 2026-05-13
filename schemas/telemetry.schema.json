@@ -1,0 +1,37 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://nemoclaw.ai/schemas/telemetry.schema.json",
+  "title": "Telemetry Snapshot",
+  "description": "A machine-readable snapshot of performance metrics and operational telemetry.",
+  "type": "object",
+  "properties": {
+    "telemetryId": {
+      "type": "string",
+      "description": "Unique identifier for the telemetry snapshot."
+    },
+    "runId": {
+      "type": "string",
+      "description": "Identifier of the orchestration run this telemetry belongs to."
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "The time the telemetry was recorded."
+    },
+    "metrics": {
+      "type": "object",
+      "properties": {
+        "requestCount": { "type": "integer", "minimum": 0 },
+        "errorRate": { "type": "number", "minimum": 0, "maximum": 1 },
+        "latencyP50Ms": { "type": "integer", "minimum": 0 },
+        "latencyP99Ms": { "type": "integer", "minimum": 0 }
+      },
+      "required": ["requestCount", "errorRate", "latencyP50Ms", "latencyP99Ms"]
+    },
+    "redacted": {
+      "type": "boolean",
+      "description": "Whether the telemetry has been redacted of sensitive information."
+    }
+  },
+  "required": ["telemetryId", "timestamp", "metrics"]
+}

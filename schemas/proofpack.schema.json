@@ -1,0 +1,50 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://nemoclaw.ai/schemas/proofpack.schema.json",
+  "title": "Proofpack Manifest",
+  "description": "A machine-readable manifest for a proofpack or evidence bundle.",
+  "type": "object",
+  "properties": {
+    "proofpackId": {
+      "type": "string",
+      "description": "Unique identifier for the proofpack."
+    },
+    "runId": {
+      "type": "string",
+      "description": "Identifier of the orchestration run this proofpack represents."
+    },
+    "planId": {
+      "type": "string",
+      "description": "Identifier of the plan associated with this proofpack."
+    },
+    "receipts": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "List of receipt IDs included in the proofpack."
+    },
+    "trustDecisions": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "List of trust decision IDs included in the proofpack."
+    },
+    "attestations": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "List of attestation record IDs included in the proofpack."
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time",
+      "description": "The time the proofpack was created."
+    },
+    "manifestHash": {
+      "type": "string",
+      "description": "Deterministic hash of the proofpack content."
+    },
+    "redacted": {
+      "type": "boolean",
+      "description": "Whether the proofpack has been redacted of sensitive information."
+    }
+  },
+  "required": ["proofpackId", "runId", "createdAt", "manifestHash"]
+}

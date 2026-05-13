@@ -1,0 +1,46 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://nemoclaw.ai/schemas/execution-plan.schema.json",
+  "title": "Execution Plan",
+  "description": "A machine-readable snapshot of an execution plan for review.",
+  "type": "object",
+  "properties": {
+    "planId": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["pending", "running", "completed", "failed"]
+    },
+    "steps": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "stepId": { "type": "string" },
+          "name": { "type": "string" },
+          "status": { "type": "string" },
+          "payload": { "type": "object", "additionalProperties": true }
+        },
+        "required": ["stepId", "name", "status"]
+      }
+    },
+    "policy": {
+      "type": "object",
+      "properties": {
+        "policyId": { "type": "string" },
+        "version": { "type": "string" }
+      },
+      "required": ["policyId", "version"]
+    },
+    "createdAt": { "type": "string", "format": "date-time" },
+    "updatedAt": { "type": "string", "format": "date-time" }
+  },
+  "required": ["planId", "name", "status", "steps", "policy", "createdAt", "updatedAt"]
+}

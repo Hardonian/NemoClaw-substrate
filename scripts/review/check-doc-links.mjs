@@ -33,11 +33,12 @@ async function checkDocLinks(dir) {
   }
   await walk(dir);
   if (issues > 0) {
-    // Just warn for now to avoid blocking CI unexpectedly
-    console.warn(`[check-doc-links] Found ${issues} broken links (warnings).`);
+    console.error(`[check-doc-links] Found ${issues} broken link(s).`);
+    process.exit(1);
   }
   console.log('[check-doc-links] Link check complete.');
 }
+
 
 checkDocLinks('./docs').catch(err => {
   console.error(err);
