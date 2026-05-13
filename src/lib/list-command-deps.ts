@@ -18,27 +18,27 @@ interface RecoveredRegistry {
   recoveredFromGateway?: number;
 }
 
-interface RegistryFallback {
+interface StaticRegistryListing {
   sandboxes: SandboxEntry[];
   defaultSandbox?: string | null;
 }
 
 /**
- * #2666 fallback wrapper: if the primary recovery throws (e.g. openshell
- * hangs talking to a foreign port-holder), surface the registry-only
+ * #2666 secondary recovery wrapper: if the primary recovery throws (e.g. openshell
+ * hangs talking to a foreign port-holder), surface the static registry-only
  * listing instead of letting the throw propagate and silence output.
  *
  * Exported for direct unit testing — `buildListCommandDeps()` wires the
  * real `recoverRegistryEntries` and `registry.listSandboxes` here.
  */
-export async function recoverRegistryEntriesWithFallback(
+export async function recoverRegistryEntriesWithStaticRecovery(
   primary: () => Promise<RecoveredRegistry>,
-  fallback: () => RegistryFallback,
+  staticRecovery: () => StaticRegistryListing,
 ): Promise<RecoveredRegistry> {
   try {
     return await primary();
   } catch {
-    const list = fallback();
+    const list = staticRecovery();
     return { ...list, recoveredFromSession: false, recoveredFromGateway: 0 };
   }
 }
@@ -67,7 +67,7 @@ export function buildListCommandDeps(): ListSandboxesCommandDeps {
     // stopped) suppress the registry-only listing. The registry lives on
     // disk and is independent of runtime state.
     recoverRegistryEntries: () =>
-      recoverRegistryEntriesWithFallback(
+      recoverRegistryEntriesWithStaticRecovery(
         () => recoverRegistryEntries(),
         () => registry.listSandboxes(),
       ),

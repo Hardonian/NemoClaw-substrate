@@ -70,7 +70,7 @@ interface ReplayEvidencePackage {
   governanceEvents: OperationalEvent[];
   diagnosticsSnapshots: OperationalEvent[];
   degradedStates: DegradedState[];
-  fallbackEvidence: OperationalEvent[];
+  degradedStateTriggerEvidence: OperationalEvent[];
   approvalLineage: OperationalEvent[];
   digest: EvidenceDigest;
 }

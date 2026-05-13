@@ -77,9 +77,9 @@ export function getProbeRecovery(
   if (classified.some((c) => c.kind === "endpoint")) {
     return { kind: "endpoint", retry: "selection" };
   }
-  const fallback = classified[0];
-  if (!allowModelRetry && fallback.kind === "model") {
+  const selectedStrategy = classified[0];
+  if (!allowModelRetry && selectedStrategy.kind === "model") {
     return { kind: "unknown", retry: "selection" };
   }
-  return fallback;
+  return selectedStrategy;
 }

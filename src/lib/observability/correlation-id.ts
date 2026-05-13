@@ -67,11 +67,11 @@ export function getCorrelationContext(): CorrelationContext | undefined {
 }
 
 /**
- * Get the current correlation ID, or a fallback if none is active.
+ * Get the current correlation ID, or a default value if none is active.
  */
-export function getCurrentCorrelationId(fallback = "none"): string {
+export function getCurrentCorrelationId(defaultValue = "none"): string {
   const ctx = correlationStorage.getStore();
-  return ctx?.correlationId ?? fallback;
+  return ctx?.correlationId ?? defaultValue;
 }
 
 /**

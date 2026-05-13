@@ -30,12 +30,12 @@ import {
   getSandboxInventory,
   renderSandboxInventoryText,
 } from "../dist/lib/inventory-commands.js";
-import { recoverRegistryEntriesWithFallback } from "../dist/lib/list-command-deps.js";
+import { recoverRegistryEntriesWithStaticRecovery } from "../dist/lib/list-command-deps.js";
 
 const CLI = path.join(import.meta.dirname, "..", "bin", "nemoclaw.js");
 
 function buildDepsWithThrowingRecovery(): ListSandboxesCommandDeps {
-  const registryFallback = {
+  const staticRegistryListing = {
     sandboxes: [
       {
         name: "my-assist",
@@ -50,13 +50,13 @@ function buildDepsWithThrowingRecovery(): ListSandboxesCommandDeps {
   };
   // Simulates the deps behavior in list-command-deps.ts: the underlying
   // recover throws (e.g. openshell hangs/errors talking to the foreign
-  // port-holder), and the wrapper falls back to the registry shape.
+  // port-holder), and the wrapper uses the static registry listing.
   return {
     recoverRegistryEntries: async () => {
       try {
         throw new Error("simulated openshell timeout / hang");
       } catch {
-        return { ...registryFallback, recoveredFromSession: false, recoveredFromGateway: 0 };
+        return { ...staticRegistryListing, recoveredFromSession: false, recoveredFromGateway: 0 };
       }
     },
     getLiveInference: () => null,
@@ -80,7 +80,7 @@ describe("#2666 — silent empty output regression", () => {
     expect(lines.length).toBeGreaterThan(0);
   });
 
-  it("getSandboxInventory does not throw when recovery returns the registry-only fallback", async () => {
+  it("getSandboxInventory does not throw when recovery returns the static registry listing", async () => {
     const deps = buildDepsWithThrowingRecovery();
     const inventory = await getSandboxInventory(deps);
     expect(inventory.sandboxes).toHaveLength(1);
@@ -91,7 +91,7 @@ describe("#2666 — silent empty output regression", () => {
 });
 
 describe("#2666 — list-command-deps resilience wrapper", () => {
-  // Exercises the actual exported `recoverRegistryEntriesWithFallback` from
+  // Exercises the actual exported `recoverRegistryEntriesWithStaticRecovery` from
   // src/lib/list-command-deps.ts, not a parallel re-implementation. If the
   // production wrapper regresses, these tests fail.
 
@@ -102,12 +102,12 @@ describe("#2666 — list-command-deps resilience wrapper", () => {
       recoveredFromSession: true,
       recoveredFromGateway: 2,
     }));
-    const fallback = vi.fn(() => ({ sandboxes: [], defaultSandbox: null }));
+    const staticRecovery = vi.fn(() => ({ sandboxes: [], defaultSandbox: null }));
 
-    const result = await recoverRegistryEntriesWithFallback(primary, fallback);
+    const result = await recoverRegistryEntriesWithStaticRecovery(primary, staticRecovery);
 
     expect(primary).toHaveBeenCalledOnce();
-    expect(fallback).not.toHaveBeenCalled();
+    expect(staticRecovery).not.toHaveBeenCalled();
     expect(result.sandboxes).toEqual([
       { name: "happy", model: null, provider: null, gpuEnabled: false, policies: [] },
     ]);
@@ -115,24 +115,24 @@ describe("#2666 — list-command-deps resilience wrapper", () => {
     expect(result.recoveredFromSession).toBe(true);
   });
 
-  it("falls back to the registry-only listing when primary throws", async () => {
+  it("recovers from static registry listing when primary throws", async () => {
     const primary = vi.fn(async () => {
       throw new Error("simulated openshell hang");
     });
-    const fallback = vi.fn(() => ({
+    const staticRecovery = vi.fn(() => ({
       sandboxes: [
         { name: "my-assist", model: "test-model", provider: "test-provider", gpuEnabled: false, policies: [] },
       ],
       defaultSandbox: "my-assist",
     }));
 
-    const result = await recoverRegistryEntriesWithFallback(primary, fallback);
+    const result = await recoverRegistryEntriesWithStaticRecovery(primary, staticRecovery);
 
     expect(primary).toHaveBeenCalledOnce();
-    expect(fallback).toHaveBeenCalledOnce();
+    expect(staticRecovery).toHaveBeenCalledOnce();
     expect(result.sandboxes).toHaveLength(1);
     expect(result.sandboxes[0].name).toBe("my-assist");
-    // Fallback synthesizes recovery flags so downstream rendering treats the
+    // Recovery path synthesizes recovery flags so downstream rendering treats the
     // result as the registry-only state, not a partial recovery from gateway.
     expect(result.recoveredFromGateway).toBe(0);
     expect(result.recoveredFromSession).toBe(false);
@@ -254,7 +254,7 @@ describe("#2666 — subprocess regression: simulated (container-stopped + foreig
     expect(combined.trim().length).toBeGreaterThan(0);
     expect(combined).toContain("my-assist");
     // `list` succeeds even when the live gateway is unreachable: the
-    // registry-only listing is the documented fallback behavior (#2666).
+    // registry-only listing is the documented secondary recovery behavior (#2666).
     expect(code).toBe(0);
   });
 
