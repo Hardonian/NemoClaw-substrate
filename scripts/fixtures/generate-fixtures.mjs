@@ -136,11 +136,10 @@ function generateDegradedStateFixture(seed) {
 }
 
 function generateProofpackFixture(seed) {
-  return {
+  const base = {
     proofpackId: `proof-${generateDeterministicId(`proof-${seed}`)}`,
     runId: `run-${generateDeterministicId(`run-${seed}`)}`,
     planId: `plan-${generateDeterministicId(`plan-${seed}`)}`,
-    manifestHash: generateDeterministicId(`manifest-${seed}`),
     receipts: [
       `rcpt-${generateDeterministicId(`proof-receipt-${seed}-1`)}`,
       `rcpt-${generateDeterministicId(`proof-receipt-${seed}-2`)}`
@@ -154,6 +153,8 @@ function generateProofpackFixture(seed) {
     createdAt: "2026-05-12T12:00:00.000Z",
     redacted: true
   };
+  const contentHash = crypto.createHash('sha256').update(JSON.stringify(base)).digest('hex').substring(0, 16);
+  return { ...base, manifestHash: contentHash };
 }
 
 function generateQueueLeaseFixture(seed) {
