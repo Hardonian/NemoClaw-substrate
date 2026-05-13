@@ -4,7 +4,7 @@
 import { promises as fs } from 'fs';
 import path from 'path';
 
-const SECRET_REGEX = /(sk-[a-zA-Z0-9]{48}|gh[p|u|s|r]_[a-zA-Z0-9]{36}|nvapi-[a-zA-Z0-9_-]{40,}|AKIA[0-9A-Z]{16}|\b(?![a-f0-9]{40}\b)[a-zA-Z0-9+/]{40}\b)/g;
+const SECRET_REGEX = /(sk-[a-zA-Z0-9]{48}|gh[pousr]_[a-zA-Z0-9]{36}|xox[baprs]-[a-zA-Z0-9]{10,48}|nvapi-[a-zA-Z0-9_-]{40,}|AKIA[0-9A-Z]{16}|\b(?![a-f0-9]{40}\b)[a-zA-Z0-9+/]{40}\b)/g;
 
 async function checkFixturesRedacted(dir) {
   let issues = 0;

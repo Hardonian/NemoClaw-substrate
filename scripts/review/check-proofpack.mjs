@@ -9,6 +9,7 @@ const SECRET_PATTERNS = [
   { name: 'NVIDIA API key', re: /nvapi-[a-zA-Z0-9_-]{20,}/ },
   { name: 'OpenAI key', re: /sk-[a-zA-Z0-9]{20,}/ },
   { name: 'GitHub token', re: /gh[pousr]_[a-zA-Z0-9]{20,}/ },
+  { name: 'Slack token', re: /xox[baprs]-[a-zA-Z0-9]{10,48}/ },
 ];
 
 function computeHash(data) {
