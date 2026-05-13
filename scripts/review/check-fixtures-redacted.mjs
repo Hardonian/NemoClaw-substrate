@@ -1,10 +1,13 @@
+// SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+// SPDX-License-Identifier: Apache-2.0
+
 import { promises as fs } from 'fs';
 import path from 'path';
 
 // Check for common secret patterns like "sk-...", "ghp_...", "nvapi-..."
 const secretRegex = /(sk-[a-zA-Z0-9]{48}|gh[p|u|s|r]_[a-zA-Z0-9]{36}|nvapi-[a-zA-Z0-9_-]{40,})/g;
 
-async function checkFixturesRedacted(dir) {
+async function checkFixturesRedacted(targetDir) {
   let issues = 0;
   async function walk(currentDir) {
     const entries = await fs.readdir(currentDir, { withFileTypes: true });
@@ -23,12 +26,11 @@ async function checkFixturesRedacted(dir) {
     }
   }
   
-  // We check fixtures directory if it exists, otherwise warn
   try {
-    await fs.access(dir);
-    await walk(dir);
+    await fs.access(targetDir);
+    await walk(targetDir);
   } catch (e) {
-    console.warn(`[check-fixtures-redacted] Directory ${dir} not found. Skipping.`);
+    console.warn(`[check-fixtures-redacted] Directory ${targetDir} not found. Skipping.`);
     return;
   }
   
@@ -39,7 +41,8 @@ async function checkFixturesRedacted(dir) {
   console.log('[check-fixtures-redacted] Fixtures redaction check complete.');
 }
 
-checkFixturesRedacted('./fixtures').catch(err => {
+const dir = process.argv[2] || './fixtures';
+checkFixturesRedacted(dir).catch(err => {
   console.error(err);
   process.exit(1);
 });

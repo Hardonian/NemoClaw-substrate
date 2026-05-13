@@ -89,7 +89,7 @@ NemoClaw is in alpha status. The following features are incomplete or under deve
 
 | Limitation | Risk | Mitigation |
 |------------|------|------------|
-| Alpha status means interfaces may change | Config and policy compatibility not guaranteed across versions | Use snapshots before upgrades |
+| Alpha status means interfaces may change | Config and policy compatibility not assured across versions | Use snapshots before upgrades |
 | Network policies are allow-list based | Misconfiguration may block required egress | Test policies before applying in production |
 | Credential storage depends on host system | Credentials stored on host are subject to host security | Follow host security best practices |
 

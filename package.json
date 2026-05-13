@@ -1,7 +1,7 @@
 {
   "name": "nemoclaw",
   "version": "0.1.0",
-  "description": "NemoClaw \u2014 run OpenClaw inside OpenShell with NVIDIA inference",
+  "description": "NemoClaw — run OpenClaw inside OpenShell with NVIDIA inference",
   "license": "Apache-2.0",
   "bin": {
     "nemoclaw": "./bin/nemoclaw.js",
@@ -62,6 +62,14 @@
     "verify:export": "tsx scripts/verify-export.ts",
     "verify:docs-strict": "tsx scripts/verify-docs-strict.ts",
     "review:claims": "node scripts/review/check-claims.mjs",
+    "review:links": "node scripts/review/check-doc-links.mjs",
+    "review:status": "node scripts/review/check-status-matrix.mjs",
+    "review:theatre": "node scripts/review/check-no-theatre.mjs",
+    "review:fixtures": "node scripts/review/check-fixtures-redacted.mjs",
+    "review:spdx": "node scripts/review/check-spdx-docs.mjs",
+    "review:proofpack": "node scripts/review/check-proofpack.mjs",
+    "review:index": "node scripts/review/check-doc-index.mjs",
+    "review:all": "npm run review:claims && npm run review:links && npm run review:status && npm run review:theatre && npm run review:fixtures && npm run review:spdx && npm run review:proofpack && npm run review:index",
     "review:paths": "node scripts/review/list-review-paths.mjs"
   },
   "dependencies": {
@@ -100,6 +108,7 @@
     "@types/node": "^25.5.2",
     "@vitest/coverage-v8": "^4.1.0",
     "ajv": "^8.17.0",
+    "ajv-formats": "^3.0.1",
     "execa": "^9.6.1",
     "tsx": "^4.21.0",
     "typescript": "^6.0.2",

@@ -1,0 +1,13 @@
+{
+  "id": "5ed7c18f69b4",
+  "timestamp": "2026-05-12T12:00:00.000Z",
+  "status": "completed",
+  "attestation": {
+    "hash": "9e6c5403c23d",
+    "redacted": true
+  },
+  "metrics": {
+    "duration_ms": 1284,
+    "tokens_used": 1362
+  }
+}

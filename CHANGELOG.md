@@ -9,6 +9,12 @@ All notable changes to this fork are documented in this file.
 
 ### Added
 
+- Review automation scripts (`check-claims.mjs`, `check-doc-links.mjs`, `check-status-matrix.mjs`, `check-no-theatre.mjs`, `check-fixtures-redacted.mjs`, `check-spdx-docs.mjs`, `check-proofpack.mjs`, `check-doc-index.mjs`) and the `npm run review:all` aggregate script.
+- Deterministic fixture generation for receipts, replay envelopes, and diagnostics.
+- Operator CLI smoke test harness using generated fixtures in demo mode.
+- Schema documentation index and guidelines.
+- Site Map and Navigation Map for docs.
+
 - Canonical policy evaluation with scope inheritance, explicit overrides, and replay-safe traces.
 - Execution lifecycle contracts for plans, queue records, leases, idempotency, receipts, replay checks, proofpack validation, and diagnostics.
 - Security policy helpers for transport, network, command descriptors, redaction, and proofpack/export preflight.

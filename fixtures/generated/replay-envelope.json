@@ -1,0 +1,19 @@
+{
+  "envelope_id": "ccc440225eef",
+  "version": "1.0.0",
+  "events": [
+    {
+      "type": "start",
+      "timestamp": "2026-05-12T12:00:00.000Z"
+    },
+    {
+      "type": "log",
+      "payload": "redacted_content",
+      "timestamp": "2026-05-12T12:00:01.000Z"
+    },
+    {
+      "type": "end",
+      "timestamp": "2026-05-12T12:00:02.000Z"
+    }
+  ]
+}

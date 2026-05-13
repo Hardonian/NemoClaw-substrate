@@ -1,0 +1,10 @@
+{
+  "diag_id": "66682fb4255c",
+  "system_health": "ok",
+  "components": {
+    "sandbox": "active",
+    "router": "active",
+    "policy_engine": "active"
+  },
+  "memory_usage_mb": 128
+}

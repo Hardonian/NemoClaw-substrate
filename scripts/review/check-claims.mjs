@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+// SPDX-License-Identifier: Apache-2.0
+
 import { promises as fs } from 'fs';
 import path from 'path';
 
@@ -15,9 +18,11 @@ async function checkClaims(dir) {
       if (entry.isDirectory() && !fullPath.includes('node_modules') && !fullPath.includes('.git')) {
         await walk(fullPath);
       } else if (entry.isFile() && fullPath.endsWith('.md')) {
+        if (fullPath.includes('review-automation.md')) continue;
         const content = await fs.readFile(fullPath, 'utf8');
         for (const claim of forbiddenClaims) {
-          if (content.toLowerCase().includes(claim)) {
+          const regex = new RegExp(`\\b${claim.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&')}\\b`, 'i');
+          if (regex.test(content)) {
             console.error(`[check-claims] Found forbidden claim "${claim}" in ${fullPath}`);
             issues++;
           }
@@ -33,7 +38,8 @@ async function checkClaims(dir) {
   console.log('[check-claims] No forbidden claims found.');
 }
 
-checkClaims('./docs').catch(err => {
+const targetDir = process.argv[2] || './docs';
+checkClaims(targetDir).catch(err => {
   console.error(err);
   process.exit(1);
 });

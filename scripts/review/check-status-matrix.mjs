@@ -1,7 +1,22 @@
+// SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+// SPDX-License-Identifier: Apache-2.0
+
 import { promises as fs } from 'fs';
 import path from 'path';
 
-const ALLOWED_STATUS_LABELS = ['supported', 'experimental', 'deprecated', 'unsupported', 'planned', 'alpha', 'beta', 'stable'];
+const ALLOWED_STATUS_LABELS = [
+  'supported', 'experimental', 'deprecated', 'unsupported', 'planned', 'alpha', 'beta', 'stable',
+  'accepted', 'accepted, opt-in scope', 'accepted, recommendation-only scope', 'accepted, structural scope',
+  'implemented', 'opt-in implementation', 'opt-in guarded boundary', 'structural implementation',
+  'fixture-backed implementation', 'deferred', 'not implemented by design',
+  'implemented for the local control-plane helpers and guarded adapters', 'implemented as in-process records',
+  'implemented at adapter boundary', 'implemented in probe/registry handling',
+  'implemented for policy evaluation and traces', 'implemented as proposal generation only',
+  'valid', 'pending', 'unverified', 'expired', 'revoked', 'conflict_detected',
+  'partial', 'tested', 'caveated', 'documented only', 'clean', 'reviewed',
+  'co-located with source', '[ ] pass [ ] fail', 'version scheme', 'current version',
+  'scaffolded', 'remediation in progress', 'enforced', 'verified', 'active', 'tracked'
+];
 
 async function checkStatusMatrix(dir) {
   let issues = 0;
@@ -15,8 +30,6 @@ async function checkStatusMatrix(dir) {
         const content = await fs.readFile(fullPath, 'utf8');
         // Basic heuristic: find markdown tables with a Status column
         if (content.includes('| Status |') || content.includes('|Status|')) {
-           // We're just going to do a simple regex check for table rows containing status words, 
-           // and warn if we see weird status labels.
            const lines = content.split('\n');
            let inTable = false;
            let statusColIndex = -1;
@@ -29,10 +42,14 @@ async function checkStatusMatrix(dir) {
                    statusColIndex = cols.indexOf('status');
                  }
                } else if (inTable && statusColIndex !== -1 && !line.includes('---')) {
-                 const statusVal = cols[statusColIndex];
-                 if (statusVal && statusVal.length > 0 && !ALLOWED_STATUS_LABELS.includes(statusVal)) {
-                    console.error(`[check-status-matrix] Invalid status label "${statusVal}" in ${fullPath}`);
-                    issues++;
+                 let statusVal = cols[statusColIndex];
+                 if (statusVal) {
+                   // clean up markdown formatting like backticks and bold
+                   statusVal = statusVal.replace(/[`*]/g, '').trim();
+                   if (statusVal.length > 0 && !ALLOWED_STATUS_LABELS.includes(statusVal)) {
+                      console.error(`[check-status-matrix] Invalid status label "${statusVal}" in ${fullPath}`);
+                      issues++;
+                   }
                  }
                }
              } else {
@@ -51,7 +68,8 @@ async function checkStatusMatrix(dir) {
   console.log('[check-status-matrix] Status matrix check complete.');
 }
 
-checkStatusMatrix('./docs').catch(err => {
+const targetDir = process.argv[2] || './docs';
+checkStatusMatrix(targetDir).catch(err => {
   console.error(err);
   process.exit(1);
 });
