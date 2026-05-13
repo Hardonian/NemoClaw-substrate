@@ -379,7 +379,7 @@ export function buildAgentGovernanceTopology(input: {
   activeContests: ContestedExecution[];
   pendingReviews: SupervisoryReview[];
 }): AgentGovernanceTopology {
-  const topology: Omit<AgentGovernanceTopology, "topologyHash"> = {
+  const topology = {
     capturedAt: new Date().toISOString(),
     agents: input.agents,
     relationships: input.relationships,

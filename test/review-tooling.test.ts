@@ -136,9 +136,80 @@ describe("review/check-doc-index.mjs", () => {
   });
 });
 
+describe("review/check-spdx-docs.mjs", () => {
+  it("passes when docs have SPDX headers", async () => {
+    const { stdout } = await execa("node", [path.join(scriptsDir, "check-spdx-docs.mjs")]);
+    expect(stdout).toContain("SPDX docs check complete");
+  });
+
+  it("fails when docs are missing SPDX headers", async () => {
+    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "spdx-test-"));
+    const testFile = path.join(tmpDir, "test.md");
+    fs.writeFileSync(testFile, "# Test\n\nNo SPDX header here.");
+
+    const { exitCode, stderr } = await execa(
+      "node",
+      [path.join(scriptsDir, "check-spdx-docs.mjs"), tmpDir],
+      { reject: false },
+    );
+
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+    expect(exitCode).toBe(1);
+    expect(stderr).toContain("Missing SPDX header");
+  });
+});
+
 describe("review/check-proofpack.mjs", () => {
   it("runs without crashing", async () => {
     const { stdout } = await execa("node", [path.join(scriptsDir, "check-proofpack.mjs")]);
     expect(stdout).toContain("check-proofpack");
+  });
+
+  it("validates proofpack fixture structure when fixtures exist", async () => {
+    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "proofpack-test-"));
+    const proofpackPath = path.join(tmpDir, "proofpack.json");
+    fs.writeFileSync(
+      proofpackPath,
+      JSON.stringify([
+        {
+          id: "test-1",
+          state: "ok",
+          detail: "valid proofpack entry",
+        },
+      ]),
+    );
+
+    const { stdout } = await execa("node", [
+      path.join(scriptsDir, "check-proofpack.mjs"),
+      tmpDir,
+    ]);
+
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+    expect(stdout).toContain("Reviewing proofpack");
+  });
+
+  it("catches unredacted secrets in proofpack fixtures", async () => {
+    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "proofpack-secret-"));
+    const proofpackPath = path.join(tmpDir, "proofpack.json");
+    fs.writeFileSync(
+      proofpackPath,
+      JSON.stringify([
+        {
+          id: "test-1",
+          state: "ok",
+          detail: "token=nvapi-abcdefghijklmnopqrstuvwxyz1234567890",
+        },
+      ]),
+    );
+
+    const { exitCode, stderr } = await execa(
+      "node",
+      [path.join(scriptsDir, "check-proofpack.mjs"), tmpDir],
+      { reject: false },
+    );
+
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+    expect(exitCode).toBe(1);
+    expect(stderr).toContain("unredacted");
   });
 });

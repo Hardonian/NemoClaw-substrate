@@ -247,6 +247,3 @@ describe("DEPRECATION_RULES", () => {
     expect(paths).toContain("logs.verbose");
   });
 });
-erbose");
-  });
-});

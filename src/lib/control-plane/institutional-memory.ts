@@ -211,7 +211,7 @@ export function createOperationalMemoryEntry(input: {
   replayRef?: { lineage: string[]; replayVersion: string };
   tags?: string[];
 }): OperationalMemoryEntry {
-  const entry: Omit<OperationalMemoryEntry, "entryHash"> = {
+  const entry = {
     entryId: stableHash("memory-entry", { type: input.type, source: input.source, sequence: input.sequence }),
     type: input.type,
     recordedAt: new Date().toISOString(),

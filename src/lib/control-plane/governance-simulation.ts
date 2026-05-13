@@ -306,7 +306,7 @@ export function simulateRouting(input: {
 export function simulatePolicyImpact(input: {
   currentPolicy: PolicyBundle;
   proposedPolicy: PolicyBundle;
-  testContexts: Array<{ requestId: string; context: import("./governance").PolicyEvaluationContext }>;
+  testContexts: Array<{ requestId: string; context: PolicyEvaluationContext }>;
   assumptions?: SimulationAssumption[];
 }): PolicyImpactSimulation {
   const decisionsChanged: PolicyImpactSimulation["decisionsChanged"] = [];
@@ -473,7 +473,7 @@ export function simulateGovernanceDecision(input: {
   type: SimulationType;
   intent: ExecutionIntent;
   policyBundle: PolicyBundle;
-  policyContext: import("./governance").PolicyEvaluationContext;
+  policyContext: PolicyEvaluationContext;
   candidates: Array<{
     nodeId: string;
     candidateClass: "local_provider" | "remote_worker";
