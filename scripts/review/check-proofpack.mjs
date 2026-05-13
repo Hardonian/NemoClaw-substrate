@@ -128,6 +128,22 @@ async function checkProofpack(targetDir) {
     } else {
       console.log('[check-proofpack] Generated proofpack manifest hash verified');
     }
+
+    // Verify replay linkage — check that linked receipt IDs match receipt fixture patterns
+    if (Array.isArray(generated.receipts)) {
+      for (const receiptId of generated.receipts) {
+        if (!/^rcpt-[a-f0-9]{12}$/.test(receiptId)) {
+          warnings.push(`Generated proofpack has non-standard receipt ID: ${receiptId}`);
+        }
+      }
+    }
+    if (Array.isArray(generated.trustDecisions)) {
+      for (const trustId of generated.trustDecisions) {
+        if (!/^trust-[a-f0-9]{12}$/.test(trustId)) {
+          warnings.push(`Generated proofpack has non-standard trust decision ID: ${trustId}`);
+        }
+      }
+    }
   }
 
   // 8. Check docs exist
