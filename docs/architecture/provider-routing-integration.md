@@ -16,7 +16,7 @@ Default NemoClaw provider routing remains unchanged unless `NEMOCLAW_GOVERNED_RO
 
 - Disabled (default): no scheduler policy enforcement on live routing.
 - Enabled: request classification, policy evaluation, local capability snapshot/registry scheduling, explicit deny/approval block, receipt/event emission.
-- No candidate: explicit error unless degraded state is explicitly enabled (`NEMOCLAW_GOVERNED_ROUTING_ALLOW_FALLBACK=1`), with degraded state recorded in receipt.
+- No candidate: explicit error unless degraded state is explicitly enabled (`NEMOCLAW_GOVERNED_ROUTING_ALLOW_DEGRADED_STATE=1`), with degraded state recorded in receipt.
 
 ## Worker probe and telemetry adapter note (2026-05-09)
 
