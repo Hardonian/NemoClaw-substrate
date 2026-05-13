@@ -6,7 +6,7 @@
 #
 # Sourced by scripts/nemoclaw-start.sh (OpenClaw) and agents/hermes/start.sh
 # (Hermes) to provide a single source of truth for security-sensitive
-# initialisation functions. Prevents drift between entrypoints — every
+# initialization functions. Prevents drift between entrypoints — every
 # security fix applied here protects both agents automatically.
 #
 # Usage (from an entrypoint script):
@@ -123,7 +123,7 @@ emit_restricted_log() {
 
 # Verify that trust-boundary files in /tmp have the expected permissions
 # BEFORE handing off to the sandbox user. Call this after all init work
-# and before launching services. Defence-in-depth: catches regressions
+# and before launching services. Defense-in-depth: catches regressions
 # even if a new file is added without using the helper above.
 #
 # Usage:
@@ -433,7 +433,7 @@ validate_config_symlinks() {
     name="$(basename "$entry")"
     target="$(readlink -f "$entry" 2>/dev/null || true)"
     # Resolve expected path too so macOS /var → /private/var doesn't cause
-    # false positives. Fall back to the unresolved path if readlink fails.
+    # false positives. Default to the unresolved path if readlink fails.
     expected="$(readlink -f "${data_dir}/${name}" 2>/dev/null || echo "${data_dir}/${name}")"
     if [ "$target" != "$expected" ]; then
       echo "[SECURITY] Symlink $entry points to unexpected target: $target (expected $expected)" >&2
