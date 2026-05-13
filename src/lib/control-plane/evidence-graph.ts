@@ -280,7 +280,6 @@ export function createGovernanceSnapshot(input: {
     activeEscalationBoundaries: input.activeEscalationBoundaries,
     degradedStates: input.degradedStates,
     trustDecisions: input.trustDecisions,
-    snapshotHash: "",
   };
   const snapshotHash = stableHash("governance-snapshot", {
     snapshotId: snapshot.snapshotId,

@@ -1590,7 +1590,7 @@ describe("Cross-Domain Integration", () => {
     });
 
     const node = createEvidenceNode({
-      type: "governance_event",
+      type: "governance_event" as any,
       source: "test",
       payload: { incidentId: incident.incidentId, entryId: entry.entryId },
       provenance: { requestId: "req-001" },

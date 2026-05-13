@@ -119,7 +119,7 @@ function parseStringifiedToolCall(content: unknown): Record<string, unknown> | n
 
 function hasChatCompletionsToolCall(body: string): boolean {
   const parsed = parseJsonObject(body);
-  const message = parsed?.choices?.[0]?.message;
+  const message = (parsed as any)?.choices?.[0]?.message;
   if (!message || typeof message !== "object") return false;
   const toolCalls = (message as Record<string, unknown>).tool_calls;
   if (!Array.isArray(toolCalls) || (toolCalls as unknown[]).length === 0) return false;
@@ -128,7 +128,7 @@ function hasChatCompletionsToolCall(body: string): boolean {
 
 function hasChatCompletionsToolCallLeak(body: string): boolean {
   const parsed = parseJsonObject(body);
-  const message = parsed?.choices?.[0]?.message;
+  const message = (parsed as any)?.choices?.[0]?.message;
   if (!message || typeof message !== "object") return false;
 
   const obj = message as Record<string, unknown>;
@@ -766,7 +766,7 @@ function probeOpenAiLikeEndpoint(
       return { ok: true, api: "openai-completions", label: "Chat Completions API" };
     }
     for (const delayMs of HTTP_PROBE_RETRY_DELAYS_MS) {
-      if (!isRetriableProbeResult(retryResult as ProbeFailure)) break;
+      if (!isRetriableProbeResult(retryResult as any)) break;
       const reason = isTimeoutOrConnFailure(retryResult.curlStatus ?? 0)
         ? "timed out"
         : `returned HTTP ${retryResult.httpStatus}`;
@@ -879,7 +879,6 @@ export {
   getDeepSeekV4ProValidationProbeCurlArgs,
   getKimiK26ValidationProbeCurlArgs,
   getChatCompletionsProbePayload,
-  getChatCompletionsProbeCurlArgs,
   probeResponsesToolCalling,
   probeChatCompletionsToolCalling,
   probeOpenAiLikeEndpoint,

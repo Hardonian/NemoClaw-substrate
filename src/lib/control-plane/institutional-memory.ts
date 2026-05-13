@@ -510,7 +510,6 @@ export function buildInstitutionalMemorySnapshot(input: {
     replayIncidentCount: input.replayIncidents.length,
     unresolvedReplayIncidents: input.replayIncidents.filter((i) => !i.resolved).length,
     adjudicationCount: input.adjudications.length,
-    snapshotHash: "",
   };
   const snapshotHash = stableHash("memory-snapshot", {
     capturedAt: snapshot.capturedAt,

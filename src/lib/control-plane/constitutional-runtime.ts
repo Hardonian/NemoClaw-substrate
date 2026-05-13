@@ -115,7 +115,7 @@ export const DEFAULT_CONSTITUTIONAL_CONFIG: ConstitutionalRuntimeConfig = {
 
 export function createDefaultInvariantRules(): InvariantRule[] {
   const now = new Date().toISOString();
-  return [
+  const rules: Omit<InvariantRule, "invariantHash">[] = [
     {
       invariantId: "INV-001",
       category: "operator_supremacy",
@@ -127,7 +127,6 @@ export function createDefaultInvariantRules(): InvariantRule[] {
       createdAt: now,
       createdBy: "system",
       metadata: {},
-      invariantHash: "",
     },
     {
       invariantId: "INV-002",
@@ -140,7 +139,6 @@ export function createDefaultInvariantRules(): InvariantRule[] {
       createdAt: now,
       createdBy: "system",
       metadata: {},
-      invariantHash: "",
     },
     {
       invariantId: "INV-003",
@@ -153,7 +151,6 @@ export function createDefaultInvariantRules(): InvariantRule[] {
       createdAt: now,
       createdBy: "system",
       metadata: {},
-      invariantHash: "",
     },
     {
       invariantId: "INV-004",
@@ -166,7 +163,6 @@ export function createDefaultInvariantRules(): InvariantRule[] {
       createdAt: now,
       createdBy: "system",
       metadata: {},
-      invariantHash: "",
     },
     {
       invariantId: "INV-005",
@@ -179,7 +175,6 @@ export function createDefaultInvariantRules(): InvariantRule[] {
       createdAt: now,
       createdBy: "system",
       metadata: {},
-      invariantHash: "",
     },
     {
       invariantId: "INV-006",
@@ -192,7 +187,6 @@ export function createDefaultInvariantRules(): InvariantRule[] {
       createdAt: now,
       createdBy: "system",
       metadata: {},
-      invariantHash: "",
     },
     {
       invariantId: "INV-007",
@@ -205,7 +199,6 @@ export function createDefaultInvariantRules(): InvariantRule[] {
       createdAt: now,
       createdBy: "system",
       metadata: {},
-      invariantHash: "",
     },
     {
       invariantId: "INV-008",
@@ -218,7 +211,6 @@ export function createDefaultInvariantRules(): InvariantRule[] {
       createdAt: now,
       createdBy: "system",
       metadata: {},
-      invariantHash: "",
     },
     {
       invariantId: "INV-009",
@@ -231,7 +223,6 @@ export function createDefaultInvariantRules(): InvariantRule[] {
       createdAt: now,
       createdBy: "system",
       metadata: {},
-      invariantHash: "",
     },
     {
       invariantId: "INV-010",
@@ -244,7 +235,6 @@ export function createDefaultInvariantRules(): InvariantRule[] {
       createdAt: now,
       createdBy: "system",
       metadata: {},
-      invariantHash: "",
     },
     {
       invariantId: "INV-011",
@@ -257,7 +247,6 @@ export function createDefaultInvariantRules(): InvariantRule[] {
       createdAt: now,
       createdBy: "system",
       metadata: {},
-      invariantHash: "",
     },
     {
       invariantId: "INV-012",
@@ -270,7 +259,6 @@ export function createDefaultInvariantRules(): InvariantRule[] {
       createdAt: now,
       createdBy: "system",
       metadata: {},
-      invariantHash: "",
     },
     {
       invariantId: "INV-013",
@@ -283,7 +271,6 @@ export function createDefaultInvariantRules(): InvariantRule[] {
       createdAt: now,
       createdBy: "system",
       metadata: {},
-      invariantHash: "",
     },
     {
       invariantId: "INV-014",
@@ -296,7 +283,6 @@ export function createDefaultInvariantRules(): InvariantRule[] {
       createdAt: now,
       createdBy: "system",
       metadata: {},
-      invariantHash: "",
     },
     {
       invariantId: "INV-015",
@@ -309,12 +295,12 @@ export function createDefaultInvariantRules(): InvariantRule[] {
       createdAt: now,
       createdBy: "system",
       metadata: {},
-      invariantHash: "",
     },
-  ].map((rule) => ({
-    ...rule,
-    invariantHash: stableHash("invariant", { invariantId: rule.invariantId, category: rule.category }),
-  }));
+  ];
+  return rules.map((rule) => {
+    const invariantHash = stableHash("invariant", { invariantId: rule.invariantId, category: rule.category });
+    return { ...rule, invariantHash };
+  });
 }
 
 function stableHash(prefix: string, value: unknown): string {
