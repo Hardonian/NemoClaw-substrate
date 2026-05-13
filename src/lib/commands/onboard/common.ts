@@ -8,11 +8,12 @@ import { NOTICE_ACCEPT_FLAG } from "../../onboard/usage-notice";
 const acceptFlagName = NOTICE_ACCEPT_FLAG.replace(/^--/, "");
 
 export const onboardUsage = [
-  `onboard [--non-interactive] [--resume | --fresh] [--recreate-sandbox] [--gpu | --no-gpu] [--from <Dockerfile>] [--name <sandbox>] [--agent <name>] [--control-ui-port <N>] [--yes | -y] [${NOTICE_ACCEPT_FLAG}]`,
+  `onboard [--quick | --non-interactive] [--resume | --fresh] [--recreate-sandbox] [--gpu | --no-gpu] [--from <Dockerfile>] [--name <sandbox>] [--agent <name>] [--control-ui-port <N>] [--yes | -y] [${NOTICE_ACCEPT_FLAG}]`,
 ];
 
 export const onboardExamples = [
   "<%= config.bin %> onboard",
+  "<%= config.bin %> onboard --quick",
   "<%= config.bin %> onboard --name alpha",
   "<%= config.bin %> onboard --resume",
   "<%= config.bin %> onboard --fresh",
@@ -22,6 +23,7 @@ export const onboardExamples = [
 
 export type OnboardFlags = {
   "non-interactive"?: boolean;
+  quick?: boolean;
   resume?: boolean;
   fresh?: boolean;
   "recreate-sandbox"?: boolean;
@@ -38,13 +40,16 @@ export type OnboardFlags = {
 export function buildOnboardFlags(): Record<string, any> {
   return {
     help: Flags.help({ char: "h" }),
-    "non-interactive": Flags.boolean({ description: "Run without interactive prompts" }),
+    quick: Flags.boolean({
+      description: "Skip optional features (web search, messaging, network presets) for a fast setup",
+    }),
+    "non-interactive": Flags.boolean({ description: "Skip prompts and use defaults or env vars" }),
     resume: Flags.boolean({
       description: "Resume an interrupted onboarding session",
       exclusive: ["fresh"],
     }),
     fresh: Flags.boolean({
-      description: "Ignore any saved onboarding session",
+      description: "Start a new onboarding session, ignoring saved state",
       exclusive: ["resume"],
     }),
     "recreate-sandbox": Flags.boolean({ description: "Delete and recreate an existing sandbox" }),
@@ -56,8 +61,8 @@ export function buildOnboardFlags(): Record<string, any> {
       description: "Disable GPU passthrough even when an NVIDIA GPU is detected",
       exclusive: ["gpu"],
     }),
-    from: Flags.string({ description: "Path to a Dockerfile to use as the sandbox image source" }),
-    name: Flags.string({ description: "Sandbox name" }),
+    from: Flags.string({ description: "Use a custom Dockerfile for the sandbox image" }),
+    name: Flags.string({ description: "Name for the sandbox" }),
     agent: Flags.string({ description: "Agent runtime to onboard" }),
     "control-ui-port": Flags.integer({
       description: "Host port for the local control UI",
@@ -74,6 +79,7 @@ export function buildOnboardFlags(): Record<string, any> {
 
 export function toLegacyOnboardArgs(flags: OnboardFlags): string[] {
   const args: string[] = [];
+  if (flags.quick) args.push("--quick");
   if (flags["non-interactive"]) args.push("--non-interactive");
   if (flags.resume) args.push("--resume");
   if (flags.fresh) args.push("--fresh");
