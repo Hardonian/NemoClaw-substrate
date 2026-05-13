@@ -104,6 +104,11 @@ Start here if you have limited time:
 3. [Architecture decision map](docs/architecture/decision-map.md)
 4. [Tradeoffs](docs/architecture/tradeoffs.md)
 5. [How to verify](docs/verification/how-to-verify.md)
+6. [Capability status matrix](docs/architecture/capability-status-matrix.md)
+7. [Live review walkthrough](docs/review/live-nvidia-style-review.md)
+8. [Strategic differentiation](docs/strategy/nemoclaw-vs-openclaw.md)
+9. [Gap radar](docs/strategy/gap-radar.md)
+10. [Evolution roadmap](docs/strategy/evolution-roadmap.md)
 
 ## Known Limitations
 
@@ -112,6 +117,10 @@ Start here if you have limited time:
 - Trust and attestation are represented structurally; there is no cryptographic attestation chain yet.
 - Operator CLI output is currently fixture-backed for review/demo use.
 - Some older docs remain as historical detail. The canonical review docs are linked above.
+
+For a full per-capability classification, see [capability-status-matrix.md](docs/architecture/capability-status-matrix.md).
+For the unmet-needs gap analysis, see [gap-radar.md](docs/strategy/gap-radar.md).
+For the phased evolution plan, see [evolution-roadmap.md](docs/strategy/evolution-roadmap.md).
 
 ## What Comes Next
 

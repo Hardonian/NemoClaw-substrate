@@ -329,7 +329,7 @@ export function redactSecurityPayload<T>(
 
 export function payloadContainsSecrets(payload: unknown, policy: SecretRedactionPolicy = DEFAULT_SECURITY_POLICY.secretRedaction): boolean {
   const walk = (value: unknown, depth: number, parentKey?: string): boolean => {
-    if (parentKey && isSensitiveKey(parentKey, policy)) return true;
+    if (parentKey && isSensitiveKey(parentKey, policy)) return value !== policy.replacement;
     if (depth > policy.maxDepth) return false;
     if (typeof value === "string") return value !== redactSecurityString(value, policy);
     if (value === null || typeof value !== "object") return false;
