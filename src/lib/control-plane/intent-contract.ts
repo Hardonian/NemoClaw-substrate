@@ -274,8 +274,8 @@ export function createIntentContract(input: {
   parentIntentId?: string;
   metadata?: Record<string, string>;
 }): IntentContract {
-  const base: Omit<IntentContract, "intentHash"> = {
-    version: "1",
+  const base = {
+    version: "1" as const,
     intentId: input.intentId,
     createdAt: new Date().toISOString(),
     actor: input.actor,
@@ -290,16 +290,15 @@ export function createIntentContract(input: {
     trustRequirements: input.trustRequirements,
     degradedRequirements: input.degradedRequirements,
     expirationAt: input.expirationAt,
-    state: "draft",
+    state: "draft" as const,
     lineageId: input.lineageId,
     authoritySource: input.authoritySource,
     mutationRecordIds: [],
     parentIntentId: input.parentIntentId,
     metadata: input.metadata ?? {},
-    intentHash: "",
   };
   const intentHash = hashIntentContract(base);
-  return { ...base, intentHash };
+  return { ...base, intentHash, delegationScopeId: undefined, escalationBoundaryId: undefined };
 }
 
 export function createIntentLineage(input: {

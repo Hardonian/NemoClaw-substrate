@@ -1,3 +1,6 @@
+<!-- SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved. -->
+<!-- SPDX-License-Identifier: Apache-2.0 -->
+
 # Operator CLI Smoke Harness
 
 The Operator CLI Smoke Harness validates that the Operator CLI outputs and parsing logic function correctly without requiring a live network or GPU.
