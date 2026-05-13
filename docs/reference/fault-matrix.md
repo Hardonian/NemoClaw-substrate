@@ -1,3 +1,6 @@
+<!-- SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved. -->
+<!-- SPDX-License-Identifier: Apache-2.0 -->
+
 # Fault Matrix & Failure Semantics
 
 This document defines how the NemoClaw substrate observes, categorizes, and responds to various failure states and system degradations.

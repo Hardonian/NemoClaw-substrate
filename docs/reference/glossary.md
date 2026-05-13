@@ -1,3 +1,6 @@
+<!-- SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved. -->
+<!-- SPDX-License-Identifier: Apache-2.0 -->
+
 # NemoClaw Terminology Glossary
 
 This glossary defines the canonical terminology used across the NemoClaw governed substrate. Adherence to these definitions is mandatory for all documentation, code comments, and operator-visible outputs to maintain structural coherence and prevent entropy.

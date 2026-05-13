@@ -1,3 +1,6 @@
+<!-- SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved. -->
+<!-- SPDX-License-Identifier: Apache-2.0 -->
+
 # Review Automation
 
 This document outlines the review check tooling used in the NemoClaw repository. These tools verify documentation, fixtures, and other assets to ensure they meet project standards without altering runtime semantics.

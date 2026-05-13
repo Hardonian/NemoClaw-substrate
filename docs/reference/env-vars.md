@@ -1,3 +1,6 @@
+<!-- SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved. -->
+<!-- SPDX-License-Identifier: Apache-2.0 -->
+
 # Environment Variables & Flags
 
 NemoClaw-substrate uses environment variables to control orchestration behavior, debug modes, and integration adapters. All orchestration features are disabled by default and must be explicitly enabled.

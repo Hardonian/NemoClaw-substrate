@@ -420,7 +420,7 @@ export function createExecutionAuthorizationEnvelope(input: {
   delegationScopeId?: string;
   expiresAt?: string;
 }): ExecutionAuthorizationEnvelope {
-  const envelope: Omit<ExecutionAuthorizationEnvelope, "envelopeHash"> = {
+  const envelope = {
     envelopeId: stableHash("auth-envelope", { intentId: input.intentId, authorityId: input.authorityId }),
     intentId: input.intentId,
     authorityId: input.authorityId,

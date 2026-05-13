@@ -1,3 +1,6 @@
+<!-- SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved. -->
+<!-- SPDX-License-Identifier: Apache-2.0 -->
+
 # Event Taxonomy
 
 This document defines the canonical taxonomy of events emitted by the NemoClaw governed substrate. Events are categorized by their role in the governance and execution lifecycle.

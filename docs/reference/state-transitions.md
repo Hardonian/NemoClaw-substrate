@@ -1,3 +1,6 @@
+<!-- SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved. -->
+<!-- SPDX-License-Identifier: Apache-2.0 -->
+
 # State Transition Logic
 
 This document defines the deterministic state machines for Orchestration Plans, Runs, and Steps. All transitions must be accompanied by a corresponding `reasonCode` and an emitted `receipt`.

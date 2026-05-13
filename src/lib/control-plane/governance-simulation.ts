@@ -3,7 +3,7 @@
 
 import { createHash } from "node:crypto";
 import { deterministicSerialize } from "./serde";
-import type { PolicyBundle, PolicyEvaluationResult } from "./governance";
+import type { PolicyBundle, PolicyEvaluationResult, PolicyEvaluationContext } from "./governance";
 import type { DegradedState } from "./types";
 import type { ExecutionIntent, ExecutionPolicySnapshot, ExecutionTrustSnapshot } from "./execution-plans";
 
@@ -445,7 +445,7 @@ export function simulateReplayForecast(input: {
   return { ...forecast, forecastHash };
 }
 
-function evaluatePolicyQuiet(bundle: PolicyBundle, context: import("./governance").PolicyEvaluationContext): PolicyEvaluationResult {
+function evaluatePolicyQuiet(bundle: PolicyBundle, context: PolicyEvaluationContext): PolicyEvaluationResult {
   const ordered = [...bundle.rules].sort((a, b) => a.order - b.order || a.id.localeCompare(b.id));
   const matched = ordered.filter((rule) => rule.matches(context));
   const winning = matched[0];

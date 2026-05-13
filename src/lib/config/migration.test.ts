@@ -81,8 +81,8 @@ describe("deleteNestedValue", () => {
     const obj: Record<string, unknown> = { a: { b: 1, c: 2 } };
     const result = deleteNestedValue(obj, "a.b");
     expect(result).toBe(true);
-    expect((obj.a as Record<string, unknown>).b).toBeUndefined();
-    expect((obj.a as Record<string, unknown>).c).toBe(2);
+    expect((obj as any).a.b).toBeUndefined();
+    expect((obj as any).a.c).toBe(2);
   });
 
   it("returns false for missing key", () => {
@@ -245,5 +245,8 @@ describe("DEPRECATION_RULES", () => {
     expect(paths).toContain("model.name");
     expect(paths).toContain("onboarding.skipPreflight");
     expect(paths).toContain("logs.verbose");
+  });
+});
+erbose");
   });
 });
