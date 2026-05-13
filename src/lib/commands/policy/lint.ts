@@ -4,7 +4,7 @@
 import { Command, Flags } from "@oclif/core";
 import * as path from "path";
 import * as fs from "fs";
-import { lintPolicyFile, formatLintReport, type PolicySchemaType } from "./lint-engine";
+import { lintPolicyFile, formatLintReport, type PolicySchemaType } from "../../policy/lint-engine";
 
 export default class PolicyLintCommand extends Command {
   static id = "policy:lint";
