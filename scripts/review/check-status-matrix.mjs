@@ -19,28 +19,31 @@ async function checkStatusMatrix(dir) {
     } else if (entry.name.endsWith('.md')) {
       const content = await fs.readFile(res, 'utf8');
       const lines = content.split('\n');
+      let statusColumnIndex = -1;
       for (let i = 0; i < lines.length; i++) {
         const line = lines[i];
         if (line.includes('|')) {
           const cells = line.split('|').map(c => c.trim()).filter(Boolean);
-          for (const cell of cells) {
-            const label = cell.toLowerCase();
-            // Match "Status: label" or just "| label |" in a Status column
-            const statusMatch = cell.match(/^Status:?\s*(\w+)$/i);
-            const foundLabel = statusMatch ? statusMatch[1].toLowerCase() : label;
-            
-            // Handle markdown tables: check current cell, previous line, or line before that (for separators)
-            const isStatusContext = statusMatch || 
-              (i > 0 && lines[i-1].toLowerCase().includes('status')) ||
-              (i > 1 && lines[i-1].match(/^[|\s-:]+$/) && lines[i-2].toLowerCase().includes('status'));
+          
+          // Check if this is a header line containing "Status"
+          const headerIndex = cells.findIndex(c => c.toLowerCase().includes('status'));
+          if (headerIndex !== -1 && !line.match(/^[|\s-:]+$/)) {
+            statusColumnIndex = headerIndex;
+            continue;
+          }
 
-            if (isStatusContext) {
-               if (foundLabel && !ALLOWED_LABELS.includes(foundLabel) && !foundLabel.match(/^[---]+$/) && !foundLabel.includes('status')) {
-                 console.error(`[check-status-matrix] FAIL: Invalid status label in ${res} at line ${i + 1}: ${foundLabel}`);
-                 issues++;
-               }
+          // If we are in a table row and have a status column index
+          if (statusColumnIndex !== -1) {
+            if (line.match(/^[|\s-:]+$/)) continue; // Skip separator lines
+            
+            const foundLabel = cells[statusColumnIndex]?.toLowerCase();
+            if (foundLabel && !ALLOWED_LABELS.includes(foundLabel) && !foundLabel.includes('status')) {
+              console.error(`[check-status-matrix] FAIL: Invalid status label in ${res} at line ${i + 1}: ${foundLabel}`);
+              issues++;
             }
           }
+        } else {
+          statusColumnIndex = -1; // Reset when table ends
         }
       }
     }

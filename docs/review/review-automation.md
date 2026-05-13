@@ -9,7 +9,7 @@ This document outlines the review check tooling used in the NemoClaw repository.
 
 Located in `scripts/review/`:
 
-- `check-claims.mjs`: Verifies that unsupported claims (e.g., "100%", "foolproof") are absent or properly qualified.
+- `check-claims.mjs`: Verifies that unsupported claims (e.g., "100%", "reliable") are absent or properly qualified.
 - `check-doc-links.mjs`: Checks for broken internal links in markdown files.
 - `check-status-matrix.mjs`: Ensures the status matrix in documentation uses only allowed status labels.
 - `check-no-theatre.mjs`: Ensures no security theatre words (e.g., "military-grade") are used.

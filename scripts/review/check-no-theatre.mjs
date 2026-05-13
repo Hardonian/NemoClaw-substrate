@@ -25,7 +25,7 @@ async function checkNoTheatre(dir) {
       for (const regex of THEATRE_TERMS) {
         const matches = [...content.matchAll(regex)];
         if (matches.length > 0) {
-          console.error(`[check-no-theatre] FAIL: Security theatre word found in ${res}: ${matches.map(m => m[0]).join(', ')}`);
+          console.error(`[check-no-theatre] FAIL: security theatre word found in ${res}: ${matches.map(m => m[0]).join(', ')}`);
           issues++;
         }
       }
