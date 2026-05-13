@@ -20,7 +20,7 @@ async function checkFixturesRedacted(dir) {
       const content = await fs.readFile(res, 'utf8');
       const matches = content.match(SECRET_REGEX);
       if (matches) {
-        console.error(`[check-fixtures-redacted] FAIL: Potential unredacted secret found in ${res}`);
+        console.error(`[check-fixtures-redacted] FAIL: potential unredacted secret found in ${res}`);
         issues++;
       }
     }

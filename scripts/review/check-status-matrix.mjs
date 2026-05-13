@@ -29,11 +29,13 @@ async function checkStatusMatrix(dir) {
             const statusMatch = cell.match(/^Status:?\s*(\w+)$/i);
             const foundLabel = statusMatch ? statusMatch[1].toLowerCase() : label;
             
-            // We only check if the label looks like a status term
-            // To avoid false positives on every table cell, we check if it's in a list of suspicious words
-            // OR if it's explicitly prefixed with Status:
-            if (statusMatch || (i > 0 && lines[i-1].toLowerCase().includes('status'))) {
-               if (foundLabel && !ALLOWED_LABELS.includes(foundLabel) && !foundLabel.match(/^[---]+$/)) {
+            // Handle markdown tables: check current cell, previous line, or line before that (for separators)
+            const isStatusContext = statusMatch || 
+              (i > 0 && lines[i-1].toLowerCase().includes('status')) ||
+              (i > 1 && lines[i-1].match(/^[|\s-:]+$/) && lines[i-2].toLowerCase().includes('status'));
+
+            if (isStatusContext) {
+               if (foundLabel && !ALLOWED_LABELS.includes(foundLabel) && !foundLabel.match(/^[---]+$/) && !foundLabel.includes('status')) {
                  console.error(`[check-status-matrix] FAIL: Invalid status label in ${res} at line ${i + 1}: ${foundLabel}`);
                  issues++;
                }
