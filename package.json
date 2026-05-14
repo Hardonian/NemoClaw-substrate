@@ -49,7 +49,7 @@
     "verify:changelog-hygiene": "node scripts/verify-changelog-hygiene.js",
     "verify:control-plane": "vitest run src/lib/control-plane/control-plane.test.ts src/lib/control-plane/runtime-seams.test.ts src/lib/control-plane/runtime-dispatch-integration.test.ts src/lib/control-plane/execution-plans.test.ts src/lib/control-plane/execution-lifecycle.test.ts src/lib/control-plane/evidence-export.test.ts",
     "verify:execution-lifecycle": "vitest run src/lib/control-plane/execution-lifecycle.test.ts",
-    "verify:local-probes": "vitest run src/lib/control-plane/local-runtime-probes.test.ts src/lib/control-plane/local-diagnostics-summary.test.ts",
+    "verify:local-probes": "vitest run src/lib/control-plane/local-runtime-probes.test.ts src/lib/control-plane/local-diagnostics.test.ts",
     "verify:remote-probes": "vitest run src/lib/control-plane/remote-runtime-probes.test.ts src/lib/control-plane/worker-probes.test.ts",
     "verify:governed-routing": "vitest run src/lib/control-plane/governed-provider-routing.test.ts",
     "verify:core": "node scripts/verify-core.js",
