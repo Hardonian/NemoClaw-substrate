@@ -44,7 +44,7 @@ async function checkClaims(targets = DEFAULT_TARGETS) {
 
   for (const target of targetList) {
     for await (const res of markdownFiles(target)) {
-      const content = await fs.readFile(res, 'utf8');
+      const content = await fs.readFile(res, "utf8");
       const lines = content.split(/\r?\n/);
       for (let i = 0; i < lines.length; i++) {
         const line = lines[i];
@@ -64,14 +64,17 @@ async function checkClaims(targets = DEFAULT_TARGETS) {
   return issues;
 }
 
-if (process.argv[1] && (path.resolve(process.argv[1]) === fileURLToPath(import.meta.url))) {
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const targets = process.argv.slice(2);
-  checkClaims(targets.length > 0 ? targets : DEFAULT_TARGETS).then(issues => {
-    if (issues > 0) process.exit(1);
-    console.log('[check-claims] No forbidden claims found.');
-  }).catch((error) => {
-    console.error(`[check-claims] ERROR: ${error.message}`);
-    process.exit(1);
-  });
+  checkClaims(targets.length > 0 ? targets : DEFAULT_TARGETS)
+    .then((issues) => {
+      if (issues > 0) process.exit(1);
+      console.log("[check-claims] No forbidden claims found.");
+    })
+    .catch((error) => {
+      console.error(`[check-claims] ERROR: ${error.message}`);
+      process.exit(1);
+    });
 }
+
 export { checkClaims, UNSUPPORTED_CLAIMS };

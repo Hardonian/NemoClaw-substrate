@@ -63,20 +63,19 @@ async function checkStatusMatrix(dir) {
     if (entry.isDirectory()) {
       if (SKIPPED_DIRS.has(entry.name)) continue;
       issues += await checkStatusMatrix(res);
-    } else if (entry.name.endsWith('.md')) {
-      const content = await fs.readFile(res, 'utf8');
-      const lines = content.split('\n');
+    } else if (entry.name.endsWith(".md")) {
+      const content = await fs.readFile(res, "utf8");
+      const lines = content.split("\n");
       let activeStatusColumnIndex = -1;
       let tableIsMarkedStatusMatrix = false;
+
       for (let i = 0; i < lines.length; i++) {
-        const line = lines[i];
-        const cells = parseTableCells(line);
+        const cells = parseTableCells(lines[i]);
         if (!cells) {
           activeStatusColumnIndex = -1;
           tableIsMarkedStatusMatrix = false;
           continue;
         }
-
         if (isSeparatorRow(cells)) continue;
 
         const statusHeaderIndex = cells.findIndex((cell) => cell.toLowerCase() === "status");
@@ -86,16 +85,14 @@ async function checkStatusMatrix(dir) {
           continue;
         }
 
-        if (tableIsMarkedStatusMatrix && activeStatusColumnIndex !== -1) {
-          const foundLabel = normalizeStatusLabel(cells[activeStatusColumnIndex] ?? "");
-          if (foundLabel && !ALLOWED_LABELS.includes(foundLabel)) {
-            console.error(
-              `[check-status-matrix] FAIL: Invalid status label in ${res} at line ${i + 1}: ${foundLabel}`,
-            );
-            issues++;
-          }
-        } else {
-          activeStatusColumnIndex = -1;
+        if (!tableIsMarkedStatusMatrix || activeStatusColumnIndex === -1) continue;
+
+        const foundLabel = normalizeStatusLabel(cells[activeStatusColumnIndex] ?? "");
+        if (foundLabel && !ALLOWED_LABELS.includes(foundLabel)) {
+          console.error(
+            `[check-status-matrix] FAIL: Invalid status label in ${res} at line ${i + 1}: ${foundLabel}`,
+          );
+          issues++;
         }
       }
     }
@@ -103,14 +100,17 @@ async function checkStatusMatrix(dir) {
   return issues;
 }
 
-if (process.argv[1] && (path.resolve(process.argv[1]) === fileURLToPath(import.meta.url))) {
-  const docsDir = path.resolve(process.argv[2] || './docs');
-  checkStatusMatrix(docsDir).then(issues => {
-    if (issues > 0) process.exit(1);
-    console.log('[check-status-matrix] All checks passed.');
-  }).catch((error) => {
-    console.error(`[check-status-matrix] ERROR: ${error.message}`);
-    process.exit(1);
-  });
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  const docsDir = path.resolve(process.argv[2] || "./docs");
+  checkStatusMatrix(docsDir)
+    .then((issues) => {
+      if (issues > 0) process.exit(1);
+      console.log("[check-status-matrix] All checks passed.");
+    })
+    .catch((error) => {
+      console.error(`[check-status-matrix] ERROR: ${error.message}`);
+      process.exit(1);
+    });
 }
+
 export { checkStatusMatrix, ALLOWED_LABELS };

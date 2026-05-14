@@ -53,9 +53,7 @@ async function checkNoTheatre(targets = DEFAULT_TARGETS) {
           regex.lastIndex = 0;
           const matches = [...line.matchAll(regex)];
           if (matches.length === 0) continue;
-          console.error(
-            `[check-no-theatre] FAIL: theatre wording in ${res} at line ${i + 1}: ${label}`,
-          );
+          console.error(`[check-no-theatre] FAIL: theatre wording in ${res} at line ${i + 1}: ${label}`);
           issues++;
         }
       }
