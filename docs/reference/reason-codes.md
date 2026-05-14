@@ -19,6 +19,8 @@ Primary proof:
 | `deterministic_rerun` | A repeated request matched the prior deterministic record. |
 | `idempotency_key_conflict` | The idempotency key matched an incompatible plan. |
 | `invalid_transition` | The requested lifecycle transition is not allowed. |
+| `missing_invariants` | A plan does not carry the required invariant set. |
+| `unenforced_invariant` | A required invariant is present but not enforced. |
 
 ## Missing Evidence
 
@@ -30,6 +32,8 @@ Primary proof:
 | `missing_governance_metadata` | Required governance metadata is absent. |
 | `missing_trust_metadata` | Required trust or attestation metadata is absent. |
 | `missing_degraded_reason` | A degraded state lacks an explicit reason. |
+| `missing_cancellation_reason` | A cancelled plan lacks cancellation timestamp or reason. |
+| `missing_expiration_semantics` | An expired plan lacks expiration metadata. |
 | `missing_replay_reason_code` | Replay evidence omits the reason code needed to explain a drift path. |
 | `missing_replay_digest` | A replay envelope does not include a digest. |
 | `malformed_replay_envelope` | The replay envelope is not an object. |
@@ -64,6 +68,7 @@ Primary proof:
 | `conflicting_ownership` | Multiple owners claim the same queue item. |
 | `stale_queue_ownership` | Ownership expired before execution started. |
 | `queue_item_expired` | The queue item exceeded its allowed lifetime. |
+| `orphaned_execution_state` | A queue or execution record no longer has the plan context needed for validation. |
 | `missing_queue_history` | Queue transition history is incomplete. |
 | `missing_lease_history` | Lease renewal, expiration, or revocation history is incomplete. |
 
