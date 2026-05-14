@@ -103,6 +103,27 @@ describe("degraded state chaos coverage", () => {
     expect(lines).toEqual(["Registered nodes: 0", "Capability snapshots: none", "Scheduler dry-run: not invoked"]);
   });
 
+  it("fails replay validation closed for malformed envelopes without throwing", () => {
+    const missingEvents = validateReplayEnvelope({
+      version: "1",
+      exportedAt: "2026-05-09T00:00:00.000Z",
+      eventCount: 1,
+      digest: "digest",
+    } as unknown as ReturnType<typeof buildReplayEnvelope>);
+    expect(missingEvents).toEqual({ ok: false, reasons: ["malformed_replay_events"] });
+
+    const malformedEvent = validateReplayEnvelope({
+      version: "1",
+      exportedAt: "2026-05-09T00:00:00.000Z",
+      eventCount: 1,
+      events: [{ sequence: 0, category: "degraded_state", payload: null }],
+      digest: "digest",
+    } as unknown as ReturnType<typeof buildReplayEnvelope>);
+    expect(malformedEvent.ok).toBe(false);
+    expect(malformedEvent.reasons).toContain("malformed_replay_event");
+    expect(malformedEvent.reasons).toContain("missing_replay_lineage");
+    expect(malformedEvent.reasons).toContain("missing_replay_reason_code");
+  });
 
   it("rejects replay on policy/trust/candidate/degradedStateTrigger drift reason-code gaps", () => {
     const make = (category: "degraded_state" | "degraded_state_trigger" | "policy_outcome", payload: Record<string, unknown>) =>
@@ -117,6 +138,28 @@ describe("degraded state chaos coverage", () => {
     expect(validateReplayEnvelope(trustDrift).reasons).toContain("missing_replay_reason_code");
     expect(validateReplayEnvelope(candidateMismatch).reasons).toContain("missing_replay_reason_code");
     expect(validateReplayEnvelope(degradedStateTriggerMismatch).reasons).toContain("missing_replay_reason_code");
+  });
+
+  it("accepts legacy camelCase degraded-state trigger reasons during replay validation", () => {
+    const envelope = buildReplayEnvelope([
+      {
+        eventId: "e0",
+        occurredAt: "2026-05-09T00:00:00.000Z",
+        sequence: 0,
+        category: "degraded_state_trigger",
+        source: "chaos",
+        provenance: {},
+        replayRef: { lineage: ["chaos"], replayVersion: "1" },
+        payload: {
+          degradedStateTrigger: {
+            at: "2026-05-09T00:00:00.000Z",
+            target: "local/default",
+            reason: "operator_visible_degraded_state",
+          },
+        },
+      },
+    ], "2026-05-09T00:00:01.000Z");
+    expect(validateReplayEnvelope(envelope)).toEqual({ ok: true, reasons: [] });
   });
 
 });

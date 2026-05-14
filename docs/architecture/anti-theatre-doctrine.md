@@ -3,39 +3,33 @@
 
 # Anti-Theatre Doctrine
 
-The NemoClaw governed substrate is built on a core philosophy of **Anti-Theatre**. This doctrine mandates that the system must prioritize observable truth, deterministic control, and explicit failure over opaque autonomy, "AI magic," or aspirational orchestration.
+This repository uses "anti-theatre" as an engineering rule, not a slogan. A claim is acceptable only when it can point to source, tests, and a local verifier. If a path is scaffolded, fixture-backed, opt-in, or deferred, the docs must say that plainly.
 
-## Core Principles
+## Rules
 
-### 1. Truth in Execution
+1. **No hidden recovery.** A failed component must surface a degraded, unavailable, stale, blocked, or partial state. It must not be described as success because a later path might recover.
+2. **No authority from telemetry alone.** Probe output is evidence. Policy evaluation and operator approval remain the authority boundary.
+3. **No prompt-only safety claims.** Security and governance behavior must live in code, config, schemas, tests, or explicit operator action.
+4. **No target-state promotion.** A roadmap item stays a roadmap item until implementation and verification exist.
+5. **No automatic policy mutation.** Policy promotion may produce proposals. Operators still approve or reject the change.
 
-NemoClaw rejects the use of hidden fallbacks or silent recoveries. If a component fails, the system must report it as a [Degraded State](failure-semantics.md) rather than attempting to hide the failure behind autonomous retries that the operator cannot audit.
+## Current Implementation Boundaries
 
-### 2. Determinism Over Autonomy
+| Boundary | Current handling | Verification |
+|---|---|---|
+| Replay drift | Rejects digest, lineage, ownership, lease, trust, and reason-code drift | `npm run verify:chaos` |
+| Degraded states | Emits explicit reason-coded events instead of masking failure | `npm run verify:execution-lifecycle` |
+| Proofpack export | Builds deterministic digest-backed evidence bundles; no hardware signing claim | `npm run verify:proofpack` |
+| Remote execution | Disabled by default; gated by policy, approval, trust, transport, and command checks | `npm run verify:remote-probes` |
+| Operator CLI | Fixture-backed inspection path for review; not live telemetry | `npm run build:cli && node ./bin/nemoclaw.js operator status --json` |
 
-The substrate is decision infrastructure, not a feature factory. Every decision made by the control plane—whether it is routing to a local provider or denying a network request—must be governed by inspectable contracts and policy artifacts. We do not rely on "prompt-only" instructions for core system safety.
+## Wording Rules
 
-### 3. Explicit Capability Matrix
+Use concrete mechanism names. Avoid words that imply invisible judgment or unverified assurance:
 
-We distinguish clearly between what is **implemented**, **scaffolded**, and **planned**. Documentation must never present a target-state design as current repository truth. This prevents "architecture theatre" where non-existent capabilities are marketed as functional.
+- Replace "seamlessly" with the actual handoff, file, command, or state transition.
+- Replace "intelligently" with the deterministic rule, heuristic, or scoring input.
+- Replace "automatically heals" with the explicit recovery mechanism, or say that recovery is not implemented.
+- Replace "learns policy" with "generates a supervised policy-promotion proposal."
 
-### 4. Fail-Closed Governance
-
-In the event of a conflict between autonomy and governance, governance always wins. If the system cannot verify the safety of an action (e.g., due to a stale policy or unavailable telemetry), it must [fail-closed](governance-invariants.md).
-
-## Implementation in the Substrate
-
-- **Execution Proofpacks:** Every execution lifecycle produces a verifiable Proofpack. These bundles contain the raw telemetry and policy evaluations used to make decisions, ensuring that "magic" is replaced by auditable receipts.
-- **Strict Verification Gates:** Release readiness is determined by a deterministic verification chain (`verify:core`, `verify:release`), not by subjective "vibe checks" of agent performance.
-- **No Automatic Policy Mutation:** Policies are promoted via supervised operator approval flows. The system does not "learn" new trust boundaries autonomously, as this would violate the principle of deterministic control.
-
-## Anti-Theatre Lexicon
-
-To maintain this doctrine, we avoid the following terms in technical documentation and code comments:
-
-- **"Seamlessly"**: Implies hidden complexity that should be observable.
-- **"Intelligently"**: Replaced by specific descriptions of the heuristic or algorithm used.
-- **"Automatically heals"**: Replaced by "recovers to a known state via [specific mechanism]."
-- **"Learns"**: Replaced by "updates configuration based on [specific supervised input]."
-
-By adhering to the Anti-Theatre Doctrine, NemoClaw ensures that operators maintain full agency and trust in the execution environment.
+The doctrine is simple: the substrate earns trust by making failure and evidence inspectable.

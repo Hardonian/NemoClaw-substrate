@@ -82,7 +82,7 @@ All items in the comparison table marked "Scaffolded" or "Partial" require imple
 This repository explicitly rejects claims of:
 
 - Production readiness
-- Autonomous orchestration or self-healing
+- Autonomous orchestration or hidden recovery
 - GPU load balancing across distributed workers
 - DynamoDB integration for production use
 - Cryptographic attestation chains

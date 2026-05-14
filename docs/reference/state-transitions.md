@@ -3,46 +3,46 @@
 
 # State Transition Logic
 
-This document defines the deterministic state machines for Orchestration Plans, Runs, and Steps. All transitions must be accompanied by a corresponding `reasonCode` and an emitted `receipt`.
+This page documents the implemented execution-lifecycle substrate in `src/lib/control-plane/execution-lifecycle.ts`. It is not a distributed worker protocol and does not start background queue workers.
 
-## Orchestration Plan States
+## Execution Plan States
 
-| From | To | Trigger |
-|:---|:---|:---|
-| (initial) | `draft` | `plan_created` |
-| `draft` | `pending` | Validation success |
-| `pending` | `running` | `plan_started` (first step dispatch) |
-| `running` | `completed` | All mandatory steps in `completed` or `skipped` state |
-| `running` | `failed` | Mandatory step enters `failed` state and retries exhausted |
-| `running` | `cancelled` | Operator or system `plan_cancelled` |
-| `running` | `timed_out` | `maxPlanDurationMs` exceeded |
+| From | Allowed next states |
+|---|---|
+| `planned` | `queued`, `cancelled`, `expired`, `blocked`, `degraded` |
+| `queued` | `leased`, `cancelled`, `expired`, `blocked`, `degraded` |
+| `leased` | `executing`, `cancelled`, `expired`, `degraded`, `blocked` |
+| `executing` | `completed`, `failed`, `cancelled`, `degraded`, `blocked` |
+| `blocked` | `cancelled`, `expired`, `degraded` |
+| `degraded` | `cancelled`, `expired`, `blocked` |
+| `completed` | terminal |
+| `failed` | terminal |
+| `cancelled` | terminal |
+| `expired` | terminal |
 
-## Orchestration Run States
+Invalid transitions return `invalid_transition`. A cancelled plan returns `plan_cancelled`; an expired plan returns `plan_expired` unless the requested transition is `expired` or `cancelled`.
 
-Runs represent a specific execution instance of a Plan.
+## Queue And Lease Rules
 
-| State | Description |
-|:---|:---|
-| `initialized` | State object created, no steps dispatched. |
-| `planning` | Dynamic step resolution or dependency analysis in progress. |
-| `executing` | One or more steps are in flight. |
-| `completed` | All steps finalized. |
-| `failed` | Run terminated due to step failure or internal error. |
+| Rule | Enforcement |
+|---|---|
+| A terminal plan cannot be queued. | `enqueueExecutionPlan()` rejects `completed`, `failed`, `cancelled`, and `expired` plans. |
+| A queue item lease has one owner. | `acquireQueueLease()` rejects duplicate, stale, or conflicting owners. |
+| Execution requires an active lease. | `startQueuedExecution()` and completion helpers check owner and lease expiry. |
+| Lease expiration and revocation are explicit. | `expireQueueLease()` and `revokeQueueLease()` emit receipts/events. |
+| Replay references travel with queue items. | Queue replay validation checks lineage, ownership, lease, receipt, governance, trust, and degraded-state trigger metadata. |
 
-## Orchestration Step States
+## Replay And Evidence Guardrails
 
-| State | Description |
-|:---|:---|
-| `pending` | Step is created but dependencies are not yet met. |
-| `in_progress` | Step payload has been dispatched to a runner. |
-| `completed` | Runner returned success. |
-| `failed` | Runner returned error or timeout. |
-| `skipped` | Step bypassed by policy or unsatisfied non-mandatory dependency. |
-| `cancelled` | Step execution interrupted. |
-| `timed_out` | `maxStepDurationMs` exceeded. |
+- Every transition decision carries a `reasonCode`.
+- Blocked or degraded states require explicit reason codes.
+- Cancellation requires `cancelledAt` and `cancellationReasonCode`.
+- Proofpack validation rejects hidden retries and hidden degraded-state triggers.
+- Replay validation rejects malformed envelopes, missing lineage, missing reason codes, sequence drift, event-count mismatch, and digest mismatch.
 
-## Determinism Guardrails
+## Verification
 
-1. **No Silent Transitions**: Every transition must emit a receipt of the corresponding `ReceiptType`.
-2. **Immutability**: Once a Step reaches a terminal state (`completed`, `failed`, `skipped`, `cancelled`, `timed_out`), it cannot transition back to `in_progress` (a new step or retry attempt must be created).
-3. **Dependency Locking**: Steps cannot enter `in_progress` until all IDs in `dependsOnStepIds` are in the `completed` state.
+```bash
+npm run verify:execution-lifecycle
+npm run verify:chaos
+```

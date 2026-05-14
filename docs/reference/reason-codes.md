@@ -31,6 +31,12 @@ Primary proof:
 | `missing_trust_metadata` | Required trust or attestation metadata is absent. |
 | `missing_degraded_reason` | A degraded state lacks an explicit reason. |
 | `missing_replay_reason_code` | Replay evidence omits the reason code needed to explain a drift path. |
+| `missing_replay_digest` | A replay envelope does not include a digest. |
+| `malformed_replay_envelope` | The replay envelope is not an object. |
+| `malformed_replay_events` | The replay envelope does not contain an event array. |
+| `malformed_replay_event` | At least one replay event is missing required event shape. |
+| `malformed_replay_event_count` | The replay event count is not numeric. |
+| `unsupported_replay_version` | The replay envelope version is not supported. |
 
 ## Drift And Integrity
 
@@ -46,6 +52,9 @@ Primary proof:
 | `lease_mismatch` | The active lease does not match the execution context. |
 | `receipt_mismatch` | A receipt digest does not match its recorded value. |
 | `proofpack_integrity_mismatch` | Proofpack digest validation failed. |
+| `digest_mismatch` | Replay digest validation failed. |
+| `event_count_mismatch` | Replay event count differs from the event array length. |
+| `sequence_mismatch` | Replay event sequence values are not contiguous from zero. |
 
 ## Queue And Lease
 

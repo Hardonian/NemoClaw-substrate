@@ -24,6 +24,14 @@ const duplicateLines = [...duplicateLineMap.entries()]
   .filter(([, countForLine]) => countForLine > 1)
   .map(([line]) => line);
 
+const generatedProsePatterns = [
+  { label: "phase-labeled changelog entry", pattern: /\bPhase\s+\d+\b/i },
+  { label: "claim-verification prose", pattern: /\bConfirmed\b/i },
+  { label: "AI-generated marker", pattern: /\bAI-generated\b/i },
+  { label: "unsupported production claim", pattern: /\bproduction[- ]ready\b/i },
+  { label: "unsupported enterprise claim", pattern: /\benterprise[- ]grade\b/i },
+];
+
 const problems = [];
 if (count(/SPDX-FileCopyrightText/g) !== 1)
   problems.push("duplicate SPDX-FileCopyrightText header");
@@ -46,6 +54,10 @@ if (titleIndex >= 0) {
 }
 if (duplicateLines.length)
   problems.push(`duplicate non-empty lines: ${duplicateLines.join(" | ")}`);
+for (const { label, pattern } of generatedProsePatterns) {
+  const matchingLines = normalized.filter((line) => pattern.test(line));
+  if (matchingLines.length) problems.push(`${label}: ${matchingLines.join(" | ")}`);
+}
 
 if (problems.length) {
   console.error(`CHANGELOG hygiene failed:\n- ${problems.join("\n- ")}`);
