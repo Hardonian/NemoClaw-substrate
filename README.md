@@ -31,7 +31,7 @@ The practical problem is narrow:
 | Capability | Current proof | Main files |
 |---|---|---|
 | Execution lifecycle records for plans, queue items, leases, receipts, replay checks, proofpacks, and diagnostics | `npm run verify:execution-lifecycle` | `src/lib/control-plane/execution-lifecycle.ts`, `src/lib/control-plane/execution-lifecycle.test.ts` |
-| Replay envelope validation and drift rejection | `npm run verify:chaos` | `src/lib/control-plane/replay.ts`, `src/lib/control-plane/degraded-state-chaos.test.ts` |
+| Replay envelope validation, malformed input rejection, and drift rejection | `npm run verify:chaos` | `src/lib/control-plane/replay.ts`, `src/lib/control-plane/degraded-state-chaos.test.ts` |
 | Opt-in governed provider routing | `npm run verify:governed-routing` | `src/lib/control-plane/governed-provider-routing.ts`, `src/lib/control-plane/runtime-dispatch-integration.ts` |
 | Guarded remote execution seam with trust, approval, transport, and command checks | `npm run verify:remote-probes`, `npm run verify:chaos` | `src/lib/control-plane/remote-execution.ts`, `src/lib/control-plane/remote-execution.test.ts` |
 | Evidence export and proofpack integrity helpers | `npm run verify:proofpack`, `npm run verify:export` | `src/lib/control-plane/evidence-export.ts`, `src/lib/control-plane/evidence-export.test.ts` |

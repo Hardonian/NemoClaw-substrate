@@ -3,69 +3,87 @@
 
 # Event Taxonomy
 
-This document defines the canonical taxonomy of events emitted by the NemoClaw governed substrate. Events are categorized by their role in the governance and execution lifecycle.
+This page lists the implemented control-plane event categories. Event names are evidence labels, not promises that a background worker or distributed queue exists.
 
-## Governance Events
+## Execution Lifecycle Events
 
-Governance events represent high-level lifecycle transitions and authorization decisions.
+These are emitted by the lifecycle helpers in `src/lib/control-plane/execution-lifecycle.ts`.
 
-| Event Category | Description |
-|:---|:---|
-| `execution_plan_created` | A new orchestration plan has been synthesized and validated. |
-| `execution_plan_blocked` | Plan execution is blocked by policy or lack of approval. |
-| `execution_plan_cancelled` | Plan execution was terminated by the operator or system. |
-| `execution_plan_phase_transition` | A plan has moved between major lifecycle phases (governance, planning, execution, etc.). |
-| `execution_approval_requested` | Operator approval is required for a plan or specific step. |
-| `execution_plan_approved` | Operator has granted approval for execution. |
-| `execution_plan_rejected` | Operator has denied approval for execution. |
-| `execution_plan_revoked` | Previously granted approval has been revoked. |
-| `execution_plan_expired` | A plan or approval has exceeded its time-to-live (TTL). |
+| Event Category | Meaning |
+|---|---|
+| `execution_plan_created` | A plan record was created. |
+| `execution_plan_blocked` | A plan was blocked by governance, trust, policy, or lifecycle checks. |
+| `execution_plan_cancelled` | A plan was cancelled explicitly. |
+| `queue_item_queued` | A plan was represented as a queue item. |
+| `queue_item_leased` | A queue item was leased to an owner. |
+| `queue_item_expired` | A queue item expired. |
+| `queue_conflict_detected` | Queue ownership or replay validation found a conflict. |
+| `lease_acquired` | A lease was acquired. |
+| `lease_expired` | A lease expired. |
+| `lease_revoked` | A lease was revoked. |
+| `lease_conflict_detected` | Lease ownership conflicted. |
+| `execution_started` | A leased execution started. |
+| `execution_completed` | A leased execution completed. |
+| `execution_failed` | A leased execution failed. |
+| `execution_cancelled` | A leased execution was cancelled. |
+| `execution_blocked` | Execution was blocked before running. |
+| `proofpack_generated` | A proofpack artifact was generated. |
+| `proofpack_validation_failed` | Proofpack validation failed. |
 
-## Queue & Lease Events
+## Governance And Replay Events
 
-Events related to the task queue and worker distribution. These ensure atomic ownership and prevent duplication.
+These are operational-memory categories used by replay, approval, and policy evidence.
 
-| Event Category | Description |
-|:---|:---|
-| `queue_item_queued` | A task has entered the execution queue for a specific plan. |
-| `queue_item_leased` | A worker has successfully taken a temporary lease on a task. |
-| `queue_item_expired` | A queued task has exceeded its maximum wait time. |
-| `queue_conflict_detected` | Concurrent access detected on a queue item (e.g., duplicate claim). |
-| `lease_acquired` | A worker lease was successfully established for a task. |
-| `lease_expired` | A worker failed to renew its lease within the required interval. |
-| `lease_revoked` | A lease was terminated by the control plane. |
-| `lease_conflict_detected` | Multiple workers attempted to claim the same lease simultaneously. |
+| Event Category | Meaning |
+|---|---|
+| `receipt` | A receipt was recorded. |
+| `policy_outcome` | A policy decision was recorded. |
+| `operator_override` | An operator override was recorded. |
+| `runtime_action` | A runtime action was recorded. |
+| `execution_plan_phase_transition` | A plan phase transition was recorded. |
+| `execution_approval_requested` | Approval was requested. |
+| `execution_plan_approved` | Approval was granted. |
+| `execution_plan_rejected` | Approval was rejected. |
+| `execution_plan_revoked` | Approval was revoked. |
+| `execution_plan_expired` | Approval or plan lifetime expired. |
+| `execution_authorization_granted` | Authorization was granted. |
+| `execution_authorization_denied` | Authorization was denied. |
+| `execution_policy_snapshot_recorded` | A policy snapshot hash was recorded. |
+| `execution_trust_snapshot_recorded` | A trust snapshot hash was recorded. |
+| `execution_replay_validation_succeeded` | Replay validation succeeded. |
+| `execution_replay_validation_failed` | Replay validation failed. |
+| `replay_metadata` | Replay metadata was recorded. |
 
-## Execution Events
+## Telemetry And Trust Events
 
-Execution events track the progress of tasks as they are processed by workers.
+Telemetry is evidence. It does not authorize execution by itself.
 
-| Event Category | Description |
-|:---|:---|
-| `execution_started` | The worker has started processing the task. |
-| `execution_completed` | The task has finished successfully and generated results. |
-| `execution_failed` | The task encountered an error or crashed. |
-| `execution_cancelled` | The task execution was interrupted by an external signal. |
-| `execution_blocked` | Task cannot start due to runtime resource constraints. |
+| Event Category | Meaning |
+|---|---|
+| `telemetry_probe_started` | A telemetry probe started. |
+| `telemetry_probe_succeeded` | A telemetry probe succeeded. |
+| `telemetry_probe_failed` | A telemetry probe failed. |
+| `telemetry_parse_succeeded` | Telemetry parsing succeeded. |
+| `telemetry_parse_partial` | Telemetry parsing produced partial data. |
+| `telemetry_parse_failed` | Telemetry parsing failed. |
+| `telemetry_unavailable` | Telemetry was unavailable. |
+| `telemetry_stale` | Telemetry was stale. |
+| `telemetry_conflict_detected` | Telemetry conflicted with existing evidence. |
+| `telemetry_registry_update_applied` | A registry update was applied from telemetry evidence. |
+| `telemetry_registry_update_skipped` | A registry update was skipped. |
+| `worker_identity_observed` | Worker identity evidence was observed. |
+| `capability_claim_recorded` | A capability claim was recorded. |
+| `capability_attestation_observed` | Structural attestation evidence was observed. |
+| `capability_attestation_conflict` | Attestation evidence conflicted. |
+| `worker_trust_elevated` | Trust assessment increased. |
+| `worker_trust_denied` | Trust assessment denied execution. |
+| `worker_trust_revoked` | Trust assessment was revoked. |
+| `worker_attestation_expired` | Worker attestation expired. |
 
-## Verification & Proofpack Events
+## Degraded And Diagnostics Events
 
-Events related to the export and verification of execution evidence.
-
-| Event Category | Description |
-|:---|:---|
-| `proofpack_generated` | A comprehensive bundle of evidence has been exported. |
-| `proofpack_validation_failed` | Integrity check or signature verification failed for a Proofpack. |
-| `replay_validation_succeeded` | Replay execution matched the recorded history exactly. |
-| `replay_validation_failed` | Replay detected drift or non-deterministic behavior. |
-| `diagnostics_snapshot` | A comprehensive capture of system state facts for debugging. |
-
-## Operational Status Events
-
-Events tracking the health and operational mode of the substrate.
-
-| Event Category | Description |
-|:---|:---|
-| `degraded_state` | The system has entered a Degraded State (reduced accuracy/performance). |
-| `degraded_state_trigger` | A specific condition triggered a transition to Degraded State. |
-| `operator_override` | An operator manually bypassed a policy or safety gate. |
+| Event Category | Meaning |
+|---|---|
+| `degraded_state` | A degraded state was recorded with a reason code. |
+| `degraded_state_trigger` | A condition triggered degraded-state handling. |
+| `diagnostics_snapshot` | A diagnostics snapshot was captured. |
