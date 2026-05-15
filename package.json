@@ -72,7 +72,8 @@
     "review:all": "npm run review:claims && npm run review:links && npm run review:status && npm run review:theatre && npm run review:fixtures && npm run review:spdx && npm run review:proofpack && npm run review:index",
     "review:paths": "node scripts/review/list-review-paths.mjs",
     "generate-fixtures": "tsx scripts/generate-fixtures.ts --seed 42",
-    "check-fixtures": "tsx scripts/check-fixtures.ts"
+    "check-fixtures": "tsx scripts/check-fixtures.ts",
+    "demo:local-proof": "node scripts/demo/run-local-governed-proof.mjs"
   },
   "dependencies": {
     "@oclif/core": "^4.10.5",
