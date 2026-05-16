@@ -1,0 +1,6 @@
+{
+  "id": "lease-local-safe-echo",
+  "queueId": "queue-local-safe-echo",
+  "ownerId": "local-operator",
+  "status": "active"
+}

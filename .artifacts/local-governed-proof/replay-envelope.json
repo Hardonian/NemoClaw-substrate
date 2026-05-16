@@ -1,0 +1,11 @@
+{
+  "id": "replay-local-governed-proof",
+  "reasonCode": "replay_validated",
+  "lineage": [
+    "local-node-1",
+    "plan-local-safe-echo",
+    "queue-local-safe-echo",
+    "lease-local-safe-echo",
+    "receipt-local-safe-echo"
+  ]
+}

@@ -1,0 +1,7 @@
+[
+  {
+    "id": "nvidia_smi_unavailable",
+    "state": "degraded",
+    "detail": "nvidia-smi not available"
+  }
+]

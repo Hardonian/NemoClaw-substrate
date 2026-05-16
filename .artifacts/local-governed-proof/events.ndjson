@@ -1,0 +1,2 @@
+{"id":"event-execution-started","type":"execution_started","reasonCode":"execution_started","executionId":"exec-local-safe-echo"}
+{"id":"event-execution-completed","type":"execution_completed","reasonCode":"execution_completed","executionId":"exec-local-safe-echo"}

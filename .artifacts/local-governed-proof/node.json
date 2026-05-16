@@ -1,0 +1,8 @@
+{
+  "nodeId": "local-node-1",
+  "trustStatus": "trusted_local",
+  "attestationStatus": "not_required",
+  "telemetryState": "unavailable",
+  "profileSource": "local-only",
+  "registeredAt": "2026-05-16T00:39:42.870Z"
+}
