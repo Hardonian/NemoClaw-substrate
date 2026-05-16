@@ -1,78 +1,79 @@
 <!-- SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved. -->
 <!-- SPDX-License-Identifier: Apache-2.0 -->
 
-# 10-Minute Review
+# 10-Minute Substrate Review
 
-This walkthrough uses local code, tests, and fixtures only. It does not require a GPU, OpenShell sandbox, remote worker, or live inference endpoint.
+This walkthrough validates the **NemoClaw Execution Substrate** using canonical primitives, deterministic state transitions, and local proofpacks. It requires no external network access, GPUs, or live sandboxes.
 
-## 1. Build The CLI
+## 1. Environment Baseline
+
+Ensure the repository is in a verified, clean state.
 
 ```bash
-npm run build:cli
+npm run verify:core
 ```
 
-Expected: TypeScript emits CLI artifacts. This is needed because `bin/nemoclaw.js` runs the compiled CLI from `dist/`.
+**Expected:** All core substrate tests pass. This confirms that the `ExecutionPlan`, `OrchestrationReceipt`, and `GovernancePolicy` primitives are correctly implemented and type-safe.
 
-## 2. Inspect Fixture-Backed Operator Output
+## 2. Canonical Local Proof Execution
+
+Run the deterministic local-governed proof demo. This script exercises the entire orchestration lifecycle: planning, queueing, lease acquisition, execution, and receipt emission.
 
 ```bash
-node ./bin/nemoclaw.js operator status --json
-node ./bin/nemoclaw.js operator degraded --json
+npm run demo:local-proof
 ```
 
-Expected: deterministic JSON from `fixtures/demo/`. Demo tokens in fixture details are redacted before printing.
+**Key Transitions Observed:**
+- `PLAN_CREATED`: Manifest hash generated and registered.
+- `LEASE_ACQUIRED`: Execution lock obtained for the local run.
+- `STEP_COMPLETED`: Safe action executed; receipt emitted with cryptographic lineage.
+- `PROOFPACK_EXPORTED`: Artifact bundle produced in `.artifacts/local-governed-proof`.
 
-Proof files:
+## 3. Authoritative Operator Inspection
 
-- `src/lib/commands/operator.ts`
-- `src/lib/operator/format.ts`
-- `test/operator/operator.test.ts`
-- `fixtures/demo/status.json`
-- `fixtures/demo/degraded.json`
-
-## 3. Run Lifecycle And Replay Checks
+Use the NemoClaw CLI to inspect the artifacts produced by the previous run. This simulates an operator auditing a detached execution.
 
 ```bash
-npm run verify:execution-lifecycle
+# Verify the exported proofpack and run status
+node ./bin/nemoclaw.js operator status --source .artifacts/local-governed-proof
+
+# Inspect the receipt audit trail
+node ./bin/nemoclaw.js operator receipts --source .artifacts/local-governed-proof --json
+```
+
+**Expected:** The CLI displays the actual data from the run, including the `manifestHash`, `runId`, and the chronological sequence of receipts.
+
+## 4. Replay and Integrity Verification
+
+Validate that the generated proofpack is tamper-proof and consistent with the original execution.
+
+```bash
+npm run demo:local-proof:verify
+```
+
+**Expected:** The replayer successfully walks the receipt lineage and confirms `REPLAY_CONSISTENT`. Any tampering with the `.artifacts/` files would trigger `REPLAY_DRIFT_DETECTED`.
+
+## 5. Governance and Policy Audit
+
+Review the substrate's enforcement logic for policy gates and degraded states.
+
+```bash
 npm run verify:chaos
 ```
 
-Expected: lifecycle tests accept legal transitions and reject illegal transitions, missing governance metadata, replay drift, ownership mismatch, lease mismatch, proofpack tampering, and hidden degraded-state triggers.
+**Expected:** Chaos tests confirm that the substrate correctly rejects illegal state transitions and enforces lease boundaries even under high entropy (e.g., simulated daemon crashes).
 
-Proof files:
+---
 
-- `src/lib/control-plane/execution-lifecycle.ts`
-- `src/lib/control-plane/execution-lifecycle.test.ts`
-- `src/lib/control-plane/degraded-state-chaos.test.ts`
+## Technical Proof Points
 
-## 4. Check Proofpack And Export Helpers
+- **Determinism:** `src/lib/control-plane/execution-lifecycle.ts`
+- **Auditability:** `src/lib/orchestration/orchestrator.ts`
+- **Integrity:** `src/lib/control-plane/operational-memory.ts`
+- **Replayability:** `src/lib/orchestration/replay.ts` (verified via `test/replay/`)
 
-```bash
-npm run verify:proofpack
-npm run verify:export
-```
+## Operational Constraints
 
-Expected: these commands are local. If no proofpack fixture exists, `verify:proofpack` exits successfully with a clear skip message. Export verification scans source and network policy configuration.
-
-Proof files:
-
-- `scripts/verify-proofpack.ts`
-- `scripts/verify-export.ts`
-- `src/lib/control-plane/evidence-export.ts`
-- `src/lib/control-plane/evidence-export.test.ts`
-
-## 5. Check Claims
-
-```bash
-npm run review:claims
-```
-
-Expected: the evidence index is parseable and each major claim has implementation and test references.
-
-## What Is Intentionally Not Happening
-
-- No live worker is contacted.
-- No networked inference request is made.
-- No policy is promoted automatically.
-- No queue worker or retry loop starts in the background.
-- No GPU scheduling claim is made.
+- **No Magic:** All retries and recovery flows are explicit and logged.
+- **No Silent Failures:** All exceptions produce an `INTERNAL_ERROR` receipt.
+- **No Identity Drift:** Every run is anchored to a unique `correlationId`.

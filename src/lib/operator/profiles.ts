@@ -5,10 +5,12 @@ export interface OperatorProfile {
   name: string;
   remoteEnabled: boolean;
   requireApproval: boolean;
+  intentHashValidation?: boolean;
   trustedNetworks: string[];
 }
 
 const BASE: Record<string, OperatorProfile> = {
+  "strict": { name: "strict", remoteEnabled: false, requireApproval: true, intentHashValidation: true, trustedNetworks: ["127.0.0.1/32"] },
   "local-only": { name: "local-only", remoteEnabled: false, requireApproval: true, trustedNetworks: [] },
   "HX370-primary": { name: "HX370-primary", remoteEnabled: false, requireApproval: true, trustedNetworks: ["loopback"] },
   "X99-gpu-worker": { name: "X99-gpu-worker", remoteEnabled: false, requireApproval: true, trustedNetworks: ["loopback"] },

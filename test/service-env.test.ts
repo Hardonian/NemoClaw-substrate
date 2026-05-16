@@ -7,7 +7,7 @@ import {
   execFileSync,
   type ExecFileSyncOptionsWithStringEncoding,
 } from "node:child_process";
-import { mkdtempSync, writeFileSync, unlinkSync, readFileSync, lstatSync } from "node:fs";
+import { mkdtempSync, writeFileSync, unlinkSync, readFileSync, lstatSync, mkdirSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { resolveOpenshell } from "../dist/lib/adapters/openshell/resolve";
@@ -904,7 +904,7 @@ describe("service environment", () => {
 
     it("NemoClaw#1570: proxy-env.sh omits ws-proxy-fix when script does not exist", () => {
       const fakeDataDir = join(tmpdir(), `nemoclaw-ws-noop-test-${process.pid}`);
-      execFileSync("mkdir", ["-p", fakeDataDir]);
+      mkdirSync(fakeDataDir, { recursive: true });
       const tmpFile = join(tmpdir(), `nemoclaw-ws-noop-env-${process.pid}.sh`);
       try {
         const persistBlock = extractRuntimeShellEnvSnippet();
@@ -926,13 +926,17 @@ describe("service environment", () => {
             .replaceAll("/tmp/nemoclaw-proxy-env.sh", `${fakeDataDir}/proxy-env.sh`),
         ].join("\n");
         writeFileSync(tmpFile, wrapper, { mode: 0o700 });
-        execFileSync("bash", [tmpFile], { encoding: "utf-8" });
+        const bashPath = process.platform === "win32" 
+          ? tmpFile.replace(/^([a-zA-Z]):/, (_, drive) => `/${drive.toLowerCase()}`).replace(/\\/g, "/")
+          : tmpFile;
+        execFileSync("bash", [bashPath], { encoding: "utf-8" });
 
         const envFile = readFileSync(join(fakeDataDir, "proxy-env.sh"), "utf-8");
         expect(envFile).not.toContain("ws-proxy-fix");
       } finally {
         try {
-          execFileSync("rm", ["-rf", fakeDataDir, tmpFile]);
+          try { rmSync(fakeDataDir, { recursive: true, force: true }); } catch {}
+          try { rmSync(tmpFile, { force: true }); } catch {}
         } catch {
           /* ignore */
         }
@@ -974,7 +978,7 @@ describe("service environment", () => {
           "--require",
           wsFixPath,
           "-e",
-          `require("${wsFixPath}"); console.log(require('https').request.name)`,
+          `require("${wsFixPath.replace(/\\/g, "/")}"); console.log(require('https').request.name)`,
         ],
         {
           encoding: "utf-8",
