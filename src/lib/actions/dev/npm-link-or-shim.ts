@@ -52,7 +52,7 @@ function defaultRun(
 }
 
 function defaultCommandPath(command: string, env: NodeJS.ProcessEnv): string | null {
-  const result = spawnSync("sh", ["-c", `command -v ${JSON.stringify(command)} 2>/dev/null`], {
+  const result = spawnSync("sh", ["-c", 'command -v "$1" 2>/dev/null', "sh", command], {
     encoding: "utf-8",
     env,
   });

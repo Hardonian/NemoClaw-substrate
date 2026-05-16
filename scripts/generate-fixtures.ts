@@ -78,7 +78,9 @@ function validateFixture(name: string, requiredFields: string[]): void {
       }
     }
   } catch (e) {
-    console.error(`  FAILED to read/parse: ${name} - ${e instanceof Error ? e.message : String(e)}`);
+    console.error(
+      `  FAILED to read/parse: ${name} - ${e instanceof Error ? e.message : String(e)}`,
+    );
     process.exit(1);
   }
 }
@@ -197,7 +199,9 @@ function main(): void {
       name: "diagnostics.json",
       requiredFields: ["events", "envelope"],
       generate: () => ({
-        events: seededResult.events.filter((e) => e.category === "diagnostics_snapshot" || e.category === "replay_metadata"),
+        events: seededResult.events.filter(
+          (e) => e.category === "diagnostics_snapshot" || e.category === "replay_metadata",
+        ),
         envelope: seededResult.envelope,
       }),
     },

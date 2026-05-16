@@ -1,0 +1,4 @@
+## 2026-05-16 - Command Injection via JSON.stringify in spawnSync
+**Vulnerability:** A command injection vulnerability existed in `defaultCommandPath` where `JSON.stringify(command)` was directly interpolated into a shell command string: `spawnSync("sh", ["-c", \`command -v \${JSON.stringify(command)} 2>/dev/null\`])`.
+**Learning:** `JSON.stringify` produces double-quoted strings. In bash, double-quoted strings are subject to variable expansion and command substitution (e.g., `$(...)` or backticks). An attacker controlling the `command` input could inject arbitrary shell commands, which would be executed when the shell evaluates the double-quoted string.
+**Prevention:** Never interpolate unsanitized user input directly into a shell command string. Instead, use shell positional parameters (`$1`, `$2`, etc.) and pass the input as arguments to the shell interpreter: `spawnSync("sh", ["-c", 'command -v "$1" 2>/dev/null', "sh", command])`.
