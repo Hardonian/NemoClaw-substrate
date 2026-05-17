@@ -89,3 +89,6 @@ npm run verify:release
 
 ### Residual matrix closure status (2026-05-09)
 The governed substrate closure pass is verification-focused: direct branch assertions, replay/diagnostics truth hardening, and status-document coherence. It does not add orchestration, distributed execution, GPU balancing, Dynamo integration, autonomous routing, or automatic policy/trust mutation.
+
+<!-- platform-matrix:begin -->
+<!-- platform-matrix:end -->
