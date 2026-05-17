@@ -27,7 +27,7 @@ export function runSchedulerDryRun(input: {
   operationalMemory?: OperationalMemoryLog;
 }): SchedulerDryRunResult {
   const classification = classifyRequest(input.request);
-  const policy = evaluatePolicy(input.policyBundle, { request: input.request, actionClass: classification.riskLevel === 'high' ? 'high_risk' : 'generic' });
+  const policy = evaluatePolicy(input.policyBundle, { request: input.request, actionClass: "generic" });
   const scheduling = scheduleDeterministically({
     request: input.request,
     classification,
