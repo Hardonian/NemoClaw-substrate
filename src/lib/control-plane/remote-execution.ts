@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { createHash } from "crypto";
-import { exec } from "child_process";
+import { exec, execFile } from "child_process";
 import { promisify } from "util";
 import { evaluatePolicy, type PolicyBundle } from "./governance";
 import type { DeviceRegistry } from "./device-registry";
@@ -28,6 +28,7 @@ import {
 } from "../security/security-policy";
 
 const execAsync = promisify(exec);
+const execFileAsync = promisify(execFile);
 
 export type RemoteExecutionStatus = "disabled" | "policy_denied" | "approval_required" | "authorization_denied" | "unavailable" | "degraded" | "failed" | "succeeded" | "not_supported";
 export type TransportType = "http" | "ssh" | "https-signed";
@@ -101,10 +102,10 @@ export async function executeSshCommand(credentials: SshCredentials, command: st
     sshArgs.push("-i", credentials.privateKeyPath);
   }
   sshArgs.push(`${credentials.user}@${credentials.host}`);
-  const sshCmd = ["ssh", ...sshArgs, command].join(" ");
+  sshArgs.push(command);
 
   try {
-    const { stdout, stderr } = await execAsync(sshCmd, { timeout: timeoutMs });
+    const { stdout, stderr } = await execFileAsync("ssh", sshArgs, { timeout: timeoutMs });
     return { stdout, stderr, exitCode: 0 };
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
