@@ -92,3 +92,6 @@ The governed substrate closure pass is verification-focused: direct branch asser
 
 <!-- platform-matrix:begin -->
 <!-- platform-matrix:end -->
+
+<!-- start-badges -->
+<!-- end-badges -->

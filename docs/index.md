@@ -300,6 +300,14 @@ Overview <about/overview>
 Architecture Overview <about/how-it-works>
 Ecosystem <about/ecosystem>
 Release Notes <about/release-notes>
+Fork Rationale <adr/0001-fork-purpose>
+0002 Control Plane Separation <adr/0002-control-plane-separation>
+0003 Deterministic Routing <adr/0003-deterministic-routing>
+0004 Supervised Policy Promotion <adr/0004-supervised-policy-promotion>
+0005 Receipts And Degraded State Truth <adr/0005-receipts-and-degraded-state-truth>
+0006 Device Registry Before Scheduler <adr/0006-device-registry-before-scheduler>
+0007 Policy Outside Prompts <adr/0007-policy-outside-prompts>
+
 ```
 
 ```{toctree}
@@ -383,6 +391,50 @@ Troubleshooting <reference/troubleshooting>
 
 Security Policy <architecture/security-policy>
 Transport Security <architecture/transport-security>
+Capability Attestation <architecture/capability-attestation>
+Command Execution Safety <architecture/command-execution-safety>
+Control Plane <architecture/control-plane>
+Current State <architecture/current-state>
+Device Registry <architecture/device-registry>
+Diagnostics <architecture/diagnostics>
+Failure Semantics <architecture/failure-semantics>
+Governance Invariants <architecture/governance-invariants>
+Governance Threat Model <architecture/governance-threat-model>
+Governed Fallbacks <architecture/governed-fallbacks>
+Gpu Telemetry <architecture/gpu-telemetry>
+Heterogeneous Routing <architecture/heterogeneous-routing>
+Local Probes <architecture/local-probes>
+Local Stack Security Profiles <architecture/local-stack-security-profiles>
+Observability <architecture/observability>
+Operational Memory <architecture/operational-memory>
+Policy Engine <architecture/policy-engine>
+Policy Inheritance <architecture/policy-inheritance>
+Policy Promotion <architecture/policy-promotion>
+Policy Tracing <architecture/policy-tracing>
+Provider Routing Integration <architecture/provider-routing-integration>
+Receipts And Degraded States <architecture/receipts-and-degraded-states>
+Registry Synchronization <architecture/registry-synchronization>
+Registry Telemetry Policy <architecture/registry-telemetry-policy>
+Remote Execution Adapters <architecture/remote-execution-adapters>
+Remote Probe Security <architecture/remote-probe-security>
+Replayability <architecture/replayability>
+Runtime Capabilities <architecture/runtime-capabilities>
+Runtime Dispatch Integration <architecture/runtime-dispatch-integration>
+Runtime Integration <architecture/runtime-integration>
+Runtime Telemetry Parsers <architecture/runtime-telemetry-parsers>
+Scheduler Provider Bridge <architecture/scheduler-provider-bridge>
+Scheduler <architecture/scheduler>
+Secret Redaction Doctrine <architecture/secret-redaction-doctrine>
+Security Policy Model <architecture/security-policy-model>
+Security Threat Model <architecture/security-threat-model>
+Status Matrix <architecture/status-matrix>
+Target State <architecture/target-state>
+Task Classification <architecture/task-classification>
+Telemetry Adapters <architecture/telemetry-adapters>
+Worker Adapters <architecture/worker-adapters>
+Worker Identity Trust <architecture/worker-identity-trust>
+Worker Probes <architecture/worker-probes>
+
 Secret Redaction <architecture/secret-redaction>
 Network Policy <architecture/network-policy>
 Command Safety <architecture/command-safety>
@@ -394,6 +446,16 @@ Command Safety <architecture/command-safety>
 
 Verification Matrix <verification/verification-matrix>
 Security Hardening <verification/security-hardening>
+Branch Strategy <contributing/branch-strategy>
+Control Plane Rules <contributing/control-plane-rules>
+Local Bootstrap <contributing/local-bootstrap>
+Pr Template Guide <contributing/pr-template-guide>
+Verification <contributing/verification>
+Fork Rationale <fork-rationale>
+Replay Inspector <replay-inspector>
+Degraded State Chaos <verification/degraded-state-chaos>
+Policy Verification <verification/policy-verification>
+Security Verification Matrix <verification/security-verification-matrix>
 Release Checklist <verification/release-checklist>
 Release Readiness <verification/release-readiness>
 ```
@@ -403,6 +465,7 @@ Release Readiness <verification/release-readiness>
 :hidden:
 
 Agent Skills <resources/agent-skills>
+Roadmap <roadmap>
 Report Vulnerabilities <https://github.com/NVIDIA/NemoClaw/blob/main/SECURITY.md>
 resources/license
 Discord <https://discord.gg/XFpfPv9Uvx>
