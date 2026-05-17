@@ -10,18 +10,17 @@ This is infrastructure-only: no autodiscovery and no routing side effects.
 Future seams: queue-aware orchestration, GPU telemetry adapters, distributed-worker adapters.
 
 ## 2026-05-09 adapter/dry-run update
-
 Worker/provider adapter contracts and scheduler-to-provider dry-run bridge are implemented for diagnostics and receipt/event emission only. Live provider routing is unchanged. Remote execution, Dynamo adapters, and GPU telemetry remain planned future work.
 
-## Worker probe and telemetry adapter note (2026-05-09)
 
+## Worker probe and telemetry adapter note (2026-05-09)
 - Probes are explicit operator-invoked actions (manual/invoked-only), not autonomous loops.
 - Remote execution remains disabled in this phase; governed routing remains opt-in.
 - Telemetry fields can be unavailable/stale and are surfaced truthfully without fabrication.
 - Dynamo integration is planned only and not implemented.
 
-## 2026-05-09 telemetry truth update
 
+## 2026-05-09 telemetry truth update
 - Telemetry is explicit probe-only and best effort.
 - Unavailable telemetry is acceptable and non-fatal.
 - No background polling daemons are introduced.
@@ -33,7 +32,6 @@ Worker/provider adapter contracts and scheduler-to-provider dry-run bridge are i
 Device registry telemetry snapshots preserve source attribution and stale/conflict markers. Unavailable telemetry does not clear previously observed inventory.
 
 ## Worker trust and attestation constraints (2026-05-09)
-
 - Self-reported claims are evidence only and are **not automatically trusted**.
 - Probe-observed evidence improves visibility but is **not authorization**.
 - Operator approval is explicit and required before remote trust elevation.

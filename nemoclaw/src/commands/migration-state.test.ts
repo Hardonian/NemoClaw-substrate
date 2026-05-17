@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, it, expect, beforeEach, vi } from "vitest";
 import type { PluginLogger } from "../index.js";
 import { setConfigValue } from "./migration-state.js";
 
@@ -104,13 +104,13 @@ vi.mock("tar", () => ({
 }));
 
 import {
+  detectHostOpenClaw,
+  createSnapshotBundle,
   cleanupSnapshotBundle,
   createArchiveFromDirectory,
-  createSnapshotBundle,
-  detectHostOpenClaw,
-  type HostOpenClawState,
   loadSnapshotManifest,
   restoreSnapshotToHost,
+  type HostOpenClawState,
   type SnapshotManifest,
 } from "./migration-state.js";
 

@@ -6,7 +6,6 @@
 Telemetry parsing is evidence-only metadata enrichment for remote probes. It does not change routing defaults or auto-route by default.
 
 Parsers:
-
 - `parseOllamaTelemetry`
 - `parseVllmTelemetry`
 - `parseLlamaCppTelemetry`
@@ -14,7 +13,6 @@ Parsers:
 - `parseGenericRuntimeTelemetry`
 
 Rules:
-
 - Missing fields are returned as partial or unavailable.
 - Unknown values are kept unknown (not fabricated).
 - No background polling.

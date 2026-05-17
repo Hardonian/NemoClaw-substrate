@@ -18,7 +18,7 @@ const AUDIT_DIR = join(process.env.HOME ?? "/tmp", ".nemoclaw", "state");
 const AUDIT_FILE = join(AUDIT_DIR, "shields-audit.jsonl");
 
 export interface ShieldsAuditEntry {
-  action: "shields_down" | "shields_up" | "shields_remediation" | "shields_up_failed";
+  action: "shields_down" | "shields_up" | "shields_auto_restore" | "shields_up_failed";
   sandbox: string;
   timestamp: string;
   timeout_seconds?: number;
@@ -26,7 +26,7 @@ export interface ShieldsAuditEntry {
   policy_applied?: string;
   policy_snapshot?: string;
   restored_at?: string;
-  restored_by?: "operator" | "remediation_timer";
+  restored_by?: "operator" | "auto_timer";
   duration_seconds?: number;
   error?: string;
 }

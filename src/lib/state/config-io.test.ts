@@ -81,16 +81,16 @@ describe("config-io", () => {
     expect(fs.statSync(dir).mode & 0o777).toBe(0o700);
   });
 
-  it("returns the defaultValue when the config file is missing", () => {
+  it("returns the fallback when the config file is missing", () => {
     const file = path.join(makeTempDir(), "missing.json");
-    expect(readConfigFile(file, { defaultValue: { ok: true } })).toEqual({ ok: true });
+    expect(readConfigFile(file, { ok: true })).toEqual({ ok: true });
   });
 
-  it("returns the defaultValue when the config file is malformed", () => {
+  it("returns the fallback when the config file is malformed", () => {
     const dir = makeTempDir();
     const file = path.join(dir, "config.json");
     fs.writeFileSync(file, "{not-json");
-    expect(readConfigFile(file, { defaultValue: { ok: true } })).toEqual({ ok: true });
+    expect(readConfigFile(file, { ok: true })).toEqual({ ok: true });
   });
 
   it("writes and reads JSON atomically", () => {

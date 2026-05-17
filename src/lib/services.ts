@@ -253,7 +253,7 @@ export function showStatus(opts: ServiceOptions = {}): void {
  * Uses the OpenShell gateway container's kubectl as the privileged path so it
  * can signal the gateway process even when the sandbox SSH/exec user is
  * `sandbox` and the gateway process runs as the separate `gateway` user.  The
- * secondary `openshell sandbox exec` path uses the same verified script for
+ * fallback `openshell sandbox exec` path uses the same verified script for
  * older/non-root deployments where the exec user can signal the gateway.
  *
  * The in-sandbox script intentionally does not rely on a bare `pkill -f`
@@ -275,12 +275,12 @@ export function stopSandboxChannels(sandboxName: string): void {
     return;
   }
 
-  const execPathResult = spawnSync(
+  const fallbackResult = spawnSync(
     openshell,
     ["sandbox", "exec", "--name", sandboxName, "--", "sh", "-lc", GATEWAY_STOP_SCRIPT],
     { encoding: "utf-8", stdio: ["ignore", "pipe", "pipe"], timeout: 20000 },
   );
-  reportStopResult(execPathResult);
+  reportStopResult(fallbackResult);
 }
 
 const GATEWAY_CLUSTER_CONTAINER = "openshell-cluster-nemoclaw";

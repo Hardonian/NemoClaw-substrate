@@ -1,8 +1,6 @@
 // SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-import * as fs from "fs";
-import * as path from "path";
 import { deterministicSerialize } from "./serde";
 import type { ExecutionApproval, ExecutionAuthorizationResult, ExecutionPlan } from "./execution-plans";
 import type { DegradedState, ExecutionReceipt, PolicyDecision, SchedulingDecision } from "./types";
@@ -11,7 +9,7 @@ import { redactSecurityPayload } from "../security/security-policy";
 export type OperationalEventCategory =
   | "receipt"
   | "policy_outcome"
-  | "degraded_state_trigger"
+  | "fallback"
   | "degraded_state"
   | "scheduler_outcome"
   | "operator_override"
@@ -36,8 +34,6 @@ export type OperationalEventCategory =
   | "worker_trust_revoked"
   | "worker_attestation_expired"
   | "execution_plan_created"
-  | "execution_plan_blocked"
-  | "execution_plan_cancelled"
   | "execution_plan_phase_transition"
   | "execution_approval_requested"
   | "execution_plan_approved"
@@ -50,21 +46,6 @@ export type OperationalEventCategory =
   | "execution_trust_snapshot_recorded"
   | "execution_replay_validation_succeeded"
   | "execution_replay_validation_failed"
-  | "queue_item_queued"
-  | "queue_item_leased"
-  | "queue_item_expired"
-  | "queue_conflict_detected"
-  | "lease_acquired"
-  | "lease_expired"
-  | "lease_revoked"
-  | "lease_conflict_detected"
-  | "execution_started"
-  | "execution_completed"
-  | "execution_failed"
-  | "execution_cancelled"
-  | "execution_blocked"
-  | "proofpack_generated"
-  | "proofpack_validation_failed"
   | "diagnostics_snapshot"
   | "replay_metadata";
 
@@ -94,144 +75,6 @@ export class InMemoryOperationalStore implements OperationalMemoryStore {
 
 export interface OperationalMemoryPersistenceAdapter {
   write(events: OperationalEvent[]): Promise<void>;
-}
-
-export interface FileOperationalMemoryStoreOptions {
-  filePath: string;
-  flushIntervalMs?: number;
-  maxFileSizeBytes?: number;
-  onWarn?: (message: string) => void;
-}
-
-export class FileOperationalMemoryStore implements OperationalMemoryStore, OperationalMemoryPersistenceAdapter {
-  private readonly events: OperationalEvent[] = [];
-  private readonly filePath: string;
-  private readonly flushIntervalMs: number;
-  private readonly maxFileSizeBytes: number;
-  private readonly onWarn: (message: string) => void;
-  private pendingWrites: OperationalEvent[] = [];
-  private flushTimer: ReturnType<typeof setTimeout> | null = null;
-  private nextSequence = 0;
-
-  constructor(options: FileOperationalMemoryStoreOptions) {
-    this.filePath = options.filePath;
-    this.flushIntervalMs = options.flushIntervalMs ?? 100;
-    this.maxFileSizeBytes = options.maxFileSizeBytes ?? 10 * 1024 * 1024;
-    this.onWarn = options.onWarn ?? ((m: string) => process.stderr.write(`[operational-memory] ${m}\n`));
-  }
-
-  async initialize(): Promise<void> {
-    this.events.length = 0;
-    const dir = path.dirname(this.filePath);
-    if (!fs.existsSync(dir)) {
-      fs.mkdirSync(dir, { recursive: true });
-    }
-    if (!fs.existsSync(this.filePath)) {
-      fs.writeFileSync(this.filePath, "", { encoding: "utf8" });
-      return;
-    }
-    const content = fs.readFileSync(this.filePath, "utf8");
-    const lines = content.split("\n");
-    let maxSeq = -1;
-    for (const rawLine of lines) {
-      const line = rawLine.trim();
-      if (line.length === 0) continue;
-      try {
-        const event = JSON.parse(line) as OperationalEvent;
-        if (event && typeof event.sequence === "number" && event.eventId && event.category) {
-          this.events.push(event);
-          if (event.sequence > maxSeq) maxSeq = event.sequence;
-        } else {
-          this.onWarn(`Skipping malformed entry: missing required fields`);
-        }
-      } catch {
-        this.onWarn(`Skipping malformed JSONL line: ${line.slice(0, 80)}...`);
-      }
-    }
-    this.nextSequence = maxSeq + 1;
-    this.events.sort((a, b) => a.sequence - b.sequence);
-  }
-
-  append(event: OperationalEvent): void {
-    this.events.push(event);
-    this.pendingWrites.push(event);
-    if (this.pendingWrites.length >= 1) {
-      this.scheduleFlush();
-    }
-  }
-
-  list(): OperationalEvent[] {
-    return [...this.events].sort((a, b) => a.sequence - b.sequence);
-  }
-
-  clear(): void {
-    this.events.length = 0;
-    this.pendingWrites.length = 0;
-    if (this.flushTimer !== null) {
-      clearTimeout(this.flushTimer);
-      this.flushTimer = null;
-    }
-    if (fs.existsSync(this.filePath)) {
-      fs.writeFileSync(this.filePath, "", { encoding: "utf8" });
-    }
-  }
-
-  async flush(): Promise<void> {
-    if (this.pendingWrites.length === 0) return;
-    const toWrite = [...this.pendingWrites];
-    this.pendingWrites.length = 0;
-    const serialized = toWrite.map((e) => deterministicSerialize(e)).join("\n") + "\n";
-    const tmpPath = this.filePath + ".tmp";
-    fs.appendFileSync(this.filePath, serialized, { encoding: "utf8" });
-    const size = fs.statSync(this.filePath).size;
-    if (size > this.maxFileSizeBytes) {
-      await this.compact();
-    }
-  }
-
-  async write(events: OperationalEvent[]): Promise<void> {
-    for (const event of events) {
-      this.append(event);
-    }
-    await this.flush();
-  }
-
-  async compact(): Promise<void> {
-    if (this.flushTimer !== null) {
-      clearTimeout(this.flushTimer);
-      this.flushTimer = null;
-    }
-    await this.flush();
-    const snapshot = this.list();
-    if (snapshot.length === 0) {
-      fs.writeFileSync(this.filePath, "", { encoding: "utf8" });
-      return;
-    }
-    const tmpPath = this.filePath + ".tmp";
-    const serialized = snapshot.map((e) => deterministicSerialize(e)).join("\n") + "\n";
-    fs.writeFileSync(tmpPath, serialized, { encoding: "utf8" });
-    fs.renameSync(tmpPath, this.filePath);
-  }
-
-  get size(): number {
-    return this.events.length;
-  }
-
-  get currentSequence(): number {
-    return this.nextSequence;
-  }
-
-  nextSeq(): number {
-    return this.nextSequence++;
-  }
-
-  private scheduleFlush(): void {
-    if (this.flushTimer !== null) return;
-    this.flushTimer = setTimeout(() => {
-      this.flushTimer = null;
-      this.flush().catch(() => {});
-    }, this.flushIntervalMs);
-  }
 }
 
 export class OperationalMemoryLog {
@@ -265,7 +108,7 @@ export function buildEventsFromReceipt(receipt: ExecutionReceipt, source = "runt
     out.push(log.append({ occurredAt: receipt.createdAt, category: "scheduler_outcome", source, provenance: { requestId: receipt.requestId, receiptId: receipt.receiptId }, replayRef: receipt.provenance, payload: { schedulingDecision: receipt.schedulingDecision as SchedulingDecision } }));
   }
   receipt.degradedEvents.forEach((d: DegradedState) => out.push(log.append({ occurredAt: d.timestamp, category: "degraded_state", source, provenance: { requestId: receipt.requestId, receiptId: receipt.receiptId }, replayRef: receipt.provenance, payload: { degraded: d } })));
-  receipt.degradedStateTriggers.forEach((f) => out.push(log.append({ occurredAt: f.at, category: "degraded_state_trigger", source, provenance: { requestId: receipt.requestId, receiptId: receipt.receiptId }, replayRef: receipt.provenance, payload: { degraded_state_trigger: f } })));
+  receipt.fallbackAttempts.forEach((f) => out.push(log.append({ occurredAt: f.at, category: "fallback", source, provenance: { requestId: receipt.requestId, receiptId: receipt.receiptId }, replayRef: receipt.provenance, payload: { fallback: f } })));
   receipt.operatorOverrides.forEach((o) => out.push(log.append({ occurredAt: o.at, category: "operator_override", source, provenance: { requestId: receipt.requestId, receiptId: receipt.receiptId, actor: o.actor }, replayRef: receipt.provenance, payload: { override: o } })));
   return out;
 }

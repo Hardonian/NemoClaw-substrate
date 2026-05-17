@@ -66,14 +66,6 @@ const TIMEOUT_MS = 30_000;
 
 function commandExists(cmd: string): boolean {
   try {
-    if (process.platform === "win32") {
-      // Use 'where' on Windows. It returns 0 if found, non-zero if not.
-      const result = spawnSync("where", [cmd], {
-        stdio: ["ignore", "ignore", "ignore"],
-        shell: true,
-      });
-      return result.status === 0;
-    }
     // Use sh -c with the command as a separate argument to avoid shell injection.
     // While cmd values are hardcoded internally, this is defensive.
     execFileSync("sh", ["-c", `command -v "$1"`, "--", cmd], {
@@ -100,7 +92,6 @@ function collect(collectDir: string, label: string, command: string, args: strin
     timeout: TIMEOUT_MS,
     stdio: ["ignore", "pipe", "pipe"],
     encoding: "utf-8",
-    shell: process.platform === "win32",
   });
 
   const raw = (result.stdout ?? "") + "\n" + (result.stderr ?? "");
@@ -118,11 +109,10 @@ function collectShell(collectDir: string, label: string, shellCmd: string): void
   const filename = label.replace(/[ /]/g, (c) => (c === " " ? "_" : "-"));
   const outfile = join(collectDir, `${filename}.txt`);
 
-  const result = spawnSync(process.platform === "win32" ? "cmd" : "sh", [process.platform === "win32" ? "/c" : "-c", shellCmd], {
+  const result = spawnSync("sh", ["-c", shellCmd], {
     timeout: TIMEOUT_MS,
     stdio: ["ignore", "pipe", "pipe"],
     encoding: "utf-8",
-    shell: process.platform === "win32",
   });
 
   const raw = (result.stdout ?? "") + "\n" + (result.stderr ?? "");
@@ -162,7 +152,6 @@ function detectSandboxName(): string {
       encoding: "utf-8",
       timeout: 10_000,
       stdio: ["ignore", "pipe", "ignore"],
-      shell: process.platform === "win32",
     });
     const lines = output.split("\n").filter((l) => l.trim().length > 0);
     for (const line of lines) {
@@ -181,15 +170,9 @@ function detectSandboxName(): string {
 
 function collectSystem(collectDir: string, quick: boolean): void {
   section("System");
-  if (process.platform === "win32") {
-    collect(collectDir, "systeminfo", "systeminfo", []);
-    collect(collectDir, "ver", "cmd", ["/c", "ver"]);
-    collect(collectDir, "hostname", "hostname", []);
-  } else {
-    collect(collectDir, "date", "date", []);
-    collect(collectDir, "uname", "uname", ["-a"]);
-    collect(collectDir, "uptime", "uptime", []);
-  }
+  collect(collectDir, "date", "date", []);
+  collect(collectDir, "uname", "uname", ["-a"]);
+  collect(collectDir, "uptime", "uptime", []);
 
   if (isMacOS) {
     collectShell(
@@ -197,16 +180,12 @@ function collectSystem(collectDir: string, quick: boolean): void {
       "memory",
       'echo "Physical: $(($(sysctl -n hw.memsize) / 1048576)) MB"; vm_stat',
     );
-  } else if (process.platform === "linux") {
+  } else {
     collect(collectDir, "free", "free", ["-m"]);
   }
 
   if (!quick) {
-    if (process.platform === "win32") {
-      collect(collectDir, "wmic-disk", "wmic", ["logicaldisk", "get", "size,freespace,caption"]);
-    } else {
-      collect(collectDir, "df", "df", ["-h"]);
-    }
+    collect(collectDir, "df", "df", ["-h"]);
   }
 }
 
@@ -218,8 +197,6 @@ function collectProcesses(collectDir: string, quick: boolean): void {
       "ps-cpu",
       "ps -eo pid,ppid,comm,%mem,%cpu | sort -k5 -rn | head -30",
     );
-  } else if (process.platform === "win32") {
-    collect(collectDir, "tasklist", "tasklist", []);
   } else {
     collectShell(
       collectDir,
@@ -236,15 +213,6 @@ function collectProcesses(collectDir: string, quick: boolean): void {
         "ps -eo pid,ppid,comm,%mem,%cpu | sort -k4 -rn | head -30",
       );
       collectShell(collectDir, "top", "top -l 1 | head -50");
-    } else if (process.platform === "win32") {
-    collect(collectDir, "ps-mem", "powershell", [
-      "-Command",
-      "Get-Process | Sort-Object -Property WorkingSet64 -Descending | Select-Object -First 30 -Property Id, ParentProcessId, Name, @{Name='WorkingSet(MB)';Expression={[math]::Round($_.WorkingSet64 / 1MB, 2)}}, @{Name='CPU(s)';Expression={[math]::Round($_.CPU, 2)}}",
-    ]);
-    collect(collectDir, "top", "powershell", [
-      "-Command",
-      "Get-Process | Sort-Object -Property CPU -Descending | Select-Object -First 50 -Property Id, Name, CPU, WorkingSet64",
-    ]);
     } else {
       collectShell(
         collectDir,
@@ -334,7 +302,6 @@ function collectSandboxInternals(
       encoding: "utf-8",
       timeout: 10_000,
       stdio: ["ignore", "pipe", "ignore"],
-      shell: process.platform === "win32",
     });
     const names = output
       .split("\n")
@@ -354,7 +321,6 @@ function collectSandboxInternals(
       timeout: TIMEOUT_MS,
       stdio: ["ignore", "pipe", "ignore"],
       encoding: "utf-8",
-      shell: process.platform === "win32",
     });
     if (sshResult.status !== 0) {
       warn(`Could not generate SSH config for sandbox '${sandboxName}', skipping internals`);
@@ -405,10 +371,6 @@ function collectNetwork(collectDir: string): void {
     collect(collectDir, "ifconfig", "ifconfig", []);
     collect(collectDir, "routes", "netstat", ["-rn"]);
     collect(collectDir, "dns-config", "scutil", ["--dns"]);
-  } else if (process.platform === "win32") {
-    collect(collectDir, "netstat", "netstat", ["-ano"]);
-    collect(collectDir, "ipconfig", "ipconfig", ["/all"]);
-    collect(collectDir, "route-print", "route", ["print"]);
   } else {
     collect(collectDir, "ss", "ss", ["-ltnp"]);
     collect(collectDir, "ip-addr", "ip", ["addr"]);
@@ -416,23 +378,13 @@ function collectNetwork(collectDir: string): void {
     collectShell(collectDir, "resolv-conf", "cat /etc/resolv.conf");
   }
   collect(collectDir, "nslookup", "nslookup", ["integrate.api.nvidia.com"]);
-
-  if (process.platform === "win32") {
-    collectShell(
-      collectDir,
-      "curl-models",
-      'powershell -Command "$resp = Invoke-WebRequest -Uri https://integrate.api.nvidia.com/v1/models -Method Get -ErrorAction SilentlyContinue; if ($resp) { Write-Host \"HTTP $($resp.StatusCode)\"; if ($resp.StatusCode -ge 200 -and $resp.StatusCode -lt 500) { Write-Host \"NIM API reachable\" } else { Write-Host \"NIM API unreachable\"; exit 1 } } else { Write-Host \"NIM API unreachable\"; exit 1 }"',
-    );
-  } else {
-    collectShell(
-      collectDir,
-      "curl-models",
-      'code=$(curl -s -o /dev/null -w "%{http_code}" https://integrate.api.nvidia.com/v1/models); echo "HTTP $code"; if [ "$code" -ge 200 ] && [ "$code" -lt 500 ]; then echo "NIM API reachable"; else echo "NIM API unreachable"; exit 1; fi',
-    );
-  }
-
-  collectShell(collectDir, "lsof-net", process.platform === "win32" ? "netstat -ano" : "lsof -i -P -n 2>/dev/null | head -50");
-  collectShell(collectDir, "lsof-18789", process.platform === "win32" ? `netstat -ano | findstr :${DASHBOARD_PORT}` : `lsof -i :${DASHBOARD_PORT}`);
+  collectShell(
+    collectDir,
+    "curl-models",
+    'code=$(curl -s -o /dev/null -w "%{http_code}" https://integrate.api.nvidia.com/v1/models); echo "HTTP $code"; if [ "$code" -ge 200 ] && [ "$code" -lt 500 ]; then echo "NIM API reachable"; else echo "NIM API unreachable"; exit 1; fi',
+  );
+  collectShell(collectDir, "lsof-net", "lsof -i -P -n 2>/dev/null | head -50");
+  collect(collectDir, "lsof-18789", "lsof", ["-i", `:${DASHBOARD_PORT}`]);
 }
 
 function collectOnboardSession(collectDir: string, repoDir: string): void {
@@ -458,15 +410,6 @@ function collectKernel(collectDir: string): void {
   if (isMacOS) {
     collect(collectDir, "vmstat", "vm_stat", []);
     collect(collectDir, "iostat", "iostat", ["-c", "5", "-w", "1"]);
-  } else if (process.platform === "win32") {
-    collect(collectDir, "memory", "powershell", [
-      "-Command",
-      "Get-CimInstance Win32_OperatingSystem | Select-Object TotalVisibleMemorySize, FreePhysicalMemory",
-    ]);
-    collect(collectDir, "cpu-usage", "powershell", [
-      "-Command",
-      "Get-CimInstance Win32_Processor | Select-Object LoadPercentage",
-    ]);
   } else {
     collect(collectDir, "vmstat", "vmstat", ["1", "5"]);
     collect(collectDir, "iostat", "iostat", ["-xz", "1", "5"]);
@@ -481,11 +424,6 @@ function collectKernelMessages(collectDir: string): void {
       "system-log",
       'log show --last 5m --predicate "eventType == logEvent" --style compact 2>/dev/null | tail -100',
     );
-  } else if (process.platform === "win32") {
-    collect(collectDir, "event-log-system", "powershell", [
-      "-Command",
-      "Get-EventLog -LogName System -Newest 100 | Select-Object TimeGenerated, EntryType, Source, Message",
-    ]);
   } else {
     collectShell(collectDir, "dmesg", "dmesg | tail -100");
   }
@@ -503,7 +441,6 @@ export function createTarball(collectDir: string, output: string): boolean {
   const result = spawnSync("tar", ["czf", output, "-C", dirname(collectDir), basename(collectDir)], {
     stdio: "inherit",
     timeout: 60_000,
-    shell: process.platform === "win32",
   });
   if (result.status !== 0 || result.signal) {
     const reason = result.signal

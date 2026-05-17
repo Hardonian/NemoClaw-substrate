@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 //
-// Remediation timer for shields-down. Runs as a detached child process
+// Auto-restore timer for shields-down. Runs as a detached child process
 // forked by shields.ts. Sleeps until the absolute restore time, then
 // restores the captured policy snapshot.
 //
@@ -116,7 +116,7 @@ function runRestoreTimer(args: TimerArgs): void {
         action: "shields_up_failed",
         sandbox: args.sandboxName,
         timestamp: now,
-        restored_by: "remediation_timer",
+        restored_by: "auto_timer",
         error: "Policy snapshot file missing",
       });
       exitCode = 1;
@@ -134,7 +134,7 @@ function runRestoreTimer(args: TimerArgs): void {
         action: "shields_up_failed",
         sandbox: args.sandboxName,
         timestamp: now,
-        restored_by: "remediation_timer",
+        restored_by: "auto_timer",
         error: `Policy restore exited with status ${String(status)}`,
       });
       exitCode = 1;
@@ -172,11 +172,11 @@ function runRestoreTimer(args: TimerArgs): void {
         } else {
           lockVerified = false;
           appendAudit({
-            action: "shields_remediation_lock_warning",
+            action: "shields_auto_restore_lock_warning",
             sandbox: args.sandboxName,
             timestamp: now,
-            restored_by: "remediation_timer",
-            warning: "Missing config directory for remediation re-lock verification",
+            restored_by: "auto_timer",
+            warning: "Missing config directory for auto-restore re-lock verification",
             lock_verified: false,
           });
         }
@@ -187,10 +187,10 @@ function runRestoreTimer(args: TimerArgs): void {
         } catch (error: unknown) {
           lockVerified = false;
           appendAudit({
-            action: "shields_remediation_lock_warning",
+            action: "shields_auto_restore_lock_warning",
             sandbox: args.sandboxName,
             timestamp: now,
-            restored_by: "remediation_timer",
+            restored_by: "auto_timer",
             warning: error instanceof Error ? error.message : String(error),
             lock_verified: false,
           });
@@ -209,10 +209,10 @@ function runRestoreTimer(args: TimerArgs): void {
       });
 
       appendAudit({
-        action: "shields_remediation",
+        action: "shields_auto_restore",
         sandbox: args.sandboxName,
         timestamp: now,
-        restored_by: "remediation_timer",
+        restored_by: "auto_timer",
         policy_snapshot: args.snapshotPath,
         restore_at: args.restoreAtIso,
       });
@@ -227,7 +227,7 @@ function runRestoreTimer(args: TimerArgs): void {
       action: "shields_up_failed",
       sandbox: args.sandboxName,
       timestamp: now,
-      restored_by: "remediation_timer",
+      restored_by: "auto_timer",
       error: "Config re-lock verification failed — shields remain DOWN",
     });
     exitCode = 1;
@@ -236,7 +236,7 @@ function runRestoreTimer(args: TimerArgs): void {
       action: "shields_up_failed",
       sandbox: args.sandboxName,
       timestamp: now,
-      restored_by: "remediation_timer",
+      restored_by: "auto_timer",
       error: error instanceof Error ? error.message : String(error),
     });
     exitCode = 1;

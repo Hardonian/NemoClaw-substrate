@@ -1,10 +1,10 @@
 // SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+import { describe, it, expect, beforeEach, vi } from "vitest";
 import type fs from "node:fs";
 import { homedir } from "node:os";
-import { beforeEach, describe, expect, it, vi } from "vitest";
-import { clearState, loadState, type NemoClawState, saveState } from "./state.js";
+import { loadState, saveState, clearState, type NemoClawState } from "./state.js";
 
 const store = new Map<string, string>();
 

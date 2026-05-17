@@ -9,7 +9,7 @@ import { evaluatePolicy } from "./governance";
 export interface RuntimeActionDescriptor {
   requestId: string;
   action: string;
-  actionClass: "tool" | "shell" | "file_mutation" | "remote_node" | "provider" | "degraded_state_trigger" | "network_sensitive" | "high_risk" | "generic" | "runtime";
+  actionClass: "tool" | "shell" | "file_mutation" | "remote_node" | "provider" | "fallback" | "network_sensitive" | "high_risk" | "generic";
   executionPhase: ExecutionPhase;
   provider?: string;
   model?: string;
@@ -45,7 +45,7 @@ export function evaluateRuntimePolicy(policy: PolicyBundle, descriptor: RuntimeA
       constraints: [],
       metadata: descriptor.metadata,
     },
-    actionClass: descriptor.actionClass,
+    actionClass: descriptor.actionClass as any,
   });
 }
 
@@ -64,7 +64,7 @@ export function buildRuntimeReceipt(input: {
   completedAt: string;
   policy?: PolicyEvaluationResult;
   degradedStates?: DegradedState[];
-  degradedStateTriggerReason?: string;
+  fallbackReason?: string;
   executionLineage?: ExecutionReceipt["executionLineage"];
 }): ExecutionReceipt {
   const policyDecision: PolicyDecision | undefined = input.policy
@@ -74,7 +74,7 @@ export function buildRuntimeReceipt(input: {
         reasons: [
           {
             code: input.policy.reasonCode,
-            explanation: input.policy.matchedRuleDescription || "runtime policy evaluation",
+            explanation: (input.policy as any).matchedRuleDescription || "runtime policy evaluation",
             source: input.policy.sourceRuleId || "policy-default",
           },
         ],
@@ -93,7 +93,7 @@ export function buildRuntimeReceipt(input: {
     modelId: input.action.model,
     policyDecision,
     degradedEvents: input.degradedStates ?? [],
-    degradedStateTriggers: input.degradedStateTriggerReason ? [{ at: input.completedAt, reason: input.degradedStateTriggerReason }] : [],
+    fallbackAttempts: input.fallbackReason ? [{ at: input.completedAt, reason: input.fallbackReason }] : [],
     toolInvocations: input.action.toolName
       ? [{ name: input.action.toolName, at: input.completedAt, status: "ok" }]
       : [],

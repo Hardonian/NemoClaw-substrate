@@ -125,9 +125,9 @@ Output: NVIDIA_API_KEY=<REDACTED>
 
 ---
 
-## Shell degraded state coverage
+## Shell fallback coverage
 
-When Node.js is unavailable (e.g., during early bootstrap), `debug.sh` uses `sed`-based redaction. This degraded state only covers `EXPECTED_SHELL_PREFIXES`:
+When Node.js is unavailable (e.g., during early bootstrap), `debug.sh` uses `sed`-based redaction. This fallback only covers `EXPECTED_SHELL_PREFIXES`:
 
 - `nvapi-`
 - `nvcf-`
@@ -155,5 +155,5 @@ These are inherent limitations of regex-based content scanning and are documente
 
 1. Add the regex to `src/lib/security/secret-patterns.ts` (for CLI redaction) and/or `nemoclaw/src/security/secret-scanner.ts` (for memory write scanning).
 2. Add a test case to the corresponding test file.
-3. If the pattern has a distinctive prefix that should be covered by the shell degraded state, add it to `EXPECTED_SHELL_PREFIXES` and update `debug.sh`.
+3. If the pattern has a distinctive prefix that should be covered by the shell fallback, add it to `EXPECTED_SHELL_PREFIXES` and update `debug.sh`.
 4. Run `npx vitest run src/lib/security/redact.test.ts` and `npx vitest run nemoclaw/src/security/secret-scanner.test.ts`.

@@ -9,7 +9,6 @@ export type CommandGroup =
   | "Messaging Channels"
   | "Compatibility Commands"
   | "Services"
-  | "Operations"
   | "Troubleshooting"
   | "Credentials"
   | "Backup"

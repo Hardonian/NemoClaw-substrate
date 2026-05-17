@@ -284,7 +284,6 @@ export function createSystemDeps(openshellBinary: string): SessionDetectionDeps 
           encoding: "utf-8",
           stdio: ["ignore", "pipe", "pipe"],
           timeout: 5000,
-          shell: process.platform === "win32",
         });
         if (result.status !== 0) return null;
         return result.stdout || "";

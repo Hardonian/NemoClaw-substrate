@@ -207,21 +207,21 @@ Automatic recovery is intentionally absent for all failure states unless explici
 
 ---
 
-## degraded-blocked
+## fallback-blocked
 
-**Meaning:** A degraded state path was identified but blocked by policy or explicit configuration.
+**Meaning:** A fallback path was identified but blocked by policy or explicit no-fallback configuration.
 
-**Operator interpretation:** Review degraded state policy. The block is intentional enforcement.
+**Operator interpretation:** Review fallback policy. The block is intentional enforcement.
 
-**Replay implications:** Degraded-blocked events carry origin, target, and blocking reason.
+**Replay implications:** Fallback-blocked events carry origin, target, and blocking reason.
 
-**Observability implications:** Degraded-blocked events are visible in routing summaries.
+**Observability implications:** Fallback-blocked events are visible in routing summaries.
 
-**Receipt implications:** Receipts carry degraded-blocked with full context.
+**Receipt implications:** Receipts carry fallback-blocked with full context.
 
-**Retry expectations:** Adjust policy or provide alternative. No automatic degraded state entry.
+**Retry expectations:** Adjust fallback policy or provide alternative. No automatic fallback.
 
-**Automatic recovery absent:** Yes. Intentional — blocking reflects operator policy.
+**Automatic recovery absent:** Yes. Intentional — fallback blocking reflects operator policy.
 
 ---
 

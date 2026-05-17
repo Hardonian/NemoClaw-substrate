@@ -126,7 +126,6 @@ export function runOpenshellCommand(
     encoding: "utf-8",
     stdio: opts.stdio ?? "inherit",
     timeout: opts.timeout,
-    shell: process.platform === "win32",
   });
   if (result.error) {
     if (isIgnoredTimeout(result.error, opts)) {
@@ -155,7 +154,6 @@ export function captureOpenshellCommand(
     encoding: "utf-8",
     stdio: ["ignore", "pipe", "pipe"],
     timeout: opts.timeout,
-    shell: process.platform === "win32",
   });
   if (result.error) {
     if (isIgnoredTimeout(result.error, opts)) {
@@ -186,7 +184,6 @@ export function captureOpenshellCommandAsync(
       env: { ...process.env, ...opts.env },
       detached: process.platform !== "win32",
       stdio: ["ignore", "pipe", "pipe"],
-      shell: process.platform === "win32",
     }) as ChildProcess;
 
     let stdout = "";

@@ -4,11 +4,11 @@
 import { promises as dnsPromises } from "node:dns";
 import { isIP } from "node:net";
 
-import { isPrivateHostname, isPrivateIp } from "./private-networks.js";
+import { isPrivateIp, isPrivateHostname } from "./private-networks.js";
 
 // Re-export so consumers can pick the narrower IP-only check (for
 // post-DNS addresses) or the broader name-aware check (for user input).
-export { isPrivateHostname, isPrivateIp };
+export { isPrivateIp, isPrivateHostname };
 
 const ALLOWED_SCHEMES = new Set(["https:", "http:"]);
 
@@ -52,17 +52,6 @@ export async function validateEndpointUrl(url: string): Promise<ValidatedEndpoin
   if (!hostname) {
     throw new Error(`No hostname found in URL: ${url}`);
   }
-
-  if (parsed.username || parsed.password) {
-    throw new Error(
-      "Endpoint URL must not include username/password credentials. Use `nemoclaw credential` commands instead.",
-    );
-  }
-
-  if (parsed.hash) {
-    throw new Error("Endpoint URL must not include a fragment (#...).");
-  }
-
   if (isPrivateHostname(hostname)) {
     throw new Error(
       `Endpoint URL points to private/internal address ${hostname}. ` +

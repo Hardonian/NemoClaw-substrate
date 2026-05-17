@@ -8,8 +8,8 @@
  * Shields can only be lowered or raised from the host CLI (security invariant).
  */
 
-import { loadState } from "../blueprint/state.js";
 import type { PluginCommandResult } from "../index.js";
+import { loadState } from "../blueprint/state.js";
 
 export function slashShieldsStatus(): PluginCommandResult {
   const state = loadState();

@@ -63,7 +63,6 @@ This document defines the trust boundaries, security profiles, and worker classi
 | Credential persistence | Stripped from configs, injected at runtime |
 
 **Trust assumptions:**
-
 - Operator host is trusted.
 - Sandbox container is partially trusted (capability-restricted).
 - Agent code runs with sandbox-level isolation.
@@ -85,7 +84,6 @@ Adds to local-only profile:
 | Response integrity | Validated (JSON structure, status code); content not signed |
 
 **Trust assumptions:**
-
 - Remote workers are untrusted by default.
 - Trust is a classification signal, not authorization (INV-003).
 - Attestation is not trust (INV-004).
@@ -100,7 +98,7 @@ Adds to remote-enabled profile:
 | Property | Value |
 |----------|-------|
 | Routing decisions | Policy-evaluated, receipt-emitting |
-| Degraded State paths | Explicit records with reason codes (INV-006) |
+| Fallback paths | Explicit records with reason codes (INV-006) |
 | Candidate selection | Policy-constrained, not telemetry-driven |
 | Diagnostics | Read-only; no runtime mutation (INV-007) |
 | Operational memory | Append-only; supervised proposals only (INV-016) |

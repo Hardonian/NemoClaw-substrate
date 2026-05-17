@@ -14,7 +14,7 @@ describe("installer ref helpers", () => {
     expect(resolveInstallRef({})).toBe("latest");
   });
 
-  it("derives installer versions from refs and default sources", () => {
+  it("derives installer versions from refs and fallback sources", () => {
     expect(
       resolveInstallerVersion({
         defaultVersion: "0.1.0",

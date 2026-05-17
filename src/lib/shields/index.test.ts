@@ -1,10 +1,10 @@
 // SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import fs from "node:fs";
-import path from "node:path";
 import os from "node:os";
+import path from "node:path";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // The shields module uses CJS require("./runner") etc., which vitest resolves
 // relative to src/lib/. We mock the absolute paths that vitest will resolve.
@@ -302,7 +302,7 @@ describe("NC-2227-04: sandbox-state.ts tar commands do not follow symlinks", () 
   it("restore tar command does not use -h flag (no symlink following)", () => {
     const src = getSourceCode();
     // Find the restore function
-    const fnStart = src.indexOf("function restoreSandboxState");
+    const fnStart = src.indexOf("function restoreStateDirs(");
     expect(fnStart).not.toBe(-1);
     const fnBody = src.slice(fnStart);
 
@@ -339,7 +339,7 @@ describe("NC-2227-04: sandbox-state.ts tar commands do not follow symlinks", () 
 
   it("restore fails closed when pre-restore cleanup cannot remove stale state", () => {
     const src = getSourceCode();
-    const fnStart = src.indexOf("function restoreSandboxState");
+    const fnStart = src.indexOf("function restoreStateDirs(");
     const fnBody = src.slice(fnStart);
     const cleanupCheck = fnBody.slice(
       fnBody.indexOf("const rmResult"),
@@ -355,7 +355,7 @@ describe("NC-2227-04: sandbox-state.ts tar commands do not follow symlinks", () 
 
   it("restore treats post-restore ownership repair as best-effort and verifies usability", () => {
     const src = getSourceCode();
-    const fnStart = src.indexOf("function restoreSandboxState");
+    const fnStart = src.indexOf("function restoreStateDirs(");
     const fnBody = src.slice(fnStart);
     const chownCheck = fnBody.slice(
       fnBody.indexOf("const chownCmd"),

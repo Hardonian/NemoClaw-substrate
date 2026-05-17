@@ -27,20 +27,17 @@ This is a structural enforcement, not a policy toggle. There is no configuration
 ### Enforcement mechanisms
 
 1. **String command rejection:**
-
    ```typescript
    // If argv is a string, throw immediately
    if (typeof argv === "string") throw new Error("use argv array instead");
    ```
 
 2. **Empty argv rejection:**
-
    ```typescript
    if (argv.length === 0) throw new Error("argv must not be empty");
    ```
 
 3. **Shell option prohibition:**
-
    ```typescript
    if (opts.shell) throw new Error("shell option is forbidden");
    ```
@@ -80,7 +77,6 @@ spawnSync("bash", ["-c", script], { shell: false, ... })
 ```
 
 This is safe because:
-
 - `bash` is the executable (not an implicit shell wrapper).
 - `-c` receives the script content as a single argument.
 - The outer `spawnSync` does not invoke a shell; it directly executes `bash`.
