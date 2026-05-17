@@ -4074,7 +4074,7 @@ async function preflight(
             `  Cleaning up orphaned SSH port-forward on port ${port} (PID ${portCheck.pid})...`,
           );
           run(["kill", String(portCheck.pid)], { ignoreError: true });
-          sleep(1);
+          await new Promise(r => setTimeout(r, 1000));
           portCheck = await checkPortAvailable(port);
           if (portCheck.ok) {
             console.log(`  ✓ Port ${port} available after orphaned forward cleanup (${label})`);
