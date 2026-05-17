@@ -6,7 +6,7 @@
 // Config starts mutable (the default state). Shields provide opt-in
 // lockdown: `shields up` locks config + applies a restrictive network
 // policy, `shields down` returns to the default (mutable) state.
-// Time-bounded shields-down has remediation via a detached timer.
+// Time-bounded shields-down has automatic restore via a detached timer.
 // The sandbox cannot lower or raise its own shields — all mutations are
 // host-initiated (security invariant).
 
@@ -136,7 +136,7 @@ function saveShieldsState(sandboxName: string, patch: ShieldsState): ShieldsStat
 }
 
 // ---------------------------------------------------------------------------
-// Timer marker — tracks the detached remediation process
+// Timer marker — tracks the detached auto-restore process
 // ---------------------------------------------------------------------------
 
 interface TimerMarker {
@@ -456,7 +456,7 @@ function unlockAgentConfig(
 }
 
 // ---------------------------------------------------------------------------
-// Config lock — used by shields-up (opt-in lockdown), remediation timer,
+// Config lock — used by shields-up (opt-in lockdown), auto-restore timer,
 // and rollback
 //
 // Each operation runs independently so a single failure does not skip the
@@ -616,7 +616,7 @@ function shieldsDown(sandboxName: string, opts: ShieldsDownOpts = {}): void {
     process.exit(1);
   }
 
-  // Kill stale remediation markers only when this command will actually
+  // Kill stale auto-restore markers only when this command will actually
   // transition into shields-down. A repeated shields-down must not cancel the
   // active timer and leave the sandbox unlocked indefinitely.
   killTimer(sandboxName);
@@ -686,7 +686,7 @@ function shieldsDown(sandboxName: string, opts: ShieldsDownOpts = {}): void {
     shieldsPolicySnapshotPath: snapshotPath,
   });
 
-  // 4. Start remediation timer (detached child process)
+  // 4. Start auto-restore timer (detached child process)
   //    Pass the absolute restore time, not a relative timeout. Steps 1-2b
   //    can take minutes (policy apply + kubectl chmod), so a relative timeout
   //    passed at fork time would fire too early.
@@ -721,7 +721,7 @@ function shieldsDown(sandboxName: string, opts: ShieldsDownOpts = {}): void {
     );
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
-    console.error(`  Cannot start remediation timer: ${message}`);
+    console.error(`  Cannot start auto-restore timer: ${message}`);
     console.error("  Rolling back — restoring policy from snapshot...");
     const rollbackResult = run(buildPolicySetCommand(snapshotPath, sandboxName), {
       ignoreError: true,
@@ -771,7 +771,7 @@ function shieldsDown(sandboxName: string, opts: ShieldsDownOpts = {}): void {
   const mins = Math.floor(timeoutSeconds / 60);
   const secs = timeoutSeconds % 60;
   console.log(
-    `  Config unlocked for ${sandboxName} (scheduled lockdown in: ${mins}m${secs ? ` ${secs}s` : ""})`,
+    `  Config unlocked for ${sandboxName} (auto-lockdown in: ${mins}m${secs ? ` ${secs}s` : ""})`,
   );
   console.log("");
   console.log("  Sandbox is in default (mutable) state.");
@@ -796,7 +796,7 @@ function shieldsUp(sandboxName: string): void {
     return;
   }
 
-  // 1. Kill remediation timer if running
+  // 1. Kill auto-restore timer if running
   killTimer(sandboxName);
 
   // 2. If coming from shields-down, restore the saved policy snapshot.
@@ -904,7 +904,7 @@ function shieldsStatus(sandboxName: string): void {
       if (remaining !== null) {
         const mins = Math.floor(remaining / 60);
         const secs = remaining % 60;
-        console.log(`  Scheduled lockdown in: ${mins}m ${secs}s`);
+        console.log(`  Auto-lockdown in: ${mins}m ${secs}s`);
       }
       console.log(`  Reason:  ${state.shieldsDownReason ?? "not specified"}`);
       console.log(`  Policy:  ${state.shieldsDownPolicy ?? "permissive"}`);

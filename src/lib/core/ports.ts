@@ -10,9 +10,9 @@
  * Read an environment variable as a port number, falling back to a default.
  * Validates that the value is a valid non-privileged port (1024-65535).
  */
-export function parsePort(envVar: string, defaultValue: number): number {
+export function parsePort(envVar: string, fallback: number): number {
   const raw = process.env[envVar];
-  if (raw === undefined || raw === "") return defaultValue;
+  if (raw === undefined || raw === "") return fallback;
   const trimmed = String(raw).trim();
   if (!/^\d+$/.test(trimmed)) {
     throw new Error(

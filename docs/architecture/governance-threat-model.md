@@ -115,13 +115,13 @@ Governance-specific threats to the NemoClaw substrate. Each threat is grounded i
 
 ---
 
-## GT-007: hidden degraded state
+## GT-007: Hidden fallback
 
 **Scenario:** Execution silently falls back without operator visibility.
 
 **Affected subsystem:** Governed routing, heterogeneous routing.
 
-**Current mitigations:** All degraded states are explicit (INV-006). No-hidden-degraded state chaos assertions.
+**Current mitigations:** All fallbacks are explicit (INV-006). No-hidden-fallback chaos assertions.
 
 **Verification:** `npm run verify:governed-routing`, `npm run verify:chaos`.
 

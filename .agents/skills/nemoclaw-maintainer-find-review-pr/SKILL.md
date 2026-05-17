@@ -89,7 +89,7 @@ Present non-duplicate PRs in a table:
 
 | PR | Issue | Title | Author | Age |
 |----|-------|-------|--------|-----|
-| #1476 | #577 | disable remote uninstall recovery path | user1 | 2d |
+| #1476 | #577 | disable remote uninstall fallback | user1 | 2d |
 | #1121 | #804 | Landlock read-only /sandbox | user2 | 6d |
 ```
 

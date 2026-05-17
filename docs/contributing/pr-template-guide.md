@@ -20,7 +20,7 @@ This guide clarifies how to structure PRs for this fork's operator-grade executi
 5. **Control-plane / policy impact**
    - Which execution or policy paths are affected?
 6. **Degraded-state behavior**
-   - How degraded/degraded state/error states are surfaced.
+   - How degraded/fallback/error states are surfaced.
 7. **Verification notes (required)**
    - Exact commands run.
    - Outcomes.
@@ -30,7 +30,7 @@ This guide clarifies how to structure PRs for this fork's operator-grade executi
 
 - Keep claims grounded in branch code/docs.
 - Do not claim runtime capabilities that are not implemented.
-- Prefer explicit failure/degraded semantics over silent degraded state language.
+- Prefer explicit failure/degraded semantics over silent fallback language.
 - If user-facing behavior changes, update relevant docs in the same PR.
 
 ## Expected verification notes in every PR

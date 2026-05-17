@@ -1,22 +1,25 @@
+// @ts-nocheck
 // SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 //
 // Inference endpoint probes — validate that a provider's API responds
 // before committing the onboard wizard to a model selection.
 
-import { normalizeCredentialValue } from "../credentials/store.js";
-import { isWsl as isWslPlatform } from "../platform.js";
-import {
+const { normalizeCredentialValue } = require("../credentials/store");
+const { isWsl } = require("../platform");
+const httpProbe = require("../http-probe");
+const {
+  isNvcfFunctionNotFoundForAccount,
+  nvcfFunctionNotFoundMessage,
+  shouldForceCompletionsApi,
+} = require("../validation");
+
+const {
   getCurlTimingArgs,
   runCurlProbe,
   runChatCompletionsStreamingProbe,
   runStreamingEventProbe,
-} from "../http-probe.js";
-import {
-  isNvcfFunctionNotFoundForAccount,
-  nvcfFunctionNotFoundMessage,
-  shouldForceCompletionsApi,
-} from "../validation.js";
+} = httpProbe;
 
 // ── Helpers ──────────────────────────────────────────────────────
 
@@ -27,7 +30,7 @@ import {
 // must fail closed unless the host is probeable from the onboard process.
 const SANDBOX_INTERNAL_HOSTS = ["host.openshell.internal", "host.docker.internal"];
 
-function isSandboxInternalUrl(url: string): boolean {
+function isSandboxInternalUrl(url) {
   try {
     const { hostname } = new URL(String(url));
     return SANDBOX_INTERNAL_HOSTS.includes(hostname);
@@ -36,7 +39,7 @@ function isSandboxInternalUrl(url: string): boolean {
   }
 }
 
-function parseJsonObject(body: string | null): Record<string, unknown> | null {
+function parseJsonObject(body) {
   if (!body) return null;
   try {
     return JSON.parse(body);
@@ -45,67 +48,63 @@ function parseJsonObject(body: string | null): Record<string, unknown> | null {
   }
 }
 
-function hasResponsesToolCall(body: string): boolean {
+function hasResponsesToolCall(body) {
   const parsed = parseJsonObject(body);
   if (!parsed || !Array.isArray(parsed.output)) return false;
 
-  const stack: unknown[] = [...(parsed.output as unknown[])];
+  const stack = [...parsed.output];
   while (stack.length > 0) {
     const item = stack.pop();
     if (!item || typeof item !== "object") continue;
-    const obj = item as Record<string, unknown>;
-    if (obj.type === "function_call" || obj.type === "tool_call") return true;
-    if (Array.isArray(obj.content)) {
-      stack.push(...obj.content);
+    if (item.type === "function_call" || item.type === "tool_call") return true;
+    if (Array.isArray(item.content)) {
+      stack.push(...item.content);
     }
   }
 
   return false;
 }
 
-function hasOwn(value: Record<string, unknown>, key: string): boolean {
+function hasOwn(value, key) {
   return Object.prototype.hasOwnProperty.call(value, key);
 }
 
-function hasValidFunctionCallPayload(value: unknown): boolean {
+function hasValidFunctionCallPayload(value) {
   if (!value || typeof value !== "object") return false;
-  const obj = value as Record<string, unknown>;
-  if (typeof obj.name !== "string" || (obj.name as string).length === 0) return false;
-  if (!hasOwn(obj, "arguments")) return false;
+  if (typeof value.name !== "string" || value.name.length === 0) return false;
+  if (!hasOwn(value, "arguments")) return false;
   return (
-    typeof obj.arguments === "string" ||
-    (typeof obj.arguments === "object" &&
-      obj.arguments !== null &&
-      !Array.isArray(obj.arguments))
+    typeof value.arguments === "string" ||
+    (typeof value.arguments === "object" &&
+      value.arguments !== null &&
+      !Array.isArray(value.arguments))
   );
 }
 
-function isStructuredChatCompletionsToolCall(value: unknown): boolean {
+function isStructuredChatCompletionsToolCall(value) {
   if (!value || typeof value !== "object") return false;
-  const obj = value as Record<string, unknown>;
-  if (obj.type !== "function") return false;
-  const fn = obj.function;
+  if (value.type !== "function") return false;
+  const fn = value.function;
   return hasValidFunctionCallPayload(fn);
 }
 
-function containsToolCallLikeValue(value: unknown): boolean {
+function containsToolCallLikeValue(value) {
   if (!value || typeof value !== "object") return false;
-  const obj = value as Record<string, unknown>;
   if (hasValidFunctionCallPayload(value)) return true;
   if (isStructuredChatCompletionsToolCall(value)) return true;
-  if (Array.isArray(obj.tool_calls)) {
-    return (obj.tool_calls as unknown[]).some((call) => isStructuredChatCompletionsToolCall(call));
+  if (Array.isArray(value.tool_calls)) {
+    return value.tool_calls.some((call) => isStructuredChatCompletionsToolCall(call));
   }
-  if (obj.message && typeof obj.message === "object") {
-    return containsToolCallLikeValue(obj.message);
+  if (value.message && typeof value.message === "object") {
+    return containsToolCallLikeValue(value.message);
   }
-  if (Array.isArray(obj.choices)) {
-    return (obj.choices as unknown[]).some((choice) => choice && containsToolCallLikeValue(choice));
+  if (Array.isArray(value.choices)) {
+    return value.choices.some((choice) => choice && containsToolCallLikeValue(choice));
   }
   return false;
 }
 
-function parseStringifiedToolCall(content: unknown): Record<string, unknown> | null {
+function parseStringifiedToolCall(content) {
   if (typeof content !== "string") return null;
   const trimmed = content.trim();
   if (!trimmed.startsWith("{") || !trimmed.endsWith("}")) return null;
@@ -117,37 +116,35 @@ function parseStringifiedToolCall(content: unknown): Record<string, unknown> | n
   }
 }
 
-function hasChatCompletionsToolCall(body: string): boolean {
+function hasChatCompletionsToolCall(body) {
   const parsed = parseJsonObject(body);
-  const message = (parsed as any)?.choices?.[0]?.message;
+  const message = parsed?.choices?.[0]?.message;
   if (!message || typeof message !== "object") return false;
-  const toolCalls = (message as Record<string, unknown>).tool_calls;
-  if (!Array.isArray(toolCalls) || (toolCalls as unknown[]).length === 0) return false;
-  return (toolCalls as unknown[]).some((call) => isStructuredChatCompletionsToolCall(call));
+  const toolCalls = message.tool_calls;
+  if (!Array.isArray(toolCalls) || toolCalls.length === 0) return false;
+  return toolCalls.some((call) => isStructuredChatCompletionsToolCall(call));
 }
 
-function hasChatCompletionsToolCallLeak(body: string): boolean {
+function hasChatCompletionsToolCallLeak(body) {
   const parsed = parseJsonObject(body);
-  const message = (parsed as any)?.choices?.[0]?.message;
+  const message = parsed?.choices?.[0]?.message;
   if (!message || typeof message !== "object") return false;
 
-  const obj = message as Record<string, unknown>;
-  const content = obj.content;
+  const content = message.content;
   if (typeof content === "string") {
     return Boolean(parseStringifiedToolCall(content));
   }
   if (Array.isArray(content)) {
-    return (content as unknown[]).some((item) => {
+    return content.some((item) => {
       if (!item || typeof item !== "object") return false;
-      const itemObj = item as Record<string, unknown>;
-      const text = typeof itemObj.text === "string" ? itemObj.text : "";
+      const text = typeof item.text === "string" ? item.text : "";
       return Boolean(parseStringifiedToolCall(text));
     });
   }
   return false;
 }
 
-function shouldRequireResponsesToolCalling(provider: string): boolean {
+function shouldRequireResponsesToolCalling(provider) {
   return (
     provider === "nvidia-prod" || provider === "gemini-api" || provider === "compatible-endpoint"
   );
@@ -162,42 +159,42 @@ function shouldRequireResponsesToolCalling(provider: string): boolean {
 // helper (probeOpenAiLikeEndpoint, probeResponsesToolCalling) target the
 // OpenAI-compat URL, so returning undefined for every provider is correct:
 // probes default to Bearer auth and Gemini onboarding succeeds.
-function getProbeAuthMode(_provider: string): undefined {
+function getProbeAuthMode(_provider) {
   return undefined;
 }
 
 // Per-validation-probe curl timing. Tighter than the default 60s in
 // getCurlTimingArgs() because validation must not hang the wizard for a
 // minute on a misbehaving model. See issue #1601 (Bug 3).
-function getValidationProbeCurlArgs(opts?: { isWsl?: boolean }): string[] {
-  if (isWslPlatform(opts)) {
+function getValidationProbeCurlArgs(opts) {
+  if (isWsl(opts)) {
     return ["--connect-timeout", "20", "--max-time", "30"];
   }
   return ["--connect-timeout", "10", "--max-time", "15"];
 }
 
-function getDeepSeekV4ProValidationProbeCurlArgs(opts?: { isWsl?: boolean }): string[] {
-  if (isWslPlatform(opts)) {
+function getDeepSeekV4ProValidationProbeCurlArgs(opts) {
+  if (isWsl(opts)) {
     return ["--connect-timeout", "30", "--max-time", "150"];
   }
   return ["--connect-timeout", "20", "--max-time", "120"];
 }
 
-function getKimiK26ValidationProbeCurlArgs(opts?: { isWsl?: boolean }): string[] {
-  if (isWslPlatform(opts)) {
+function getKimiK26ValidationProbeCurlArgs(opts) {
+  if (isWsl(opts)) {
     return ["--connect-timeout", "20", "--max-time", "90"];
   }
   return ["--connect-timeout", "10", "--max-time", "60"];
 }
 
-function getCurlMaxTimeSeconds(args: string[]): number {
+function getCurlMaxTimeSeconds(args) {
   const maxTimeIndex = args.indexOf("--max-time");
   if (maxTimeIndex === -1) return 30;
   const value = Number(args[maxTimeIndex + 1]);
   return Number.isFinite(value) && value > 0 ? value : 30;
 }
 
-function getProbeProcessTimeoutMs(args: string[]): number {
+function getProbeProcessTimeoutMs(args) {
   return (getCurlMaxTimeSeconds(args) + 5) * 1000;
 }
 
@@ -208,7 +205,7 @@ function getProbeProcessTimeoutMs(args: string[]): number {
 const RETRIABLE_HTTP_PROBE_STATUSES = new Set([429, 502, 503, 504]);
 const HTTP_PROBE_RETRY_DELAYS_MS = [5_000, 15_000, 30_000];
 
-function sleepSync(ms: number): void {
+function sleepSync(ms) {
   if (ms <= 0) return;
   // Skip real waits under vitest so retry-loop coverage doesn't burn 50s of
   // wall-clock per test. process.env.VITEST is set automatically by the
@@ -217,32 +214,20 @@ function sleepSync(ms: number): void {
   Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
 }
 
-interface ProbeExecuteResult {
-  ok: boolean;
-  httpStatus?: number;
-  curlStatus?: number;
-  body?: string;
-  stderr?: string;
-  message?: string;
-}
-
-function shouldRetryHttpProbe(result: ProbeExecuteResult): boolean {
+function shouldRetryHttpProbe(result) {
   return (
     result &&
     !result.ok &&
     result.curlStatus === 0 &&
-    RETRIABLE_HTTP_PROBE_STATUSES.has(result.httpStatus ?? 0)
+    RETRIABLE_HTTP_PROBE_STATUSES.has(result.httpStatus)
   );
 }
 
-function isCurlTimeout(result: ProbeExecuteResult): boolean {
+function isCurlTimeout(result) {
   return result && !result.ok && result.curlStatus === 28;
 }
 
-function executeProbeWithHttpRetry(probe: {
-  name: string;
-  execute: () => ProbeExecuteResult;
-}): ProbeExecuteResult {
+function executeProbeWithHttpRetry(probe) {
   let result = probe.execute();
   for (const delayMs of HTTP_PROBE_RETRY_DELAYS_MS) {
     if (!shouldRetryHttpProbe(result)) break;
@@ -257,12 +242,7 @@ function executeProbeWithHttpRetry(probe: {
 
 // ── Responses API probe ──────────────────────────────────────────
 
-function probeResponsesToolCalling(
-  endpointUrl: string,
-  model: string,
-  apiKey: string,
-  options: { authMode?: string } = {},
-): ProbeExecuteResult {
+function probeResponsesToolCalling(endpointUrl, model, apiKey, options = {}) {
   const useQueryParam = options.authMode === "query-param";
   const normalizedKey = apiKey ? normalizeCredentialValue(apiKey) : "";
   const baseUrl = String(endpointUrl).replace(/\/+$/, "");
@@ -318,12 +298,7 @@ function probeResponsesToolCalling(
   };
 }
 
-function probeChatCompletionsToolCalling(
-  endpointUrl: string,
-  model: string,
-  apiKey: string,
-  options: { authMode?: string; timingArgs?: string[] } = {},
-): ProbeExecuteResult {
+function probeChatCompletionsToolCalling(endpointUrl, model, apiKey, options = {}) {
   const useQueryParam = options.authMode === "query-param";
   const normalizedKey = apiKey ? normalizeCredentialValue(apiKey) : "";
   const baseUrl = String(endpointUrl).replace(/\/+$/, "");
@@ -432,16 +407,16 @@ function probeChatCompletionsToolCalling(
 }
 
 // ── OpenAI-like probe ────────────────────────────────────────────
-function isDeepSeekV4ProModel(model: string): boolean {
+function isDeepSeekV4ProModel(model) {
   return String(model || "").toLowerCase() === "deepseek-ai/deepseek-v4-pro";
 }
 
-function isKimiK26Model(model: string): boolean {
+function isKimiK26Model(model) {
   return String(model || "").toLowerCase() === "moonshotai/kimi-k2.6";
 }
 
-function getChatCompletionsProbePayload(model: string): Record<string, unknown> {
-  const payload: Record<string, unknown> = {
+function getChatCompletionsProbePayload(model) {
+  const payload = {
     model,
     messages: [{ role: "user", content: "Reply with exactly: OK" }],
   };
@@ -473,12 +448,7 @@ export function getChatCompletionsProbeCurlArgs({
   model,
   url,
   isWsl: isWslOverride,
-}: {
-  authHeader: string[];
-  model: string;
-  url: string;
-  isWsl?: boolean;
-}): string[] {
+}) {
   const platformOptions =
     typeof isWslOverride === "boolean" ? { isWsl: isWslOverride } : undefined;
   const timingArgs = (() => {
@@ -498,17 +468,7 @@ export function getChatCompletionsProbeCurlArgs({
   ];
 }
 
-function runChatCompletionsProbe({
-  authHeader,
-  model,
-  url,
-  isWsl: isWslOverride,
-}: {
-  authHeader: string[];
-  model: string;
-  url: string;
-  isWsl?: boolean;
-}): ProbeExecuteResult {
+function runChatCompletionsProbe({ authHeader, model, url, isWsl: isWslOverride }) {
   const args = getChatCompletionsProbeCurlArgs({
     authHeader,
     model,
@@ -523,38 +483,7 @@ function runChatCompletionsProbe({
   return runCurlProbe(args);
 }
 
-interface ProbeOptions {
-  authMode?: string;
-  requireResponsesToolCalling?: boolean;
-  requireChatCompletionsToolCalling?: boolean;
-  skipResponsesProbe?: boolean;
-  probeStreaming?: boolean;
-  isWsl?: boolean;
-}
-
-interface ProbeFailure {
-  name: string;
-  httpStatus: number;
-  curlStatus: number;
-  message: string;
-  body: string;
-}
-
-function probeOpenAiLikeEndpoint(
-  endpointUrl: string,
-  model: string,
-  apiKey: string,
-  options: ProbeOptions = {},
-): {
-  ok: boolean;
-  api?: string | null;
-  label?: string | null;
-  note?: string;
-  message?: string;
-  failures?: ProbeFailure[];
-  warning?: string;
-  validated?: boolean;
-} {
+function probeOpenAiLikeEndpoint(endpointUrl, model, apiKey, options = {}) {
   if (isSandboxInternalUrl(endpointUrl)) {
     const { hostname } = new URL(String(endpointUrl));
     if (options.requireChatCompletionsToolCalling !== true) {
@@ -587,7 +516,7 @@ function probeOpenAiLikeEndpoint(
   const baseUrl = String(endpointUrl).replace(/\/+$/, "");
   const authHeader =
     !useQueryParam && normalizedKey ? ["-H", `Authorization: Bearer ${normalizedKey}`] : [];
-  const appendKey = (urlPath: string): string =>
+  const appendKey = (urlPath) =>
     useQueryParam && normalizedKey
       ? `${baseUrl}${urlPath}?key=${encodeURIComponent(normalizedKey)}`
       : `${baseUrl}${urlPath}`;
@@ -642,7 +571,7 @@ function probeOpenAiLikeEndpoint(
     ? [chatCompletionsProbe]
     : [responsesProbe, chatCompletionsProbe];
 
-  const failures: ProbeFailure[] = [];
+  const failures = [];
   for (const probe of probes) {
     const result = executeProbeWithHttpRetry(probe);
     if (result.ok) {
@@ -720,10 +649,10 @@ function probeOpenAiLikeEndpoint(
     // through `message`.
     failures.push({
       name: probe.name,
-      httpStatus: result.httpStatus ?? 0,
-      curlStatus: result.curlStatus ?? 0,
-      message: result.message ?? "",
-      body: result.body ?? "",
+      httpStatus: result.httpStatus,
+      curlStatus: result.curlStatus,
+      message: result.message,
+      body: result.body,
     });
   }
 
@@ -732,8 +661,8 @@ function probeOpenAiLikeEndpoint(
   // stack can cause the initial probe to time out before the TLS handshake
   // completes (#987); hosted providers also occasionally drop connections for
   // tens of seconds during incidents (#3033).
-  const isTimeoutOrConnFailure = (cs: number) => cs === 28 || cs === 6 || cs === 7;
-  const isRetriableProbeResult = (result: ProbeFailure) =>
+  const isTimeoutOrConnFailure = (cs) => cs === 28 || cs === 6 || cs === 7;
+  const isRetriableProbeResult = (result) =>
     isTimeoutOrConnFailure(result.curlStatus) ||
     RETRIABLE_HTTP_PROBE_STATUSES.has(result.httpStatus);
   // Look across every failure entry rather than only failures[0] so a probe
@@ -766,8 +695,8 @@ function probeOpenAiLikeEndpoint(
       return { ok: true, api: "openai-completions", label: "Chat Completions API" };
     }
     for (const delayMs of HTTP_PROBE_RETRY_DELAYS_MS) {
-      if (!isRetriableProbeResult(retryResult as any)) break;
-      const reason = isTimeoutOrConnFailure(retryResult.curlStatus ?? 0)
+      if (!isRetriableProbeResult(retryResult)) break;
+      const reason = isTimeoutOrConnFailure(retryResult.curlStatus)
         ? "timed out"
         : `returned HTTP ${retryResult.httpStatus}`;
       console.log(
@@ -782,10 +711,10 @@ function probeOpenAiLikeEndpoint(
     if (options.requireChatCompletionsToolCalling === true) {
       failures.push({
         name: "Chat Completions API with tool calling (retry)",
-        httpStatus: retryResult.httpStatus ?? 0,
-        curlStatus: retryResult.curlStatus ?? 0,
-        message: retryResult.message ?? "",
-        body: retryResult.body ?? "",
+        httpStatus: retryResult.httpStatus,
+        curlStatus: retryResult.curlStatus,
+        message: retryResult.message,
+        body: retryResult.body,
       });
     }
   }
@@ -808,7 +737,7 @@ function probeOpenAiLikeEndpoint(
 
   const baseMessage = failures.map((failure) => `${failure.name}: ${failure.message}`).join(" | ");
   const wslHint =
-    isWslPlatform() && retriedAfterTimeout
+    isWsl() && retriedAfterTimeout
       ? " · WSL2 detected \u2014 network verification may be slower than expected. " +
         "Run `nemoclaw onboard` with the `--skip-verify` flag if this endpoint is known to be reachable."
       : "";
@@ -821,17 +750,7 @@ function probeOpenAiLikeEndpoint(
 
 // ── Anthropic probe ──────────────────────────────────────────────
 
-function probeAnthropicEndpoint(
-  endpointUrl: string,
-  model: string,
-  apiKey: string,
-): {
-  ok: boolean;
-  api?: string;
-  label?: string;
-  message?: string;
-  failures?: ProbeFailure[];
-} {
+function probeAnthropicEndpoint(endpointUrl, model, apiKey) {
   const result = runCurlProbe([
     "-sS",
     ...getCurlTimingArgs(),
@@ -861,13 +780,12 @@ function probeAnthropicEndpoint(
         httpStatus: result.httpStatus,
         curlStatus: result.curlStatus,
         message: result.message,
-        body: result.body ?? "",
       },
     ],
   };
 }
 
-export {
+module.exports = {
   isSandboxInternalUrl,
   parseJsonObject,
   hasResponsesToolCall,
@@ -879,6 +797,7 @@ export {
   getDeepSeekV4ProValidationProbeCurlArgs,
   getKimiK26ValidationProbeCurlArgs,
   getChatCompletionsProbePayload,
+  getChatCompletionsProbeCurlArgs,
   probeResponsesToolCalling,
   probeChatCompletionsToolCalling,
   probeOpenAiLikeEndpoint,

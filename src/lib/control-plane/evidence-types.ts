@@ -113,7 +113,7 @@ export interface ProofpackExportOptions {
   includeGovernanceEvents: boolean;
   includeDiagnostics: boolean;
   includeDegradedStates: boolean;
-  includeDegradedStateTriggerEvidence: boolean;
+  includeFallbackEvidence: boolean;
   includeApprovalLineage: boolean;
   classification: EvidenceClassification;
   redactSecrets: boolean;
@@ -125,7 +125,7 @@ export const DEFAULT_PROOFPACK_EXPORT_OPTIONS: ProofpackExportOptions = {
   includeGovernanceEvents: true,
   includeDiagnostics: true,
   includeDegradedStates: true,
-  includeDegradedStateTriggerEvidence: true,
+  includeFallbackEvidence: true,
   includeApprovalLineage: true,
   classification: "internal",
   redactSecrets: true,
@@ -142,7 +142,7 @@ export interface ReplayEvidencePackage {
   governanceEvents: import("./operational-memory").OperationalEvent[];
   diagnosticsSnapshots: import("./operational-memory").OperationalEvent[];
   degradedStates: DegradedState[];
-  degradedStateTriggerEvidence: import("./operational-memory").OperationalEvent[];
+  fallbackEvidence: import("./operational-memory").OperationalEvent[];
   approvalLineage: import("./operational-memory").OperationalEvent[];
   digest: EvidenceDigest;
 }
@@ -151,8 +151,6 @@ export interface ReplayEvidencePackage {
 
 export const GOVERNANCE_EVENT_CATEGORIES: ReadonlySet<OperationalEventCategory> = new Set([
   "execution_plan_created",
-  "execution_plan_blocked",
-  "execution_plan_cancelled",
   "execution_plan_phase_transition",
   "execution_approval_requested",
   "execution_plan_approved",
@@ -165,33 +163,15 @@ export const GOVERNANCE_EVENT_CATEGORIES: ReadonlySet<OperationalEventCategory> 
   "execution_trust_snapshot_recorded",
   "execution_replay_validation_succeeded",
   "execution_replay_validation_failed",
-  "queue_item_queued",
-  "queue_item_leased",
-  "queue_item_expired",
-  "queue_conflict_detected",
-  "lease_acquired",
-  "lease_expired",
-  "lease_revoked",
-  "lease_conflict_detected",
-  "execution_started",
-  "execution_completed",
-  "execution_failed",
-  "execution_cancelled",
-  "execution_blocked",
-  "proofpack_generated",
-  "proofpack_validation_failed",
 ]);
 
 export const DIAGNOSTICS_EVENT_CATEGORIES: ReadonlySet<OperationalEventCategory> = new Set([
   "diagnostics_snapshot",
   "replay_metadata",
-  "queue_conflict_detected",
-  "lease_conflict_detected",
-  "proofpack_validation_failed",
 ]);
 
-export const DEGRADED_STATE_TRIGGER_EVENT_CATEGORIES: ReadonlySet<OperationalEventCategory> = new Set([
-  "degraded_state_trigger",
+export const FALLBACK_EVENT_CATEGORIES: ReadonlySet<OperationalEventCategory> = new Set([
+  "fallback",
 ]);
 
 export const APPROVAL_EVENT_CATEGORIES: ReadonlySet<OperationalEventCategory> = new Set([

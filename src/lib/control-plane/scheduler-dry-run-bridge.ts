@@ -27,7 +27,7 @@ export function runSchedulerDryRun(input: {
   operationalMemory?: OperationalMemoryLog;
 }): SchedulerDryRunResult {
   const classification = classifyRequest(input.request);
-  const policy = evaluatePolicy(input.policyBundle, { request: input.request, actionClass: classification.actionClass ?? "generic" });
+  const policy = evaluatePolicy(input.policyBundle, { request: input.request, actionClass: "generic" });
   const scheduling = scheduleDeterministically({
     request: input.request,
     classification,
@@ -70,7 +70,7 @@ export function runSchedulerDryRun(input: {
       reasons: [{ code: policy.reasonCode, explanation: "dry-run policy evaluation", source: policy.sourceRuleId }],
     },
     degradedEvents: degradedStates,
-    degradedStateTriggers: [],
+    fallbackAttempts: [],
     toolInvocations: [],
     timing: { totalMs: 0, queueMs: 0, executionMs: 0 },
     provenance: { source: "scheduler-dry-run-bridge", lineage: [classification.taskKind], replayVersion: "1" },

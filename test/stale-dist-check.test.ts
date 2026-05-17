@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -39,6 +39,7 @@ describe("stale-dist-check", () => {
 
   afterEach(() => {
     fs.rmSync(root, { recursive: true, force: true });
+    vi.restoreAllMocks();
   });
 
   it("returns null when dist is newer than src (fresh build)", () => {
@@ -112,5 +113,35 @@ describe("stale-dist-check", () => {
     };
     expect(() => warnIfStale(root, throwingStream)).not.toThrow();
     expect(warnIfStale(root, throwingStream)).toBe(false);
+  });
+
+  it("ignores unreadable directories gracefully", () => {
+    writeFile(path.join(root, "src", "lib", "foo.ts"), "x", 1_000_000);
+    writeFile(path.join(root, "dist", "lib", "foo.js"), "x", 2_000_000);
+
+    const originalReaddirSync = fs.readdirSync;
+    vi.spyOn(fs, "readdirSync").mockImplementation((dirPath, options) => {
+      if (typeof dirPath === "string" && dirPath.includes(path.join("src", "lib"))) {
+        throw new Error("EACCES: permission denied");
+      }
+      return originalReaddirSync(dirPath, options);
+    });
+
+    expect(checkStaleDist(root)).toBeNull();
+  });
+
+  it("ignores un-stat-able files gracefully", () => {
+    writeFile(path.join(root, "src", "lib", "foo.ts"), "x", 1_000_000);
+    writeFile(path.join(root, "dist", "lib", "foo.js"), "x", 2_000_000);
+
+    const originalStatSync = fs.statSync;
+    vi.spyOn(fs, "statSync").mockImplementation((filePath, options) => {
+      if (typeof filePath === "string" && filePath.includes("foo.ts")) {
+        throw new Error("EACCES: permission denied");
+      }
+      return originalStatSync(filePath, options);
+    });
+
+    expect(checkStaleDist(root)).toBeNull();
   });
 });

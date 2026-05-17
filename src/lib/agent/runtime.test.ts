@@ -154,7 +154,7 @@ describe("buildRecoveryScript", () => {
     }
   });
 
-  it("defaults to openclaw gateway run when gateway_command is absent", () => {
+  it("falls back to openclaw gateway run when gateway_command is absent", () => {
     const agent = makeAgent({ gateway_command: undefined });
     const script = buildRecoveryScript(agent, 19000);
     expect(script).toContain('"$AGENT_BIN" gateway run --port 19000');
@@ -284,7 +284,7 @@ describe("buildRecoveryScript", () => {
       expect(script).not.toMatch(/[^>]> \/tmp\/gateway\.log 2>&1 &/);
     });
 
-    it("preserves an existing gateway.log and has a writable recovery log", () => {
+    it("preserves an existing gateway.log and has a writable fallback log", () => {
       const script = buildOpenClawRecoveryScript(18789);
       expect(script).not.toContain("rm -f /tmp/gateway.log");
       expect(script).toContain("_GATEWAY_LOG=/tmp/gateway.log");
@@ -384,7 +384,7 @@ describe("buildManualRecoveryCommand (#2426)", () => {
     expect(cmd).toContain("nohup '/usr/local/bin/test-agent' gateway run --port 19000");
   });
 
-  it("defaults to openclaw gateway run for a null agent", () => {
+  it("falls back to openclaw gateway run for a null agent", () => {
     const cmd = buildManualRecoveryCommand(null, 18789);
     expect(cmd).toContain("nohup '/usr/local/bin/openclaw' gateway run --port 18789");
   });

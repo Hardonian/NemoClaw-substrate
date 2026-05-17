@@ -1,15 +1,15 @@
 // SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { NemoClawState } from "../blueprint/state.js";
 
 vi.mock("../blueprint/state.js", () => ({
   loadState: vi.fn(),
 }));
 
-import { loadState } from "../blueprint/state.js";
 import { slashShieldsStatus } from "./shields-status.js";
+import { loadState } from "../blueprint/state.js";
 
 const mockedLoadState = vi.mocked(loadState);
 

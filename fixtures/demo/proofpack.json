@@ -1,5 +1,0 @@
-[
-  {"id":"proofpack-1","state":"ok","detail":"proofpack deterministic record token=abc123"},
-  {"id":"proofpack-2","state":"unavailable","detail":"proofpack explicit unavailable path","unavailable":true},
-  {"id":"proofpack-3","state":"degraded","detail":"proofpack explicit degraded reason=policy_guard","degraded":true}
-]

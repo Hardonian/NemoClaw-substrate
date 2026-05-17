@@ -36,7 +36,7 @@ filesystem_policy:
                                     # Blueprints are root-owned; sticky bit (1755)
                                     # on parent prevents rename/delete (#1607).
 
-# Evaluate landlock enforce mode — currently best_effort because
+# TODO: evaluate landlock enforce mode — currently best_effort because
 # enforce can break things in unpredictable ways. Needs thorough testing
 # across different kernel versions before we flip this. (ref #516 item 3)
 landlock:

@@ -145,7 +145,6 @@ export function executeSandboxExecCommand(
         env: process.env,
         stdio: ["ignore", "pipe", "pipe"],
         timeout: effectiveTimeout,
-        shell: process.platform === "win32",
       },
     );
     if (result.error) return null;
@@ -251,11 +250,11 @@ function recoverSandboxProcesses(sandboxName: string): boolean {
   return recoveredSsh(executeSandboxCommand(sandboxName, script));
 }
 
-function readNonNegativeNumberEnv(name: string, defaultValue: number): number {
+function readNonNegativeNumberEnv(name: string, fallback: number): number {
   const raw = process.env[name];
-  if (raw === undefined || raw.trim() === "") return defaultValue;
+  if (raw === undefined || raw.trim() === "") return fallback;
   const parsed = Number(raw);
-  return Number.isFinite(parsed) && parsed >= 0 ? parsed : defaultValue;
+  return Number.isFinite(parsed) && parsed >= 0 ? parsed : fallback;
 }
 
 function waitForRecoveredSandboxGateway(sandboxName: string): boolean {

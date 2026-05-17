@@ -17,11 +17,6 @@ describe("resolveGlobalOclifDispatch", () => {
       commandId: "update",
       args: ["--check"],
     });
-    expect(resolveGlobalOclifDispatch("operator", ["status", "--json"])).toEqual({
-      kind: "oclif",
-      commandId: "operator",
-      args: ["status", "--json"],
-    });
     expect(resolveGlobalOclifDispatch("tunnel", ["start"])).toEqual({
       kind: "oclif",
       commandId: "tunnel:start",

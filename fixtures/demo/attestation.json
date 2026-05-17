@@ -1,5 +1,0 @@
-[
-  {"id":"attestation-1","state":"ok","detail":"attestation deterministic record token=abc123"},
-  {"id":"attestation-2","state":"unavailable","detail":"attestation explicit unavailable path","unavailable":true},
-  {"id":"attestation-3","state":"degraded","detail":"attestation explicit degraded reason=policy_guard","degraded":true}
-]
