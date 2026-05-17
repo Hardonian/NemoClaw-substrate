@@ -1,7 +1,0 @@
-{
-  "runtime": "local",
-  "degraded": [
-    "gpu telemetry unavailable"
-  ],
-  "profile": "local-only"
-}

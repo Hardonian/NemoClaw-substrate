@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-import { describe, expect, it } from "vitest";
-import { isMemoryPath, scanForSecrets } from "./secret-scanner.js";
+import { describe, it, expect } from "vitest";
+import { scanForSecrets, isMemoryPath } from "./secret-scanner.js";
 
 // Test fixtures use synthetic values that look like real secrets but are not.
 // Assembled at runtime to avoid triggering gitleaks/detect-private-key hooks.

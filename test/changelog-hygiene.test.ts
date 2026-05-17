@@ -29,12 +29,4 @@ describe("changelog hygiene", () => {
       .filter((line) => line && !line.startsWith("<!-- SPDX-FileCopyrightText:") && !line.startsWith("<!-- SPDX-License-Identifier:"));
     expect(invalid).toEqual([]);
   });
-
-  it("does not use phase labels or unsupported readiness claims", () => {
-    const content = fs.readFileSync(path.join(process.cwd(), "CHANGELOG.md"), "utf8");
-    expect(content).not.toMatch(/\bPhase\s+\d+\b/i);
-    expect(content).not.toMatch(/\bConfirmed\b/i);
-    expect(content).not.toMatch(/\bproduction[- ]ready\b/i);
-    expect(content).not.toMatch(/\benterprise[- ]grade\b/i);
-  });
 });

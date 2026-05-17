@@ -569,7 +569,7 @@ export function validateSnapshotName(name: string): string | null {
   }
   if (VERSION_SELECTOR_RE.test(name)) {
     return (
-      `Snapshot name '${name}' conflicts with the version-assigned format ` +
+      `Snapshot name '${name}' conflicts with the auto-assigned version format ` +
       `(v<N>). Pick a different name.`
     );
   }

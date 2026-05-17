@@ -21,7 +21,6 @@ export type DegradedReasonCode =
   | "policy_blocked"
   | "approval_required"
   | "constraint_unsatisfied"
-  | "telemetry_unavailable"
   | "unknown_error";
 
 export interface DegradedState {
@@ -176,17 +175,6 @@ export interface ControlDecision {
 }
 
 export type ExecutionPhase = "received" | "policy" | "scheduling" | "execution" | "completed" | "failed";
-export interface ExecutionReceiptLineage {
-  executionPlanId?: string;
-  executionApprovalId?: string;
-  executionIntentHash?: string;
-  executionPolicySnapshotHash?: string;
-  executionTrustSnapshotHash?: string;
-  authorizationSource?: string;
-  authorizationLineageId?: string;
-  replayReferenceId?: string;
-}
-
 export interface ExecutionReceipt {
   executionLineage?: ExecutionReceiptLineage;
   version: string;
@@ -199,11 +187,10 @@ export interface ExecutionReceipt {
   schedulingDecision?: SchedulingDecision;
   policyDecision?: PolicyDecision;
   degradedEvents: DegradedState[];
-  degradedStateTriggers: Array<{ at: string; reason: string; target?: string }>;
+  fallbackAttempts: Array<{ at: string; reason: string; target?: string }>;
   toolInvocations: Array<{ name: string; at: string; durationMs?: number; status: "ok" | "failed" }>;
   timing: { totalMs?: number; queueMs?: number; executionMs?: number };
   provenance: { source: string; lineage: string[]; replayVersion: string; exportedAt?: string };
-  executionLineage?: ExecutionReceiptLineage;
   operatorOverrides: Array<{ at: string; actor: string; reason: string }>;
 }
 

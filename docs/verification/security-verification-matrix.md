@@ -10,7 +10,7 @@ This matrix maps each security doctrine requirement to its verification command 
 | ID | Domain | Verification command | Expected result |
 | --- | --- | --- | --- |
 | SEC-V01 | Secret redaction (CLI output) | `npx vitest run src/lib/security/redact.test.ts` | PASS — token patterns redacted, URL sanitization works |
-| SEC-V02 | Secret redaction (shell degraded state) | `npx vitest run src/lib/security/redact.test.ts` | PASS — EXPECTED_SHELL_PREFIXES consistency |
+| SEC-V02 | Secret redaction (shell fallback) | `npx vitest run src/lib/security/redact.test.ts` | PASS — EXPECTED_SHELL_PREFIXES consistency |
 | SEC-V03 | Credential stripping | `npx vitest run src/lib/security/credential-filter.test.ts` | PASS — credential fields stripped, sensitive files excluded |
 | SEC-V04 | Memory write scanning | `npx vitest run nemoclaw/src/security/secret-scanner.test.ts` | PASS — secret patterns detected in memory content |
 | SEC-V05 | Command execution safety | `npx vitest run src/lib/runner-argv.test.ts` | PASS — shell:true rejected, strings rejected, metacharacters literal |

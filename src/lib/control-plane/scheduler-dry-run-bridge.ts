@@ -70,7 +70,7 @@ export function runSchedulerDryRun(input: {
       reasons: [{ code: policy.reasonCode, explanation: "dry-run policy evaluation", source: policy.sourceRuleId }],
     },
     degradedEvents: degradedStates,
-    degradedStateTriggers: [],
+    fallbackAttempts: [],
     toolInvocations: [],
     timing: { totalMs: 0, queueMs: 0, executionMs: 0 },
     provenance: { source: "scheduler-dry-run-bridge", lineage: [classification.taskKind], replayVersion: "1" },

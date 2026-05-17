@@ -515,13 +515,14 @@ function isProxyNonInteractive(): boolean {
   return process.env.NEMOCLAW_NON_INTERACTIVE === "1";
 }
 
-function isProxyProgrammaticYes(): boolean {
-  // isProgrammaticYes is exported from onboard.ts, but we keep the fallback
-  // for robustness when called from contexts where onboard isn't fully loaded.
+function isProxyAutoYes(): boolean {
+  // isAutoYes is not exported from onboard.ts, so fall back to the env var.
+  // The interactive override prompt path still covers --yes-only invocations
+  // because non-interactive mode is the gate that matters here.
   try {
     const onboardMod = require("./onboard");
-    if (typeof onboardMod.isProgrammaticYes === "function") {
-      return Boolean(onboardMod.isProgrammaticYes());
+    if (typeof onboardMod.isAutoYes === "function") {
+      return Boolean(onboardMod.isAutoYes());
     }
   } catch {
     /* fall through to env-var check */
@@ -578,8 +579,7 @@ async function checkOllamaModelToolSupport(
   // supportsTools === false — model is on disk but advertises no tools support.
   printToolsIncompatibleWarning(model);
 
-  const isYes = isProxyProgrammaticYes();
-  if (isYes) {
+  if (isProxyAutoYes()) {
     console.log("  Continuing because --yes was passed.");
     return { ok: true };
   }

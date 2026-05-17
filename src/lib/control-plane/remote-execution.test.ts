@@ -53,7 +53,7 @@ function approvedPlan() {
   const intent = { requestId: "r-plan", actor: "operator", action: "worker:execute", command: "run:model", targetNodeId: "worker-1", executionMode: "remote" as const, metadata: {} };
   const plan = createExecutionPlan({
     intent,
-    policySnapshot: createExecutionPolicySnapshot({ capturedAt: now, governedRoutingEnabled: true, heterogeneousRoutingEnabled: true, remoteExecutionEnabled: true, policy, degradedStateTriggerPermitted: false, selectedCandidateClass: "remote_worker", workerTrustLevel: node.workerTrustLevel, workerAttestationStatus: node.workerAttestationStatus, executionMode: "remote" }),
+    policySnapshot: createExecutionPolicySnapshot({ capturedAt: now, governedRoutingEnabled: true, heterogeneousRoutingEnabled: true, remoteExecutionEnabled: true, policy, fallbackPermitted: false, selectedCandidateClass: "remote_worker", workerTrustLevel: node.workerTrustLevel, workerAttestationStatus: node.workerAttestationStatus, executionMode: "remote" }),
     trustSnapshot: createExecutionTrustSnapshot({ capturedAt: now, node }),
     createdAt: now,
     actor: "operator",

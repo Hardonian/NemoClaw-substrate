@@ -1,5 +1,0 @@
-[
-  {"id":"telemetry-1","state":"ok","detail":"telemetry deterministic record token=abc123"},
-  {"id":"telemetry-2","state":"unavailable","detail":"telemetry explicit unavailable path","unavailable":true},
-  {"id":"telemetry-3","state":"degraded","detail":"telemetry explicit degraded reason=policy_guard","degraded":true}
-]

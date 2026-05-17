@@ -13,10 +13,10 @@ export function resolveInstallRef(env: InstallerRefEnv): string {
   return tag || "latest";
 }
 
-export function installerVersionFromRef(ref: string, defaultVersion: string): string | null {
+export function installerVersionFromRef(ref: string, fallbackVersion: string): string | null {
   const normalized = ref.trim();
-  if (!normalized) return null;
-  return normalized.replace(/^v/, "") || defaultVersion;
+  if (!normalized || normalized === "latest") return null;
+  return normalized.replace(/^v/, "") || fallbackVersion;
 }
 
 export function resolveInstallerVersion(input: {

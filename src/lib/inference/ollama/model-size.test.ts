@@ -9,7 +9,7 @@ import {
   formatModelSize,
   getOllamaModelSize,
   probeRegistrySize,
-} from "../../../../src/lib/inference/ollama/model-size";
+} from "../../../../dist/lib/inference/ollama/model-size";
 
 const MANIFEST = JSON.stringify({
   layers: [{ size: 1_000_000_000 }, { size: 200_000_000 }, { size: 25_000 }],
@@ -96,14 +96,14 @@ describe("probeRegistrySize", () => {
 });
 
 describe("getOllamaModelSize", () => {
-  it("prefers the registry probe over the estimated size catalog", () => {
+  it("prefers the registry probe over the fallback table", () => {
     const lookup = getOllamaModelSize("qwen2.5:7b", captureReturning(MANIFEST));
     expect(lookup).toEqual({ bytes: 1_200_025_000, source: "registry" });
   });
 
-  it("recovers from the bundled catalog when the probe fails", () => {
+  it("falls back to the bundled table when the probe fails", () => {
     const lookup = getOllamaModelSize("qwen2.5:7b", captureReturning(""));
-    expect(lookup?.source).toBe("estimated");
+    expect(lookup?.source).toBe("fallback");
     expect(lookup?.bytes).toBeGreaterThan(0);
   });
 
@@ -135,8 +135,8 @@ describe("formatModelSize", () => {
     expect(formatModelSize({ bytes: 1_200_025_000, source: "registry" })).toBe("1.12 GB");
   });
 
-  it("tags estimated-sourced sizes with a qualifier", () => {
-    expect(formatModelSize({ bytes: 4_683_073_184, source: "estimated" })).toBe(
+  it("tags fallback-sourced sizes as estimated", () => {
+    expect(formatModelSize({ bytes: 4_683_073_184, source: "fallback" })).toBe(
       "4.36 GB (estimated)",
     );
   });

@@ -10,20 +10,19 @@ describe("parsePort", () => {
 
   beforeEach(() => {
     delete process.env[ENV_KEY];
-    delete process.env.EMPTY_VAR;
   });
 
   afterEach(() => {
     delete process.env[ENV_KEY];
-    delete process.env.EMPTY_VAR;
   });
 
-  it("returns defaultValue when env var is unset", () => {
-    expect(parsePort("UNSET_VAR", 8080)).toBe(8080);
+  it("returns fallback when env var is unset", () => {
+    expect(parsePort(ENV_KEY, 8080)).toBe(8080);
   });
-  it("returns defaultValue when env var is empty", () => {
-    process.env.EMPTY_VAR = "";
-    expect(parsePort("EMPTY_VAR", 8080)).toBe(8080);
+
+  it("returns fallback when env var is empty", () => {
+    process.env[ENV_KEY] = "";
+    expect(parsePort(ENV_KEY, 8080)).toBe(8080);
   });
 
   it("parses a valid port", () => {

@@ -12,7 +12,7 @@
  * - JSON and NDJSON export formats
  * - secret redaction before export via security-policy preflight
  *
- * No autonomous retries, no daemons, no hidden degradedStateTrigger behavior.
+ * No autonomous retries, no daemons, no hidden fallback behavior.
  * All ordering is deterministic. All failures are explicit.
  */
 
@@ -49,7 +49,7 @@ import {
   DEFAULT_PROOFPACK_EXPORT_OPTIONS,
   GOVERNANCE_EVENT_CATEGORIES,
   DIAGNOSTICS_EVENT_CATEGORIES,
-  DEGRADED_STATE_TRIGGER_EVENT_CATEGORIES,
+  FALLBACK_EVENT_CATEGORIES,
   APPROVAL_EVENT_CATEGORIES,
   DEGRADED_EVENT_CATEGORIES,
 } from "./evidence-types";
@@ -186,7 +186,7 @@ export function artifactFromPlan(plan: ExecutionPlan, options: Pick<ProofpackExp
 function eventKindForCategory(category: string): EvidenceArtifactKind {
   if (GOVERNANCE_EVENT_CATEGORIES.has(category as OperationalEvent["category"])) return "governance_event";
   if (DIAGNOSTICS_EVENT_CATEGORIES.has(category as OperationalEvent["category"])) return "diagnostics_snapshot";
-  if (DEGRADED_STATE_TRIGGER_EVENT_CATEGORIES.has(category as OperationalEvent["category"])) return "operational_event";
+  if (FALLBACK_EVENT_CATEGORIES.has(category as OperationalEvent["category"])) return "operational_event";
   if (APPROVAL_EVENT_CATEGORIES.has(category as OperationalEvent["category"])) return "approval_lineage";
   if (DEGRADED_EVENT_CATEGORIES.has(category as OperationalEvent["category"])) return "degraded_state";
   return "operational_event";
@@ -241,7 +241,7 @@ export function buildEvidenceBundleFromEvents(
     if (kind === "diagnostics_snapshot" && !options.includeDiagnostics) continue;
     if (kind === "degraded_state" && !options.includeDegradedStates) continue;
     if (kind === "approval_lineage" && !options.includeApprovalLineage) continue;
-    if (DEGRADED_STATE_TRIGGER_EVENT_CATEGORIES.has(event.category) && !options.includeDegradedStateTriggerEvidence) continue;
+    if (FALLBACK_EVENT_CATEGORIES.has(event.category) && !options.includeFallbackEvidence) continue;
     artifacts.push(artifactFromEvent(event, kind, options));
   }
   return buildEvidenceBundle({ artifacts, generatedAt, classification: options.classification });
@@ -266,8 +266,8 @@ export function buildReplayEvidencePackage(input: {
   const degradedStates = options.includeDegradedStates
     ? sorted.filter((e) => DEGRADED_EVENT_CATEGORIES.has(e.category)).map((e) => (e.payload["degraded"] ?? { category: "unknown", reason: e.category, affectedSubsystem: "unknown", severity: "info", reasonCode: "unknown_error", explanation: e.category, sourceComponent: "evidence-export", timestamp: e.occurredAt }) as DegradedState)
     : [];
-  const degradedStateTriggerEvidence = options.includeDegradedStateTriggerEvidence
-    ? sorted.filter((e) => DEGRADED_STATE_TRIGGER_EVENT_CATEGORIES.has(e.category))
+  const fallbackEvidence = options.includeFallbackEvidence
+    ? sorted.filter((e) => FALLBACK_EVENT_CATEGORIES.has(e.category))
     : [];
   const approvalLineage = options.includeApprovalLineage
     ? sorted.filter((e) => APPROVAL_EVENT_CATEGORIES.has(e.category))
@@ -287,7 +287,7 @@ export function buildReplayEvidencePackage(input: {
     governanceEvents,
     diagnosticsSnapshots,
     degradedStates,
-    degradedStateTriggerEvidence,
+    fallbackEvidence,
     approvalLineage,
     digest: packageDigest,
   };
@@ -337,8 +337,8 @@ export function exportReplayPackageAsNdjson(pkg: ReplayEvidencePackage): string 
   for (const state of pkg.degradedStates) {
     lines.push(deterministicSerialize({ type: "degraded_state", data: state }));
   }
-  for (const event of pkg.degradedStateTriggerEvidence) {
-    lines.push(deterministicSerialize({ type: "degraded_state_trigger_evidence", data: event }));
+  for (const event of pkg.fallbackEvidence) {
+    lines.push(deterministicSerialize({ type: "fallback_evidence", data: event }));
   }
   for (const event of pkg.approvalLineage) {
     lines.push(deterministicSerialize({ type: "approval_lineage", data: event }));

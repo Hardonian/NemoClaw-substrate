@@ -777,7 +777,7 @@ Expose the service on a host IP address that the OpenShell gateway can reach, cr
 The sandbox request then flows through the OpenShell proxy while NemoClaw preserves the existing live policy entries.
 
 Do not rely on `host.docker.internal` or `host.openshell.internal` as a general-purpose host-service path.
-Those names may appear in the sandbox's `/etc/hosts`, but in OpenShell's sandbox network they are not assured to point at a reachable host gateway.
+Those names may appear in the sandbox's `/etc/hosts`, but in OpenShell's sandbox network they are not guaranteed to point at a reachable host gateway.
 Bypassing the proxy with `--noproxy '*'` also bypasses network policy enforcement and audit.
 
 First, make sure the host-side service listens on a non-loopback address.

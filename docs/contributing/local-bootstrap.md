@@ -12,9 +12,9 @@ cd ..
 npm run verify:core
 ```
 
-## Restricted-environment degraded state
+## Restricted-environment fallback
 
-If lifecycle scripts fail because the environment cannot reach required registries or blocks install hooks, use this local-only degraded state:
+If lifecycle scripts fail because the environment cannot reach required registries or blocks install hooks, use this local-only fallback:
 
 ```bash
 npm install --ignore-scripts
@@ -25,7 +25,7 @@ node scripts/verify-core.js
 
 `npm install --ignore-scripts` is for contributor-side diagnosis only. Do not use it for release packaging, publish flows, or CI baselines because it skips lifecycle behavior that release artifacts depend on.
 
-## Interpreting degraded state results
+## Interpreting fallback results
 
 - `PASS` means the targeted check ran and succeeded.
 - `WARN` means a required toolchain/dependency was missing in the local environment.

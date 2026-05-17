@@ -39,7 +39,7 @@ describe("local runtime probes", () => {
 
   it("keeps diagnostics explicit and routing default unchanged", async () => {
     const out = await runLocalRuntimeProbes({ requestId: "p5", nowIso: "2026-05-09T00:00:00.000Z", endpoints: { llamacpp: "https://example.com/health" }, commandRunner: async () => ({ code: 127, stdout: "" }) });
-    const lines = summarizeLocalDiagnostics({ probeSummary: out, registry: createDeviceRegistry(), governedRouting: { enabled: false, source: "default", allowDegradedState: false } });
+    const lines = summarizeLocalDiagnostics({ probeSummary: out, registry: createDeviceRegistry(), governedRouting: { enabled: false, source: "default", allowFallback: false } });
     expect(lines.join("\n")).toContain("GPU telemetry");
     expect(out.receipt.provenance.lineage).toContain("local-probe");
   });

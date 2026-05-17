@@ -72,7 +72,7 @@ title_token_jaccard_threshold: 0.4
 max_candidates: 10
 ```
 
-`title_token_jaccard_threshold` is the minimum Jaccard similarity between issue title and PR title to count as a candidate during recovery expansion.
+`title_token_jaccard_threshold` is the minimum Jaccard similarity between issue title and PR title to count as a candidate during fallback expansion.
 
 ## Bot author filter
 

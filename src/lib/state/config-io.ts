@@ -183,7 +183,7 @@ export function ensureConfigDir(dirPath: string): void {
   }
 }
 
-export function readConfigFile<T>(filePath: string, defaultValue: T): T {
+export function readConfigFile<T>(filePath: string, fallback: T): T {
   try {
     return parseJson<T>(fs.readFileSync(filePath, "utf-8"));
   } catch (error) {
@@ -196,9 +196,9 @@ export function readConfigFile<T>(filePath: string, defaultValue: T): T {
       );
     }
     if (isErrnoException(errnoError) && errnoError.code === "ENOENT") {
-      return defaultValue;
+      return fallback;
     }
-    return defaultValue;
+    return fallback;
   }
 }
 

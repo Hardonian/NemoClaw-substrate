@@ -14,7 +14,9 @@ import * as registry from "../state/registry";
 import { loadAgent, type AgentDefinition } from "./defs";
 
 /**
- * sandboxes exist), then defaults to the global onboard session.
+ * Resolve the agent for a sandbox. Checks the per-sandbox registry first
+ * (so status/connect/recovery use the right agent even when multiple
+ * sandboxes exist), then falls back to the global onboard session.
  * Returns the loaded agent definition for non-OpenClaw agents, or null.
  */
 export function getSessionAgent(sandboxName?: string): AgentDefinition | null {
@@ -77,8 +79,8 @@ function buildNoFollowLogSetupCommand(
     "import errno, os, pwd, stat, sys",
     "path = sys.argv[1]",
     "owner = sys.argv[2] if len(sys.argv) > 2 else ''",
-    "owner_mode = ${ownerMode}",
-    "recovery_mode = 0o600",
+    `owner_mode = ${ownerMode}`,
+    "fallback_mode = 0o600",
     "flags = os.O_WRONLY | os.O_CREAT | os.O_TRUNC | getattr(os, 'O_NOFOLLOW', 0)",
     "try:",
     "    fd = os.open(path, flags, 0o644)",
@@ -99,12 +101,12 @@ function buildNoFollowLogSetupCommand(
     "        try:",
     "            pw = pwd.getpwnam(owner)",
     "        except KeyError:",
-    "            os.fchmod(fd, recovery_mode)",
+    "            os.fchmod(fd, fallback_mode)",
     "        else:",
     "            os.fchown(fd, pw.pw_uid, pw.pw_gid)",
     "            os.fchmod(fd, owner_mode)",
     "    else:",
-    "        os.fchmod(fd, recovery_mode)",
+    "        os.fchmod(fd, fallback_mode)",
     "finally:",
     "    os.close(fd)",
   ].join("\n");
@@ -160,8 +162,8 @@ function hermesDecodeProxyRecoveryCommand(): string {
   const decodeProxyListening = 'ss -tln 2>/dev/null | grep -Eq "127\\.0\\.0\\.1:3129([[:space:]]|$)"';
   const facadeListening = 'ss -tln 2>/dev/null | grep -Eq "127\\.0\\.0\\.1:3130([[:space:]]|$)"';
   const primaryFacadeLog = "/tmp/discord-facade.log";
-  const recoveryFacadeLog = "/tmp/discord-facade-recovery.log";
-  const facadeLogSetup = `${buildNoFollowLogSetupCommand(primaryFacadeLog, undefined, "0o600")} || exit 1; _DISCORD_FACADE_LOG=${shellQuote(primaryFacadeLog)}; if ! : >> "$_DISCORD_FACADE_LOG" 2>/dev/null; then ${buildNoFollowLogSetupCommand(recoveryFacadeLog, undefined, "0o600")} || exit 1; _DISCORD_FACADE_LOG=${shellQuote(recoveryFacadeLog)}; : >> "$_DISCORD_FACADE_LOG" 2>/dev/null || exit 1; fi`;
+  const fallbackFacadeLog = "/tmp/discord-facade-recovery.log";
+  const facadeLogSetup = `${buildNoFollowLogSetupCommand(primaryFacadeLog, undefined, "0o600")} || exit 1; _DISCORD_FACADE_LOG=${shellQuote(primaryFacadeLog)}; if ! : >> "$_DISCORD_FACADE_LOG" 2>/dev/null; then ${buildNoFollowLogSetupCommand(fallbackFacadeLog, undefined, "0o600")} || exit 1; _DISCORD_FACADE_LOG=${shellQuote(fallbackFacadeLog)}; : >> "$_DISCORD_FACADE_LOG" 2>/dev/null || exit 1; fi`;
   const facadeLaunch =
     `nohup env -u NEMOCLAW_DISCORD_FACADE_URL -u PYTHONPATH DISCORD_PROXY=http://127.0.0.1:3129 HTTPS_PROXY=http://127.0.0.1:3129 HTTP_PROXY=http://127.0.0.1:3129 NEMOCLAW_DISCORD_FACADE_PORT=3130 DISCORD_FACADE_LOG="$_DISCORD_FACADE_LOG" sh -c 'umask 0007; exec "$@" >>"$DISCORD_FACADE_LOG" 2>&1' sh ${hermesVenvPython} /usr/local/bin/nemoclaw-discord-facade &`;
   return `if ! command -v ss >/dev/null 2>&1 || ! ${decodeProxyListening}; then nohup ${hermesVenvPython} /usr/local/bin/nemoclaw-decode-proxy >/dev/null 2>&1 & for _i in 1 2 3 4 5 6 7 8 9 10; do command -v ss >/dev/null 2>&1 && ${decodeProxyListening} && break; sleep 0.5; done; fi; if ! command -v ss >/dev/null 2>&1 || ! ${facadeListening}; then ${facadeLogSetup}; ${facadeLaunch} for _i in 1 2 3 4 5 6 7 8 9 10; do command -v ss >/dev/null 2>&1 && ${facadeListening} && break; sleep 0.5; done; fi;`;
