@@ -14,7 +14,7 @@ This checklist gates the governed heterogeneous execution substrate integration 
 - [x] No claims of implemented GPU balancing.
 - [x] No claims of implemented Dynamo integration.
 - [x] No claims of autonomous orchestration.
-- [x] No claims of self-healing behavior.
+- [x] No claims of autonomous recovery behavior.
 - [x] No claims of automatic policy learning.
 
 ## Status classification discipline
@@ -42,7 +42,7 @@ This checklist gates the governed heterogeneous execution substrate integration 
 
 ## Residual matrix closure (2026-05-09)
 
-- [x] Direct assertions added for replay drift rejection (policy/trust/candidate/fallback mismatch reason-code failures).
+- [x] Direct assertions added for replay drift rejection (policy/trust/candidate/degraded state mismatch reason-code failures).
 - [x] Remote execution remains fail-closed before transport on deny, approval-required, trust denial, and stale/unhealthy worker states.
 - [x] Telemetry registry update event branches (applied/skipped/conflict/stale) remain covered and replay-preserved.
 - [x] Reserved event kinds (`replay_metadata`, `diagnostics_snapshot`) are documented as reserved and asserted as non-telemetry aggregates.

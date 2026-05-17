@@ -63,24 +63,23 @@ export function getProbeRecovery(
   if (failures.length === 0) {
     return { kind: "unknown", retry: "selection" };
   }
-  if (failures.some((failure) => classifyValidationFailure(failure).kind === "credential")) {
+  const classified = failures.map((f) => classifyValidationFailure(f));
+  if (classified.some((c) => c.kind === "credential")) {
     return { kind: "credential", retry: "credential" };
   }
-  const transportFailure = failures.find(
-    (failure) => classifyValidationFailure(failure).kind === "transport",
-  );
-  if (transportFailure) {
-    return { kind: "transport", retry: "retry", failure: transportFailure };
+  const transportIndex = classified.findIndex((c) => c.kind === "transport");
+  if (transportIndex !== -1) {
+    return { kind: "transport", retry: "retry", failure: failures[transportIndex] };
   }
-  if (allowModelRetry && failures.some((failure) => classifyValidationFailure(failure).kind === "model")) {
+  if (allowModelRetry && classified.some((c) => c.kind === "model")) {
     return { kind: "model", retry: "model" };
   }
-  if (failures.some((failure) => classifyValidationFailure(failure).kind === "endpoint")) {
+  if (classified.some((c) => c.kind === "endpoint")) {
     return { kind: "endpoint", retry: "selection" };
   }
-  const fallback = classifyValidationFailure(failures[0]);
-  if (!allowModelRetry && fallback.kind === "model") {
+  const selectedStrategy = classified[0];
+  if (!allowModelRetry && selectedStrategy.kind === "model") {
     return { kind: "unknown", retry: "selection" };
   }
-  return fallback;
+  return selectedStrategy;
 }

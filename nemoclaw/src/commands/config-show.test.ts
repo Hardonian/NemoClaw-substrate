@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { NemoClawOnboardConfig } from "../onboard/config.js";
 
 vi.mock("../onboard/config.js", () => ({
@@ -10,12 +10,12 @@ vi.mock("../onboard/config.js", () => ({
   describeOnboardProvider: vi.fn(),
 }));
 
-import { slashConfigShow } from "./config-show.js";
 import {
-  loadOnboardConfig,
   describeOnboardEndpoint,
   describeOnboardProvider,
+  loadOnboardConfig,
 } from "../onboard/config.js";
+import { slashConfigShow } from "./config-show.js";
 
 const mockedLoadOnboardConfig = vi.mocked(loadOnboardConfig);
 const mockedDescribeOnboardEndpoint = vi.mocked(describeOnboardEndpoint);

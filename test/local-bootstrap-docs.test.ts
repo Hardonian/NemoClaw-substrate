@@ -1,8 +1,5 @@
-// SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
-// SPDX-License-Identifier: Apache-2.0
-
-import fs from "node:fs";
-import { describe, expect, it } from "vitest";
+import fs from "fs";
+import { describe, it, expect } from "vitest";
 
 describe("local bootstrap docs", () => {
   it("documents ignore-scripts as local verification fallback", () => {

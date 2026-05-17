@@ -27,6 +27,9 @@ jobs:
       - name: Release verification
         run: npm run verify:release
 
+      - name: Review automation checks
+        run: npm run review:all
+
       - name: Typecheck CLI
         run: npm run typecheck:cli
 

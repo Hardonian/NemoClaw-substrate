@@ -36,7 +36,7 @@ describe("governed provider routing", () => {
   });
 
   it("disabled mode preserves default route", () => {
-    const out = routeProviderWithGovernance({ requestId: "r1", nowIso: "2026-05-09T00:00:00.000Z", provider: "openai-api", model: "gpt-5.4", registry: seededRegistry(), policyBundle: allowPolicy, config: { enabled: false, source: "default", allowFallback: false } });
+    const out = routeProviderWithGovernance({ requestId: "r1", nowIso: "2026-05-09T00:00:00.000Z", provider: "openai-api", model: "gpt-5.4", registry: seededRegistry(), policyBundle: allowPolicy, config: { enabled: false, source: "default", allowDegradedState: false } });
     expect(out.provider).toBe("openai-api");
     expect(out.model).toBe("gpt-5.4");
     expect(out.receipt).toBeUndefined();
@@ -44,26 +44,26 @@ describe("governed provider routing", () => {
 
   it("enabled mode invokes scheduler path and emits receipt/event", () => {
     const memory = createOperationalMemoryLog();
-    const out = routeProviderWithGovernance({ requestId: "r2", nowIso: "2026-05-09T00:00:00.000Z", provider: "nvidia-nim", model: "nvidia/nemotron-3-super-120b-a12b", registry: seededRegistry(), policyBundle: allowPolicy, config: { enabled: true, source: "env", allowFallback: false }, operationalMemory: memory });
+    const out = routeProviderWithGovernance({ requestId: "r2", nowIso: "2026-05-09T00:00:00.000Z", provider: "nvidia-nim", model: "nvidia/nemotron-3-super-120b-a12b", registry: seededRegistry(), policyBundle: allowPolicy, config: { enabled: true, source: "env", allowDegradedState: false }, operationalMemory: memory });
     expect(out.receipt?.schedulingDecision).toBeTruthy();
     expect(out.receipt?.policyDecision?.allowed).toBe(true);
     expect(out.events.length).toBeGreaterThan(0);
   });
 
   it("policy deny and approval block provider selection", () => {
-    expect(() => routeProviderWithGovernance({ requestId: "r3", nowIso: "2026-05-09T00:00:00.000Z", provider: "openai-api", model: "gpt-5.4", registry: seededRegistry(), policyBundle: denyPolicy, config: { enabled: true, source: "env", allowFallback: true } })).toThrow(/denied/);
-    expect(() => routeProviderWithGovernance({ requestId: "r4", nowIso: "2026-05-09T00:00:00.000Z", provider: "openai-api", model: "gpt-5.4", registry: seededRegistry(), policyBundle: approvalPolicy, config: { enabled: true, source: "env", allowFallback: true } })).toThrow(/approval_required/);
+    expect(() => routeProviderWithGovernance({ requestId: "r3", nowIso: "2026-05-09T00:00:00.000Z", provider: "openai-api", model: "gpt-5.4", registry: seededRegistry(), policyBundle: denyPolicy, config: { enabled: true, source: "env", allowDegradedState: true } })).toThrow(/denied/);
+    expect(() => routeProviderWithGovernance({ requestId: "r4", nowIso: "2026-05-09T00:00:00.000Z", provider: "openai-api", model: "gpt-5.4", registry: seededRegistry(), policyBundle: approvalPolicy, config: { enabled: true, source: "env", allowDegradedState: true } })).toThrow(/approval_required/);
   });
 
-  it("no candidate is explicit and fallback never bypasses deny", () => {
+  it("no candidate is explicit and degraded state trigger never bypasses deny", () => {
     const empty = createDeviceRegistry();
-    expect(() => routeProviderWithGovernance({ requestId: "r5", nowIso: "2026-05-09T00:00:00.000Z", provider: "openai-api", model: "gpt-5.4", registry: empty, policyBundle: allowPolicy, config: { enabled: true, source: "env", allowFallback: false } })).toThrow(/no eligible candidate/);
-    const denied = () => routeProviderWithGovernance({ requestId: "r6", nowIso: "2026-05-09T00:00:00.000Z", provider: "openai-api", model: "gpt-5.4", registry: empty, policyBundle: denyPolicy, config: { enabled: true, source: "env", allowFallback: true } });
+    expect(() => routeProviderWithGovernance({ requestId: "r5", nowIso: "2026-05-09T00:00:00.000Z", provider: "openai-api", model: "gpt-5.4", registry: empty, policyBundle: allowPolicy, config: { enabled: true, source: "env", allowDegradedState: false } })).toThrow(/no eligible candidate/);
+    const denied = () => routeProviderWithGovernance({ requestId: "r6", nowIso: "2026-05-09T00:00:00.000Z", provider: "openai-api", model: "gpt-5.4", registry: empty, policyBundle: denyPolicy, config: { enabled: true, source: "env", allowDegradedState: true } });
     expect(denied).toThrow(/denied/);
   });
 
   it("diagnostics shows enabled/disabled state", () => {
-    expect(summarizeGovernedRoutingDiagnostics({ enabled: false, source: "default", allowFallback: false })[0]).toContain("disabled");
-    expect(summarizeGovernedRoutingDiagnostics({ enabled: true, source: "env", allowFallback: true }, { provider: "nvidia-nim", model: "m", receiptId: "rid" })[0]).toContain("enabled");
+    expect(summarizeGovernedRoutingDiagnostics({ enabled: false, source: "default", allowDegradedState: false })[0]).toContain("disabled");
+    expect(summarizeGovernedRoutingDiagnostics({ enabled: true, source: "env", allowDegradedState: true }, { provider: "nvidia-nim", model: "m", receiptId: "rid" })[0]).toContain("enabled");
   });
 });

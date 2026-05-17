@@ -8,14 +8,14 @@ const PROBE_TIMEOUT_SECONDS = 3;
 const MANIFEST_ACCEPT_HEADER =
   "Accept: application/vnd.docker.distribution.manifest.v2+json, application/vnd.oci.image.manifest.v1+json";
 
-const FALLBACK_SIZE_BYTES: Readonly<Record<string, number>> = {
+const ESTIMATED_SIZE_CATALOG: Readonly<Record<string, number>> = {
   "qwen2.5:7b": 4_683_073_184,
   "nemotron-3-nano:30b": 19_000_000_000,
 };
 
 export type CaptureFn = (cmd: readonly string[], opts?: { ignoreError?: boolean }) => string;
 
-export type SizeSource = "registry" | "fallback";
+export type SizeSource = "registry" | "estimated";
 
 export interface SizeLookup {
   bytes: number;
@@ -78,8 +78,8 @@ export function getOllamaModelSize(
 ): SizeLookup | null {
   const live = probeRegistrySize(model, capture);
   if (live !== null) return { bytes: live, source: "registry" };
-  const fallback = FALLBACK_SIZE_BYTES[model];
-  if (typeof fallback === "number") return { bytes: fallback, source: "fallback" };
+  const catalogMatch = ESTIMATED_SIZE_CATALOG[model];
+  if (typeof catalogMatch === "number") return { bytes: catalogMatch, source: "estimated" };
   return null;
 }
 
@@ -99,5 +99,5 @@ export function formatBytes(bytes: number): string {
 export function formatModelSize(lookup: SizeLookup | null): string {
   if (!lookup) return "size unknown";
   const label = formatBytes(lookup.bytes);
-  return lookup.source === "fallback" ? `${label} (estimated)` : label;
+  return lookup.source === "estimated" ? `${label} (estimated)` : label;
 }

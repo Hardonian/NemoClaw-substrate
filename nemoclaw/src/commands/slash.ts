@@ -12,15 +12,15 @@
  *   /nemoclaw          - show help
  */
 
-import type { PluginCommandContext, PluginCommandResult, OpenClawPluginApi } from "../index.js";
 import { loadState } from "../blueprint/state.js";
+import type { OpenClawPluginApi, PluginCommandContext, PluginCommandResult } from "../index.js";
 import {
   describeOnboardEndpoint,
   describeOnboardProvider,
   loadOnboardConfig,
 } from "../onboard/config.js";
-import { slashShieldsStatus } from "./shields-status.js";
 import { slashConfigShow } from "./config-show.js";
+import { slashShieldsStatus } from "./shields-status.js";
 
 export function handleSlashCommand(
   ctx: PluginCommandContext,

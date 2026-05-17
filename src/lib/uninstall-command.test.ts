@@ -83,7 +83,7 @@ describe("uninstall command", () => {
       }),
     ).toThrow("exit:1");
     expect(spawnSyncImpl).not.toHaveBeenCalled();
-    expect(errors.join("\n")).toContain("Remote uninstall fallback is disabled for security.");
+    expect(errors.join("\n")).toContain("Remote uninstall recovery is disabled for security.");
     expect(errors.join("\n")).toContain("https://example.invalid/uninstall.sh");
   });
 });

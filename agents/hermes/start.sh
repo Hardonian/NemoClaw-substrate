@@ -42,38 +42,12 @@ export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 # ── Early stderr/stdout capture ──────────────────────────────────
 # Capture all entrypoint output to /tmp/nemoclaw-start.log so startup
 # failures before /tmp/gateway.log exists are still diagnosable.
-prepare_restricted_log() {
-  local path="$1"
-  local owner="${2:-}"
-  local mode="${3:-600}"
-  local dir base tmp
-
-  dir="$(dirname "$path")"
-  base="$(basename "$path")"
-  tmp="$(mktemp "${dir}/.${base}.tmp.XXXXXX")" || return 1
-  : >"$tmp" || {
-    rm -f "$tmp"
-    return 1
-  }
-  if [ "$(id -u)" -eq 0 ] && [ -n "$owner" ] && ! chown "$owner" "$tmp"; then
-    rm -f "$tmp"
-    return 1
-  fi
-  if ! chmod "$mode" "$tmp"; then
-    rm -f "$tmp"
-    return 1
-  fi
-  if ! mv -f "$tmp" "$path"; then
-    rm -f "$tmp"
-    return 1
-  fi
-}
 
 _START_LOG="/tmp/nemoclaw-start.log"
 if [ "$(id -u)" -eq 0 ]; then
-  prepare_restricted_log "$_START_LOG" root:root 600
+  emit_restricted_log "$_START_LOG" root:root 600
 else
-  prepare_restricted_log "$_START_LOG" "" 600
+  emit_restricted_log "$_START_LOG" "" 600
 fi
 exec > >(tee -a "$_START_LOG") 2> >(tee -a "$_START_LOG" >&2)
 
@@ -292,10 +266,10 @@ start_discord_facade() {
   )
 
   if [ "$(id -u)" -eq 0 ] && command -v gosu >/dev/null 2>&1 && id gateway >/dev/null 2>&1; then
-    prepare_restricted_log "$log_path" gateway:gateway 600
+    emit_restricted_log "$log_path" gateway:gateway 600
     nohup env -u NEMOCLAW_DISCORD_FACADE_URL -u PYTHONPATH "${launch_env[@]}" gosu gateway sh -c 'umask 0007; exec "$@" >/tmp/discord-facade.log 2>&1' sh "$HERMES_VENV_PYTHON" /usr/local/bin/nemoclaw-discord-facade &
   else
-    prepare_restricted_log "$log_path" "" 600
+    emit_restricted_log "$log_path" "" 600
     nohup env -u NEMOCLAW_DISCORD_FACADE_URL -u PYTHONPATH "${launch_env[@]}" sh -c 'umask 0007; exec "$@" >/tmp/discord-facade.log 2>&1' sh "$HERMES_VENV_PYTHON" /usr/local/bin/nemoclaw-discord-facade &
   fi
   DISCORD_FACADE_PID=$!
@@ -536,7 +510,7 @@ if [ "$(id -u)" -ne 0 ]; then
     exec "${NEMOCLAW_CMD[@]}"
   fi
 
-  prepare_restricted_log /tmp/gateway.log "" 600
+  emit_restricted_log /tmp/gateway.log "" 600
 
   # Defence-in-depth: verify /tmp file permissions before launching services.
   # shellcheck disable=SC2119
@@ -587,7 +561,7 @@ if [ ${#NEMOCLAW_CMD[@]} -gt 0 ]; then
 fi
 
 # SECURITY: Protect gateway log from sandbox user tampering
-prepare_restricted_log /tmp/gateway.log gateway:gateway 600
+emit_restricted_log /tmp/gateway.log gateway:gateway 600
 
 # Defence-in-depth: verify /tmp file permissions before launching services.
 # shellcheck disable=SC2119

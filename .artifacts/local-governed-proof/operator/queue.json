@@ -1,0 +1,7 @@
+[
+  {
+    "id": "queue-local-safe-echo",
+    "state": "queued",
+    "detail": "idempotencyKey=a3e3a3ba37ae98638f8ca9a5"
+  }
+]

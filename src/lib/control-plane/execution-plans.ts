@@ -64,7 +64,7 @@ export interface ExecutionPolicySnapshot {
   policyReasonCode: string;
   policySourceRuleId: string;
   policyMatchedRuleIds: string[];
-  fallbackPermitted: boolean;
+  degradedStateTriggerPermitted: boolean;
   trustRequirement: "none" | "operator_approved" | "trusted_remote" | "trusted_local";
   attestationRequirement: "none" | "fresh" | "operator_approved";
   selectedCandidateClass?: "local_provider" | "remote_worker";
@@ -133,7 +133,7 @@ export type ExecutionAuthorizationReasonCode =
   | "policy_snapshot_mismatch"
   | "trust_snapshot_mismatch"
   | "execution_intent_mismatch"
-  | "fallback_permission_mismatch"
+  | "degraded_state_trigger_permission_mismatch"
   | "candidate_eligibility_mismatch"
   | "worker_trust_revoked"
   | "attestation_conflict"
@@ -168,7 +168,7 @@ export interface ExecutionAuthorizationContext {
   currentPolicySnapshot?: ExecutionPolicySnapshot;
   currentTrustSnapshot?: ExecutionTrustSnapshot;
   candidate?: HeterogeneousCandidate;
-  fallbackPermitted?: boolean;
+  degradedStateTriggerPermitted?: boolean;
   requireApproval?: boolean;
 }
 
@@ -226,7 +226,7 @@ export function createExecutionPolicySnapshot(input: {
   heterogeneousRoutingEnabled: boolean;
   remoteExecutionEnabled: boolean;
   policy: PolicyEvaluationResult;
-  fallbackPermitted: boolean;
+  degradedStateTriggerPermitted: boolean;
   trustRequirement?: ExecutionPolicySnapshot["trustRequirement"];
   attestationRequirement?: ExecutionPolicySnapshot["attestationRequirement"];
   selectedCandidateClass?: ExecutionPolicySnapshot["selectedCandidateClass"];
@@ -247,7 +247,7 @@ export function createExecutionPolicySnapshot(input: {
     policyReasonCode: input.policy.reasonCode,
     policySourceRuleId: input.policy.sourceRuleId,
     policyMatchedRuleIds: [...input.policy.matchedRuleIds].sort(),
-    fallbackPermitted: input.fallbackPermitted,
+    degradedStateTriggerPermitted: input.degradedStateTriggerPermitted,
     trustRequirement: input.trustRequirement ?? (input.executionMode === "remote" ? "trusted_remote" : "none"),
     attestationRequirement: input.attestationRequirement ?? (input.executionMode === "remote" ? "fresh" : "none"),
     selectedCandidateClass: input.selectedCandidateClass,
@@ -428,7 +428,7 @@ export function validateExecutionAuthorization(context: ExecutionAuthorizationCo
   if (context.plan.status === "revoked") reasons.add("plan_revoked");
   if (context.plan.status === "expired") reasons.add("plan_expired");
   if (!context.plan.policySnapshot.policyAllowed) reasons.add("policy_denied");
-  if ((context.fallbackPermitted ?? context.plan.policySnapshot.fallbackPermitted) !== context.plan.policySnapshot.fallbackPermitted) reasons.add("fallback_permission_mismatch");
+  if ((context.degradedStateTriggerPermitted ?? context.plan.policySnapshot.degradedStateTriggerPermitted) !== context.plan.policySnapshot.degradedStateTriggerPermitted) reasons.add("degraded_state_trigger_permission_mismatch");
   if (context.candidate && context.candidate.status !== "eligible") reasons.add("candidate_eligibility_mismatch");
   if (context.currentTrustSnapshot?.workerTrustLevel === "revoked" || context.plan.trustSnapshot.workerTrustLevel === "revoked") reasons.add("worker_trust_revoked");
   if (context.currentTrustSnapshot?.workerAttestationStatus === "revoked" || context.plan.trustSnapshot.workerAttestationStatus === "revoked") reasons.add("worker_trust_revoked");
@@ -466,4 +466,3 @@ export function executionLineageFromPlan(plan: ExecutionPlan, approval?: Executi
     replayReferenceId: plan.replayReference.replayReferenceId,
   };
 }
-

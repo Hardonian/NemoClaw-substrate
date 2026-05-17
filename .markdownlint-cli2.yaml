@@ -23,5 +23,8 @@ config:
   MD025:
     front_matter_title: ""
 
+customRules:
+  - "./scripts/markdownlint/anti-theatre-rule.js"
+
 ignores:
-  - "node_modules/**"
+  - "**/node_modules/**"

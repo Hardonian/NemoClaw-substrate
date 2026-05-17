@@ -1,0 +1,22 @@
+sequenceDiagram
+    participant A as Auditor
+    participant V as Replay Validator
+    participant S as Substrate
+    participant E as Evidence Store
+
+    A->>V: Submit Proofpack (Receipts + Payload)
+    V->>E: Fetch Original Receipts
+    V->>S: Initialize Replay Session
+    loop For each recorded Step
+        S->>S: Re-execute Payload deterministically
+        S->>E: Emit Replayed Receipt
+        V->>V: Compare Original vs Replayed
+        alt Matches
+            V->>V: Mark as Consistent
+        else Diverges (Drift)
+            V->>V: Record Drift Details
+            V->>E: Emit replay_drift Receipt
+        end
+    end
+    V->>E: Emit replay_consistent (if no drift)
+    V-->>A: Return ReplayEnvelope (Verification Result)

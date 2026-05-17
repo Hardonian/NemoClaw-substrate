@@ -1,0 +1,8 @@
+[
+  {
+    "id": "gpu",
+    "state": "unavailable",
+    "detail": "command_unavailable",
+    "unavailable": true
+  }
+]

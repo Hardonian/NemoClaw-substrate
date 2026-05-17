@@ -6,11 +6,11 @@ import type {
   SpawnSyncOptionsWithStringEncoding,
   SpawnSyncReturns,
 } from "node:child_process";
+import { spawnSync } from "node:child_process";
+import path from "node:path";
 import { NAME_ALLOWED_FORMAT } from "./name-validation";
-
-const { spawnSync } = require("child_process");
-const path = require("path");
-const { detectDockerHost } = require("./platform");
+import { detectDockerHost } from "./platform";
+import { redact, redactError, writeRedactedResult } from "./security/redact";
 
 const ROOT = path.resolve(__dirname, "..", "..");
 const SCRIPTS = path.join(ROOT, "scripts");
@@ -62,7 +62,7 @@ function spawnAndHandle(
     env: { ...process.env, ...opts.env },
   });
   if (!opts.suppressOutput) {
-    writeRedactedResult(result, stdio);
+    writeRedactedResult(result, stdio as string[]);
   }
   if (result.error && !opts.ignoreError) {
     console.error(
@@ -98,10 +98,37 @@ function run(cmd: readonly string[], opts: RunnerOptions = {}): SpawnResult {
  * Run an explicit shell command string through bash -c.
  * Exits the process on failure unless opts.ignoreError is true.
  */
+/**
+ * Get the preferred shell and its base arguments.
+ * @param login If true, requests a login shell (e.g., -lc instead of -c for bash).
+ */
+function getShell(login = false): [string, string[]] {
+  const isWin = process.platform === "win32";
+  const flag = isWin ? "/c" : login ? "-lc" : "-c";
+
+  if (isWin) {
+    // Try bash first (Git Bash / WSL), fall back to cmd
+    try {
+      // Use --version to check for bash existence
+      spawnSync("bash", ["--version"], { stdio: "ignore" });
+      const bashFlag = login ? "-lc" : "-c";
+      return ["bash", [bashFlag]];
+    } catch {
+      return ["cmd", ["/c"]];
+    }
+  }
+  return ["bash", [flag]];
+}
+
+/**
+ * Run an explicit shell command string through bash -c (or cmd /c on Windows).
+ * Exits the process on failure unless opts.ignoreError is true.
+ */
 function runShell(cmd: string, opts: RunnerOptions = {}): SpawnResult {
   const shellCmd = String(cmd);
   const stdio = opts.stdio ?? ["ignore", "pipe", "pipe"];
-  return spawnAndHandle("bash", ["-c", shellCmd], opts, stdio, shellCmd);
+  const [shell, shellArgs] = getShell();
+  return spawnAndHandle(shell, [...shellArgs, shellCmd], opts, stdio, shellCmd);
 }
 
 /**
@@ -136,7 +163,7 @@ function runArrayCmd(
     env: { ...process.env, ...extraEnv },
   });
   if (!suppressOutput) {
-    writeRedactedResult(result, stdio);
+    writeRedactedResult(result, (Array.isArray(stdio) ? stdio.map(s => String(s)) : []) as string[]);
   }
   // Check result.error first — spawnSync sets this (with status === null) when
   // the executable is missing (ENOENT), the call times out, or the spawn fails.
@@ -171,7 +198,8 @@ function runInteractive(cmd: readonly string[], opts: RunnerOptions = {}): Spawn
  */
 function runInteractiveShell(cmd: string, opts: RunnerOptions = {}): SpawnResult {
   const stdio = opts.stdio ?? ["inherit", "pipe", "pipe"];
-  return spawnAndHandle("bash", ["-c", cmd], opts, stdio, cmd);
+  const [shell, shellArgs] = getShell();
+  return spawnAndHandle(shell, [...shellArgs, cmd], opts, stdio, cmd);
 }
 
 /**
@@ -238,15 +266,13 @@ function runCapture(cmd: readonly string[], opts: CaptureOptions = {}): string {
     }
 
     const stdout = result.stdout || "";
-    return (typeof stdout === "string" ? stdout : stdout.toString("utf-8")).trim();
+    return stdout.trim();
   } catch (err) {
     if (ignoreError) return "";
     throw redactError(err);
   }
 }
 
-// Unified redaction — see redact.ts (#2381).
-const { redact, redactError, writeRedactedResult } = require("./security/redact");
 
 /**
  * Shell-quote a value for safe interpolation into bash -c strings.
@@ -287,6 +313,7 @@ export {
   runFile,
   runInteractive,
   runInteractiveShell,
+  getShell,
   shellQuote,
   validateName,
 };

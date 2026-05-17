@@ -45,14 +45,28 @@ function isPolicyDocument(value: PolicyValue): value is PolicyDocument {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
+const RFC1123_REGEX = /^[a-z0-9]([a-z0-9-]*[a-z0-9])?$/;
+
+function validateSandboxName(sandboxName: string): void {
+  if (!sandboxName || sandboxName.length > 63 || !RFC1123_REGEX.test(sandboxName)) {
+    throw new Error(
+      `Invalid or truncated sandbox name: '${sandboxName}'. ` +
+        `Names must be 1-63 chars, lowercase alphanumeric, with optional internal hyphens.`,
+    );
+  }
+}
+
 /**
  * Enumerate every preset YAML under `nemoclaw-blueprint/policies/presets/`
  * and return `{ file, name, description }` triples parsed from the file's
  * `preset:` header.
  */
+let cachedPresets: PresetInfo[] | null = null;
+
 function listPresets(): PresetInfo[] {
+  if (cachedPresets) return cachedPresets;
   if (!fs.existsSync(PRESETS_DIR)) return [];
-  return fs
+  cachedPresets = fs
     .readdirSync(PRESETS_DIR)
     .filter((f: string) => f.endsWith(".yaml"))
     .map((f: string) => {
@@ -65,6 +79,7 @@ function listPresets(): PresetInfo[] {
         description: descMatch ? descMatch[1].trim() : "",
       };
     });
+  return cachedPresets!;
 }
 
 /**
@@ -210,7 +225,7 @@ function buildPolicyGetCommand(sandboxName: string): string[] {
 }
 
 /**
- * Text-based fallback for merging preset entries into policy YAML.
+ * Secondary text-based merger for preset entries into policy YAML.
  * Used when preset entries cannot be parsed as structured YAML.
  */
 function textBasedMerge(currentPolicy: string, presetEntries: string): string {
@@ -410,13 +425,7 @@ function removePresetFromPolicy(
 function removePreset(sandboxName: string, presetName: string): boolean {
   // Guard against truncated sandbox names — WSL can truncate hyphenated
   // names during argument parsing, e.g. "my-assistant" → "m"
-  const isRfc1123Label = /^[a-z0-9]([a-z0-9-]*[a-z0-9])?$/.test(sandboxName);
-  if (!sandboxName || sandboxName.length > 63 || !isRfc1123Label) {
-    throw new Error(
-      `Invalid or truncated sandbox name: '${sandboxName}'. ` +
-        `Names must be 1-63 chars, lowercase alphanumeric, with optional internal hyphens.`,
-    );
-  }
+  validateSandboxName(sandboxName);
 
   // Resolve preset content: built-in first, then custom presets persisted
   // in the registry. `isCustom` controls which registry bucket to prune on
@@ -577,13 +586,7 @@ function applyPresetContent(
 ): boolean {
   // Guard against truncated sandbox names — WSL can truncate hyphenated
   // names during argument parsing, e.g. "my-assistant" → "m"
-  const isRfc1123Label = /^[a-z0-9]([a-z0-9-]*[a-z0-9])?$/.test(sandboxName);
-  if (!sandboxName || sandboxName.length > 63 || !isRfc1123Label) {
-    throw new Error(
-      `Invalid or truncated sandbox name: '${sandboxName}'. ` +
-        `Names must be 1-63 chars, lowercase alphanumeric, with optional internal hyphens.`,
-    );
-  }
+  validateSandboxName(sandboxName);
 
   const presetEntries = extractPresetEntries(presetContent);
   if (!presetEntries) {
@@ -955,13 +958,7 @@ function resolvePermissivePolicyPath(sandboxName: string): string {
 }
 
 function applyPermissivePolicy(sandboxName: string): void {
-  const isRfc1123Label = /^[a-z0-9]([a-z0-9-]*[a-z0-9])?$/.test(sandboxName);
-  if (!sandboxName || sandboxName.length > 63 || !isRfc1123Label) {
-    throw new Error(
-      `Invalid or truncated sandbox name: '${sandboxName}'. ` +
-        `Names must be 1-63 chars, lowercase alphanumeric, with optional internal hyphens.`,
-    );
-  }
+  validateSandboxName(sandboxName);
 
   const policyPath = resolvePermissivePolicyPath(sandboxName);
   if (!fs.existsSync(policyPath)) {

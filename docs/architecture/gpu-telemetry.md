@@ -1,7 +1,10 @@
+<!-- SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved. -->
+<!-- SPDX-License-Identifier: Apache-2.0 -->
+
 # Placeholder
 
-
 ## 2026-05-09 telemetry truth update
+
 - Telemetry is explicit probe-only and best effort.
 - Unavailable telemetry is acceptable and non-fatal.
 - No background polling daemons are introduced.

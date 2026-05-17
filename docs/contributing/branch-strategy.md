@@ -44,7 +44,7 @@ Examples:
 
 - `docs(fork): define fork rationale and roadmap docs`
 - `feat(policy): add supervised promotion decision envelope`
-- `fix(scheduler): report deterministic fallback as degraded`
+- `fix(scheduler): report deterministic degraded state as degraded`
 
 Commit guidance:
 

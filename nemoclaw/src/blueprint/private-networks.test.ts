@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-import { describe, it, expect, beforeEach, vi } from "vitest";
 import type fs from "node:fs";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // In-memory fs shared with the mocked module.
 const store = new Map<string, string>();

@@ -79,8 +79,8 @@ Additional high-confidence patterns for persistent content:
 
 ### Tier 1: Partial redaction (`redact()`)
 
-**Consumer:** `src/lib/runner.ts` (CLI subprocess output)  
-**Behavior:** Preserves first 4 characters, replaces remainder with `*` (capped at 20 asterisks).  
+**Consumer:** `src/lib/runner.ts` (CLI subprocess output)
+**Behavior:** Preserves first 4 characters, replaces remainder with `*` (capped at 20 asterisks).
 **Rationale:** Allows operators to identify which key is in use without exposing the full secret.
 
 ```text
@@ -92,8 +92,8 @@ URL handling: Replaces userinfo with `****`, redacts sensitive query parameters.
 
 ### Tier 2: Full redaction (`redactFull()`)
 
-**Consumer:** `src/lib/debug.ts` (diagnostic dump files)  
-**Behavior:** Replaces entire match with `<REDACTED>`. Also covers `KEY=value` patterns and `Bearer` tokens.  
+**Consumer:** `src/lib/debug.ts` (diagnostic dump files)
+**Behavior:** Replaces entire match with `<REDACTED>`. Also covers `KEY=value` patterns and `Bearer` tokens.
 **Rationale:** Diagnostic dumps may be shared with support; no partial exposure is acceptable.
 
 ```text
@@ -103,8 +103,8 @@ Output: NVIDIA_API_KEY=<REDACTED>
 
 ### Tier 3: Sensitive text redaction (`redactSensitiveText()`)
 
-**Consumer:** `src/lib/onboard-session.ts` (onboarding session logs)  
-**Behavior:** Full replacement + 240-character output truncation.  
+**Consumer:** `src/lib/onboard-session.ts` (onboarding session logs)
+**Behavior:** Full replacement + 240-character output truncation.
 **Rationale:** Onboarding logs may contain user-typed credentials; truncation prevents accumulation of sensitive context.
 
 ---
@@ -125,9 +125,9 @@ Output: NVIDIA_API_KEY=<REDACTED>
 
 ---
 
-## Shell fallback coverage
+## Shell degraded state coverage
 
-When Node.js is unavailable (e.g., during early bootstrap), `debug.sh` uses `sed`-based redaction. This fallback only covers `EXPECTED_SHELL_PREFIXES`:
+When Node.js is unavailable (e.g., during early bootstrap), `debug.sh` uses `sed`-based redaction. This degraded state only covers `EXPECTED_SHELL_PREFIXES`:
 
 - `nvapi-`
 - `nvcf-`
@@ -155,5 +155,5 @@ These are inherent limitations of regex-based content scanning and are documente
 
 1. Add the regex to `src/lib/security/secret-patterns.ts` (for CLI redaction) and/or `nemoclaw/src/security/secret-scanner.ts` (for memory write scanning).
 2. Add a test case to the corresponding test file.
-3. If the pattern has a distinctive prefix that should be covered by the shell fallback, add it to `EXPECTED_SHELL_PREFIXES` and update `debug.sh`.
+3. If the pattern has a distinctive prefix that should be covered by the shell degraded state, add it to `EXPECTED_SHELL_PREFIXES` and update `debug.sh`.
 4. Run `npx vitest run src/lib/security/redact.test.ts` and `npx vitest run nemoclaw/src/security/secret-scanner.test.ts`.

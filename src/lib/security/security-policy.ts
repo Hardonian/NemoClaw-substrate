@@ -92,7 +92,7 @@ export const DEFAULT_SECURITY_POLICY: SecurityPolicy = {
     allowPublic: true,
   },
   transport: {
-    allowedSchemes: ["http:", "https:"],
+    allowedSchemes: ["https:"],
     timeoutCeilingMs: 10_000,
     defaultTimeoutMs: 2_000,
     minimumTimeoutMs: 250,
@@ -127,6 +127,18 @@ export const LOCAL_ONLY_SECURITY_POLICY: SecurityPolicy = {
     allowPrivate: false,
     allowTailscaleLan: false,
     allowPublic: false,
+  },
+  transport: {
+    ...DEFAULT_SECURITY_POLICY.transport,
+    allowedSchemes: ["http:", "https:"],
+  },
+};
+
+export const INSECURE_HTTP_TRANSPORT_POLICY: SecurityPolicy = {
+  ...DEFAULT_SECURITY_POLICY,
+  transport: {
+    ...DEFAULT_SECURITY_POLICY.transport,
+    allowedSchemes: ["http:", "https:"],
   },
 };
 
@@ -316,7 +328,15 @@ export function redactSecurityPayload<T>(
 }
 
 export function payloadContainsSecrets(payload: unknown, policy: SecretRedactionPolicy = DEFAULT_SECURITY_POLICY.secretRedaction): boolean {
-  return JSON.stringify(payload) !== JSON.stringify(redactSecurityPayload(payload, policy));
+  const walk = (value: unknown, depth: number, parentKey?: string): boolean => {
+    if (parentKey && isSensitiveKey(parentKey, policy)) return value !== policy.replacement;
+    if (depth > policy.maxDepth) return false;
+    if (typeof value === "string") return value !== redactSecurityString(value, policy);
+    if (value === null || typeof value !== "object") return false;
+    if (Array.isArray(value)) return value.some((item) => walk(item, depth + 1));
+    return Object.entries(value as Record<string, unknown>).some(([key, item]) => walk(item, depth + 1, key));
+  };
+  return walk(payload, 0);
 }
 
 export function validateCommandDescriptor(

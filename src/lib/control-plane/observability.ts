@@ -23,10 +23,10 @@ export function summarizeDegradedTimeline(events: OperationalEvent[]): string[] 
     .map((e) => `${e.occurredAt} observed ${(e.payload["degraded"] as { reasonCode?: string } | undefined)?.reasonCode ?? "unknown"}`);
 }
 
-export function summarizeFallbackFrequency(events: OperationalEvent[]): Record<string, number> {
+export function summarizeDegradedStateTriggerFrequency(events: OperationalEvent[]): Record<string, number> {
   const out: Record<string, number> = {};
-  for (const event of events.filter((e) => e.category === "fallback")) {
-    const reason = (event.payload["fallback"] as { reason?: string } | undefined)?.reason ?? "unknown";
+  for (const event of events.filter((e) => e.category === "degraded_state_trigger")) {
+    const reason = (event.payload["degraded_state_trigger"] as { reason?: string } | undefined)?.reason ?? "unknown";
     out[reason] = (out[reason] ?? 0) + 1;
   }
   return Object.fromEntries(Object.entries(out).sort(([a], [b]) => a.localeCompare(b)));
@@ -66,6 +66,26 @@ export function summarizeExecutionPlanEventCounts(events: OperationalEvent[]): R
   for (const event of events) {
     if (!event.category.startsWith("execution_")) continue;
     out[event.category] = (out[event.category] ?? 0) + 1;
+  }
+  return Object.fromEntries(Object.entries(out).sort(([a], [b]) => a.localeCompare(b)));
+}
+
+export function summarizeExecutionLifecycleEventCounts(events: OperationalEvent[]): Record<string, number> {
+  const prefixes = ["execution_", "queue_", "lease_", "proofpack_"];
+  const out: Record<string, number> = {};
+  for (const event of events) {
+    if (!prefixes.some((prefix) => event.category.startsWith(prefix))) continue;
+    out[event.category] = (out[event.category] ?? 0) + 1;
+  }
+  return Object.fromEntries(Object.entries(out).sort(([a], [b]) => a.localeCompare(b)));
+}
+
+export function summarizeExecutionLifecycleTruth(events: OperationalEvent[]): Record<string, number> {
+  const truthStates = ["observed", "inferred", "unavailable", "degraded", "stale", "conflicted", "blocked", "not_implemented"];
+  const out = Object.fromEntries(truthStates.map((state) => [state, 0]));
+  for (const event of events) {
+    const state = String(event.payload["state"] ?? event.payload["truthState"] ?? "observed");
+    if (state in out) out[state] += 1;
   }
   return Object.fromEntries(Object.entries(out).sort(([a], [b]) => a.localeCompare(b)));
 }

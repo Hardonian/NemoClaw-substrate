@@ -153,7 +153,7 @@ describe("evidence-export", () => {
 
   describe("buildEvidenceBundleFromEvents", () => {
     it("builds bundle with deterministic ordering", () => {
-      const events = [fakeEvent(2, "degraded_state"), fakeEvent(0, "receipt"), fakeEvent(1, "fallback")];
+      const events = [fakeEvent(2, "degraded_state"), fakeEvent(0, "receipt"), fakeEvent(1, "degraded_state_trigger")];
       const bundle = buildEvidenceBundleFromEvents(events, T0);
       expect(bundle.artifacts.length).toBe(3);
       const ids = bundle.artifacts.map((a) => a.artifactId);

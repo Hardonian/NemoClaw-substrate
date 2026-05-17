@@ -1,0 +1,36 @@
+sequenceDiagram
+    participant O as Operator
+    participant P as Policy Engine
+    participant S as Scheduler
+    participant R as Runner
+    participant E as Evidence Store
+
+    O->>P: Submit Execution Request
+    P->>P: Evaluate Policy (isOrchestrationEnabled)
+    alt Orchestration Disabled
+        P-->>O: Direct Execution (Bypass)
+    else Orchestration Enabled
+        P->>P: Synthesize OrchestrationPlan
+        P->>E: Emit plan_created Receipt
+        P-->>O: Present Plan for Review
+        O->>P: Approve Plan
+        P->>E: Emit plan_approved Receipt
+        P->>S: Dispatch Plan
+        S->>E: Emit plan_started Receipt
+        loop For each Step
+            S->>P: Request Step Authorization
+            P->>P: Check Trust & Approval
+            alt Authorized
+                P->>E: Emit decision_allowed Receipt
+                S->>R: Execute Step Payload
+                R->>E: Emit step_started Receipt
+                R-->>S: Return Result
+                S->>E: Emit step_completed Receipt
+            else Denied
+                P->>E: Emit decision_blocked Receipt
+                S->>S: Mark Step as Failed/Skipped
+            end
+        end
+        S->>E: Emit plan_completed Receipt
+        S-->>O: Return Results + Proofpack Link
+    end

@@ -1,0 +1,12 @@
+[
+  {
+    "id": "event-execution-started",
+    "state": "execution_started",
+    "detail": "execution_started"
+  },
+  {
+    "id": "event-execution-completed",
+    "state": "execution_completed",
+    "detail": "execution_completed"
+  }
+]

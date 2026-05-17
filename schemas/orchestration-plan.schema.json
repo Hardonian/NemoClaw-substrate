@@ -1,0 +1,118 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://nemoclaw.ai/schemas/orchestration-plan.schema.json",
+  "title": "Orchestration Plan",
+  "description": "A declarative definition of a multi-step execution plan with associated policies.",
+  "type": "object",
+  "properties": {
+    "planId": {
+      "type": "string",
+      "description": "Unique identifier for the plan."
+    },
+    "name": {
+      "type": "string",
+      "description": "Human-readable name of the plan."
+    },
+    "description": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["draft", "pending", "running", "completed", "failed", "cancelled", "timed_out"]
+    },
+    "steps": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/OrchestrationStep"
+      }
+    },
+    "policy": {
+      "type": "object",
+      "properties": {
+        "policyId": { "type": "string" },
+        "name": { "type": "string" },
+        "version": { "type": "string" },
+        "enabled": { "type": "boolean" },
+        "maxConcurrentSteps": { "type": "integer" },
+        "maxPlanDurationMs": { "type": "integer" },
+        "maxStepDurationMs": { "type": "integer" },
+        "requiresApproval": { "type": "boolean" },
+        "minimumTrustLevel": { "type": "string" }
+      },
+      "required": ["policyId", "version", "enabled"]
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "updatedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "startedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "completedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "failedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "cancelledAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "operatorId": {
+      "type": "string"
+    },
+    "correlationId": {
+      "type": "string"
+    },
+    "metadata": {
+      "type": "object",
+      "additionalProperties": true
+    }
+  },
+  "required": ["planId", "name", "status", "steps", "policy", "createdAt", "updatedAt"],
+  "definitions": {
+    "OrchestrationStep": {
+      "type": "object",
+      "properties": {
+        "stepId": { "type": "string" },
+        "planId": { "type": "string" },
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "status": {
+          "type": "string",
+          "enum": ["pending", "in_progress", "completed", "failed", "skipped", "cancelled", "timed_out"]
+        },
+        "dependsOnStepIds": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "policyVersion": { "type": "string" },
+        "trustLevel": { "type": "string" },
+        "approvalRequired": { "type": "boolean" },
+        "approvalGranted": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" },
+        "startedAt": { "type": "string", "format": "date-time" },
+        "completedAt": { "type": "string", "format": "date-time" },
+        "failedAt": { "type": "string", "format": "date-time" },
+        "failureReason": { "type": "string" },
+        "failureMessage": { "type": "string" },
+        "retryCount": { "type": "integer" },
+        "maxRetries": { "type": "integer" },
+        "metadata": { "type": "object", "additionalProperties": true }
+      },
+      "required": ["stepId", "planId", "name", "status", "payload", "retryCount", "maxRetries", "createdAt", "updatedAt"]
+    }
+  }
+}

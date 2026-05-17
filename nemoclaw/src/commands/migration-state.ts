@@ -1,6 +1,7 @@
 // SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+import { createHash } from "node:crypto";
 import {
   chmodSync,
   copyFileSync,
@@ -16,9 +17,8 @@ import {
 } from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { create as createTar } from "tar";
-import { createHash } from "node:crypto";
 import JSON5 from "json5";
+import { create as createTar } from "tar";
 import type { PluginLogger } from "../index.js";
 
 const SANDBOX_MIGRATION_DIR = "/sandbox/.nemoclaw/migration";

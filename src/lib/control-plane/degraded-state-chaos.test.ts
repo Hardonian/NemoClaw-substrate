@@ -44,10 +44,10 @@ function fakeProbe(status: WorkerProbeResult["status"], overrides: Partial<Worke
 }
 
 describe("degraded state chaos coverage", () => {
-  it("proves no hidden fallback and no denied candidate execution", () => {
+  it("proves no hidden degradedStateTrigger and no denied candidate execution", () => {
     const empty = createDeviceRegistry();
-    expect(() => routeProviderWithGovernance({ requestId: "chaos-no-candidate", nowIso: "2026-05-09T00:00:00.000Z", provider: "openai-api", model: "gpt-5", registry: empty, policyBundle: allowPolicy, config: { enabled: true, source: "env", allowFallback: false } })).toThrow(/no eligible candidate/);
-    expect(() => routeProviderWithGovernance({ requestId: "chaos-deny", nowIso: "2026-05-09T00:00:00.000Z", provider: "openai-api", model: "gpt-5", registry: fakeRegistry(), policyBundle: denyPolicy, config: { enabled: true, source: "env", allowFallback: true } })).toThrow(/denied/);
+    expect(() => routeProviderWithGovernance({ requestId: "chaos-no-candidate", nowIso: "2026-05-09T00:00:00.000Z", provider: "openai-api", model: "gpt-5", registry: empty, policyBundle: allowPolicy, config: { enabled: true, source: "env", allowDegradedState: false } })).toThrow(/no eligible candidate/);
+    expect(() => routeProviderWithGovernance({ requestId: "chaos-deny", nowIso: "2026-05-09T00:00:00.000Z", provider: "openai-api", model: "gpt-5", registry: fakeRegistry(), policyBundle: denyPolicy, config: { enabled: true, source: "env", allowDegradedState: true } })).toThrow(/denied/);
   });
 
   it("blocks remote execution for disabled flag, deny, approval_required, and stale registry", async () => {
@@ -64,7 +64,7 @@ describe("degraded state chaos coverage", () => {
     expect(transport.execute).not.toHaveBeenCalled();
   });
 
-  it("captures remote timeout and failed fallback deterministically in receipts/events", async () => {
+  it("captures remote timeout and failed degradedStateTrigger deterministically in receipts/events", async () => {
     const log = new OperationalMemoryLog();
     const transport = { execute: vi.fn().mockRejectedValue(new Error("timeout")) };
     const out = await runRemoteExecution({ request: { requestId: "chaos-timeout", nowIso: "2026-05-09T00:00:00.000Z", action: "worker:execute", command: "echo chaos", targetEndpoint: "https://worker", approved: true }, config: { enabled: true, source: "env" }, transport, policyBundle: allowPolicy, registry: fakeRegistry(), operationalMemory: log });
@@ -95,7 +95,7 @@ describe("degraded state chaos coverage", () => {
     expect(validateReplayEnvelope(envelope)).toEqual({ ok: false, reasons: ["missing_replay_lineage", "digest_mismatch"] });
 
     const missingReason = buildReplayEnvelope([
-      { eventId: "e1", occurredAt: "2026-05-09T00:00:00.000Z", sequence: 0, category: "fallback", source: "chaos", provenance: {}, replayRef: { lineage: ["chaos"], replayVersion: "1" }, payload: { fallback: { at: "2026-05-09T00:00:00.000Z", target: "local/default", reason: "" } } },
+      { eventId: "e1", occurredAt: "2026-05-09T00:00:00.000Z", sequence: 0, category: "degraded_state_trigger", source: "chaos", provenance: {}, replayRef: { lineage: ["chaos"], replayVersion: "1" }, payload: { degradedStateTrigger: { at: "2026-05-09T00:00:00.000Z", target: "local/default", reason: "" } } },
     ], "2026-05-09T00:00:03.000Z");
     expect(validateReplayEnvelope(missingReason)).toEqual({ ok: false, reasons: ["missing_replay_reason_code"] });
 
@@ -104,19 +104,19 @@ describe("degraded state chaos coverage", () => {
   });
 
 
-  it("rejects replay on policy/trust/candidate/fallback drift reason-code gaps", () => {
-    const make = (category: "degraded_state" | "fallback" | "policy_outcome", payload: Record<string, unknown>) =>
+  it("rejects replay on policy/trust/candidate/degradedStateTrigger drift reason-code gaps", () => {
+    const make = (category: "degraded_state" | "degraded_state_trigger" | "policy_outcome", payload: Record<string, unknown>) =>
       buildReplayEnvelope([{ eventId: "e0", occurredAt: "2026-05-09T00:00:00.000Z", sequence: 0, category, source: "chaos", provenance: {}, replayRef: { lineage: ["chaos"], replayVersion: "1" }, payload }], "2026-05-09T00:00:01.000Z");
 
     const policyDrift = make("policy_outcome", { policyDecision: { allowed: false, requiredApproval: false, reasons: [{ code: "" }] } });
     const trustDrift = make("degraded_state", { degraded: { reasonCode: "", reason: "trust_drift" } });
     const candidateMismatch = make("degraded_state", { degraded: { reasonCode: "", reason: "candidate_eligibility_mismatch" } });
-    const fallbackMismatch = make("fallback", { fallback: { reason: "", at: "2026-05-09T00:00:00.000Z", target: "local/default" } });
+    const degradedStateTriggerMismatch = make("degraded_state_trigger", { degradedStateTrigger: { reason: "", at: "2026-05-09T00:00:00.000Z", target: "local/default" } });
 
     expect(validateReplayEnvelope(policyDrift).reasons).toContain("missing_replay_reason_code");
     expect(validateReplayEnvelope(trustDrift).reasons).toContain("missing_replay_reason_code");
     expect(validateReplayEnvelope(candidateMismatch).reasons).toContain("missing_replay_reason_code");
-    expect(validateReplayEnvelope(fallbackMismatch).reasons).toContain("missing_replay_reason_code");
+    expect(validateReplayEnvelope(degradedStateTriggerMismatch).reasons).toContain("missing_replay_reason_code");
   });
 
 });

@@ -39,7 +39,7 @@ export interface PortProbeResult {
 export interface CheckPortOpts {
   /** Inject fake lsof output (skips shell). */
   lsofOutput?: string;
-  /** Force the net-probe fallback path. */
+  /** Force the static net-probe recovery path. */
   skipLsof?: boolean;
   /** Async probe implementation for testing. */
   probeImpl?: (port: number) => Promise<PortProbeResult>;
@@ -220,7 +220,7 @@ export function parseDockerUsesContainerdSnapshotter(info = ""): boolean {
 // `"CDISpecDirs": ["/etc/cdi", "/var/run/cdi"]` whenever the daemon is built
 // with CDI support and `features.cdi=true` (the default on recent installs).
 // An empty list means CDI device injection is not enabled, so OpenShell will
-// fall back to the legacy `nvidia` runtime path and there is no spec gap to
+// recover via the legacy `nvidia` runtime path and there is no spec gap to
 // worry about.
 export function parseDockerCdiSpecDirs(info = ""): string[] {
   const match = info.match(/"CDISpecDirs"\s*:\s*\[([^\]]*)\]/);
@@ -804,7 +804,7 @@ function parseLsofLines(output: string): PortProbeResult | null {
  *
  * Detection chain:
  *   1. lsof (primary) — identifies the blocking process name + PID
- *   2. Node.js net probe (fallback) — cross-platform, detects EADDRINUSE
+ *   2. Node.js net probe (recovery) — cross-platform, detects EADDRINUSE
  */
 export async function checkPortAvailable(
   port?: number,
@@ -840,8 +840,8 @@ export async function checkPortAvailable(
 
       // Empty lsof output is not authoritative — non-root users cannot
       // see listeners owned by root (e.g., docker-proxy, leftover gateway).
-      // Retry with sudo -n to identify root-owned listeners before falling
-      // through to the net probe (which can only detect EADDRINUSE but not
+      // Retry with sudo -n to identify root-owned listeners before recovering
+      // with the net probe (which can only detect EADDRINUSE but not
       // the owning process).
       if (!o.lsofOutput) {
         const sudoOut: string | undefined = runCapture(
@@ -861,7 +861,7 @@ export async function checkPortAvailable(
     }
   }
 
-  // ── net probe fallback ─────────────────────────────────────────
+  // ── net probe recovery ──────────────────────────────────────────
   return probePortAvailability(p, o);
 }
 

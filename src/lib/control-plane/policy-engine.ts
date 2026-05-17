@@ -128,7 +128,7 @@ export function evaluatePolicyEngine(inheritance: PolicyInheritance, context: Po
       matches = item.rule.matches(context);
     } catch {
       // Fail closed on evaluation errors
-      matches = true; 
+      matches = true;
       item.rule = { ...item.rule, effect: "deny", reasonCode: "policy_rule_deny" };
     }
 
@@ -155,7 +155,7 @@ export function evaluatePolicyEngine(inheritance: PolicyInheritance, context: Po
   }
 
   // 3. Determine winner
-  // Precedence: 
+  // Precedence:
   // 1. Highest Scope
   // 2. Deny > Approval > Allow
   // 3. Emergency deny is highest implicitly because emergency scope is highest.
@@ -171,7 +171,7 @@ export function evaluatePolicyEngine(inheritance: PolicyInheritance, context: Po
   });
 
   const winner = matchedRules[0];
-  
+
   const finalEffect = winner ? winner.effect : "deny";
   const finalReasonCode = winner ? winner.reasonCode : "policy_default_deny";
   const winningRuleId = winner ? winner.ruleId : "default_deny";

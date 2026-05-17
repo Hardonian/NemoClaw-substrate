@@ -19,6 +19,7 @@ afterEach(() => {
 
 interface Fixture {
   tmpDir: string;
+  homeLocalBin: string;
   sandboxName: string;
   invocationLog: string;
 }
@@ -38,7 +39,8 @@ function setupFixture(opts: {
   tmpFixtures.push(tmpDir);
   const homeLocalBin = path.join(tmpDir, ".local", "bin");
   const registryDir = path.join(tmpDir, ".nemoclaw");
-  const openshellPath = path.join(homeLocalBin, "openshell");
+  const isWin = process.platform === "win32";
+  const openshellPath = path.join(homeLocalBin, isWin ? "openshell.cmd" : "openshell");
   const invocationLog = path.join(tmpDir, "openshell-calls.log");
 
   fs.mkdirSync(homeLocalBin, { recursive: true });
@@ -75,9 +77,7 @@ function setupFixture(opts: {
   // while logging every invocation so the test can assert the order. The
   // forward state flips to "running" after `forward start` to model the
   // post-recovery probe.
-  fs.writeFileSync(
-    openshellPath,
-    `#!${process.execPath}
+  const nodeScript = `#!${process.execPath}
 const fs = require("node:fs");
 const args = process.argv.slice(2);
 fs.appendFileSync(${JSON.stringify(invocationLog)}, args.join(" ") + "\\n");
@@ -145,16 +145,22 @@ if (args[0] === "inference" && args[1] === "get") {
 }
 
 process.exit(0);
-`,
-    { mode: 0o755 },
-  );
+`;
 
-  return { tmpDir, sandboxName, invocationLog };
+  if (isWin) {
+    const scriptJs = path.join(homeLocalBin, "openshell.js");
+    fs.writeFileSync(scriptJs, nodeScript);
+    fs.writeFileSync(openshellPath, `@echo off\n"${process.execPath}" "${scriptJs}" %*`);
+  } else {
+    fs.writeFileSync(openshellPath, nodeScript, { mode: 0o755 });
+  }
+
+  return { tmpDir, homeLocalBin, sandboxName, invocationLog };
 }
 
 function runRecover(fixture: Fixture) {
   const repoRoot = path.join(import.meta.dirname, "..");
-  return spawnSync(
+  const result = spawnSync(
     process.execPath,
     [path.join(repoRoot, "bin", "nemoclaw.js"), fixture.sandboxName, "recover"],
     {
@@ -163,13 +169,17 @@ function runRecover(fixture: Fixture) {
       env: {
         ...process.env,
         HOME: fixture.tmpDir,
-        PATH: "/usr/bin:/bin",
+        USERPROFILE: fixture.tmpDir,
+        PATH: `${fixture.homeLocalBin}${path.delimiter}${process.env.PATH}`,
         NEMOCLAW_NO_CONNECT_HINT: "1",
       },
       timeout: execTimeout(15_000),
     },
   );
+  return result;
 }
+
+
 
 describe("nemoclaw <name> recover", () => {
   it(

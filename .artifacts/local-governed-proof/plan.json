@@ -1,0 +1,8 @@
+{
+  "id": "plan-local-safe-echo",
+  "status": "approved",
+  "intentHash": "70c184b61dc18aa2811c0d558524a3b573314cadfb644ea49a385adc2ff67402",
+  "policyHash": "2395865792ceea7fa5adafec0596e2938e6a929ab81c31dde35aa07858c5f942",
+  "trustHash": "db5e2a53f978363d0b75c38bab9a415bb6f0909366d8132f551d9bfafcad8c1d",
+  "replayRef": "replay-local-governed-proof"
+}

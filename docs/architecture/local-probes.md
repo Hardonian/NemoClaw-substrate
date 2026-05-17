@@ -9,8 +9,8 @@ NemoClaw local probes are explicit/manual diagnostics helpers. They do not run i
 - Non-local URLs are rejected.
 - Probe output is deterministic and reports explicit degraded/unavailable states.
 
-
 ## 2026-05-09 telemetry truth update
+
 - Telemetry is explicit probe-only and best effort.
 - Unavailable telemetry is acceptable and non-fatal.
 - No background polling daemons are introduced.

@@ -139,14 +139,54 @@ function createFixture({
       messagingChannelConfig: lastOnboarded.messagingChannelConfig ?? null,
       metadata: { gatewayName: "nemoclaw", fromDockerfile: fromDockerfile },
       steps: {
-        preflight: { status: "complete", startedAt: null, completedAt: null, error: null },
-        gateway: { status: "complete", startedAt: null, completedAt: null, error: null },
-        sandbox: { status: "complete", startedAt: null, completedAt: null, error: null },
-        provider_selection: { status: "complete", startedAt: null, completedAt: null, error: null },
-        inference: { status: "complete", startedAt: null, completedAt: null, error: null },
-        openclaw: { status: "pending", startedAt: null, completedAt: null, error: null },
-        agent_setup: { status: "pending", startedAt: null, completedAt: null, error: null },
-        policies: { status: "pending", startedAt: null, completedAt: null, error: null },
+        preflight: {
+          status: "complete",
+          startedAt: null,
+          completedAt: null,
+          error: null,
+        },
+        gateway: {
+          status: "complete",
+          startedAt: null,
+          completedAt: null,
+          error: null,
+        },
+        sandbox: {
+          status: "complete",
+          startedAt: null,
+          completedAt: null,
+          error: null,
+        },
+        provider_selection: {
+          status: "complete",
+          startedAt: null,
+          completedAt: null,
+          error: null,
+        },
+        inference: {
+          status: "complete",
+          startedAt: null,
+          completedAt: null,
+          error: null,
+        },
+        openclaw: {
+          status: "pending",
+          startedAt: null,
+          completedAt: null,
+          error: null,
+        },
+        agent_setup: {
+          status: "pending",
+          startedAt: null,
+          completedAt: null,
+          error: null,
+        },
+        policies: {
+          status: "pending",
+          startedAt: null,
+          completedAt: null,
+          error: null,
+        },
       },
     }),
     { mode: 0o600 },
@@ -231,7 +271,12 @@ process.exit(0);
 function runRebuild(fixture: ReturnType<typeof createFixture>) {
   return spawnSync(
     process.execPath,
-    [path.join(REPO_ROOT, "bin", "nemoclaw.js"), fixture.sandboxName, "rebuild", "--yes"],
+    [
+      path.join(REPO_ROOT, "bin", "nemoclaw.js"),
+      fixture.sandboxName,
+      "rebuild",
+      "--yes",
+    ],
     {
       cwd: REPO_ROOT,
       encoding: "utf-8",
@@ -255,7 +300,9 @@ type SessionFixture = {
 /**
  * Read the fixture's persisted onboarding session.
  */
-function readSession(fixture: ReturnType<typeof createFixture>): SessionFixture {
+function readSession(
+  fixture: ReturnType<typeof createFixture>,
+): SessionFixture {
   const p = path.join(fixture.nemoclawDir, "onboard-session.json");
   return JSON.parse(fs.readFileSync(p, "utf-8"));
 }
@@ -263,7 +310,9 @@ function readSession(fixture: ReturnType<typeof createFixture>): SessionFixture 
 /**
  * Read only the agent recorded in the fixture onboarding session.
  */
-function readSessionAgent(fixture: ReturnType<typeof createFixture>): string | null | undefined {
+function readSessionAgent(
+  fixture: ReturnType<typeof createFixture>,
+): string | null | undefined {
   return readSession(fixture).agent;
 }
 
@@ -288,8 +337,7 @@ describe("Issue #2201: rebuild syncs agent from registry, not stale session", ()
         lastOnboarded: { name: "hermes", agent: "hermes" },
       });
       runRebuild(f);
-      // With fix: session.agent = null (synced from openclaw registry entry)
-      // Without fix: session.agent stays "hermes" (from hermes onboard)
+      // session.agent should be null (synced from openclaw registry entry)
       expect(readSessionAgent(f)).toBeNull();
     },
   );
@@ -303,8 +351,7 @@ describe("Issue #2201: rebuild syncs agent from registry, not stale session", ()
         lastOnboarded: { name: "openclaw", agent: null },
       });
       runRebuild(f);
-      // With fix: session.agent = "hermes" (synced from hermes registry entry)
-      // Without fix: session.agent stays null (from openclaw onboard)
+      // session.agent should be "hermes" (synced from hermes registry entry)
       expect(readSessionAgent(f)).toBe("hermes");
     },
   );
@@ -345,9 +392,9 @@ describe("Issue #2301: rebuild forwards stored --from Dockerfile to onboard", ()
         fromDockerfile: "/tmp/custom/Dockerfile",
       });
       const result = runRebuild(f);
-      // Without fix: exits with "Session was started with --from ..."
-      // With fix: rebuild proceeds past conflict check (may still fail
-      // later in the fake-env backup step — that's expected with stubs).
+      // Rebuild should proceed past the conflict check without exiting with
+      // "Session was started with --from ..." (may still fail later in the
+      // fake-env backup step — that's expected with stubs).
       expect(result.stderr).not.toMatch(/Session was started with --from/);
     },
   );

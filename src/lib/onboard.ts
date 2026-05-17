@@ -13,12 +13,12 @@ const path = require("path");
 const { spawn, spawnSync } = require("child_process");
 const pRetry = require("p-retry");
 
-/** Parse a numeric env var, returning `fallback` when unset or non-finite. */
-function envInt(name: string, fallback: number): number {
+/** Parse a numeric env var, returning `defaultValue` when unset or non-finite. */
+function envInt(name: string, defaultValue: number): number {
   const raw = process.env[name];
-  if (raw === undefined || raw === "") return fallback;
+  if (raw === undefined || raw === "") return defaultValue;
   const n = Number(raw);
-  return Number.isFinite(n) ? Math.max(0, Math.round(n)) : fallback;
+  return Number.isFinite(n) ? Math.max(0, Math.round(n)) : defaultValue;
 }
 /** Inference timeout (seconds) for local providers (Ollama, vLLM, NIM). */
 const LOCAL_INFERENCE_TIMEOUT_SECS = envInt("NEMOCLAW_LOCAL_INFERENCE_TIMEOUT", 180);
@@ -363,6 +363,9 @@ function cleanupTempDir(filePath: string, expectedPrefix: string): void {
 const EXPERIMENTAL = process.env.NEMOCLAW_EXPERIMENTAL === "1";
 const USE_COLOR = !process.env.NO_COLOR && !!process.stdout.isTTY;
 const DIM = USE_COLOR ? "\x1b[2m" : "";
+const BOLD = USE_COLOR ? "\x1b[1m" : "";
+const GREEN = USE_COLOR ? "\x1b[1;32m" : "";
+const YELLOW = USE_COLOR ? "\x1b[1;33m" : "";
 const RESET = USE_COLOR ? "\x1b[0m" : "";
 let OPENSHELL_BIN: string | null = null;
 const GATEWAY_NAME = "nemoclaw";
@@ -421,6 +424,7 @@ import type {
 
 type OnboardOptions = {
   nonInteractive?: boolean;
+  quick?: boolean;
   recreateSandbox?: boolean;
   resume?: boolean;
   fresh?: boolean;
@@ -431,13 +435,14 @@ type OnboardOptions = {
   controlUiPort?: number | null;
   gpu?: boolean;
   noGpu?: boolean;
-  autoYes?: boolean;
+  programmaticYes?: boolean;
 };
 // Non-interactive mode: set by --non-interactive flag or env var.
 // When active, all prompts use env var overrides or sensible defaults.
 let NON_INTERACTIVE = false;
+let QUICK_MODE = false;
 let RECREATE_SANDBOX = false;
-let AUTO_YES = false;
+let PROGRAMMATIC_YES = false;
 // Set by onboard() before preflight() when --control-ui-port is specified.
 // null means "use auto-allocation" (skip dashboard port check in preflight).
 let _preflightDashboardPort: number | null = null;
@@ -458,12 +463,16 @@ function isNonInteractive(): boolean {
   return NON_INTERACTIVE || process.env.NEMOCLAW_NON_INTERACTIVE === "1";
 }
 
+function isQuickMode(): boolean {
+  return QUICK_MODE || process.env.NEMOCLAW_QUICK === "1";
+}
+
 function isRecreateSandbox(): boolean {
   return RECREATE_SANDBOX || process.env.NEMOCLAW_RECREATE_SANDBOX === "1";
 }
 
-function isAutoYes(): boolean {
-  return AUTO_YES || process.env.NEMOCLAW_YES === "1";
+function isProgrammaticYes(): boolean {
+  return PROGRAMMATIC_YES || process.env.NEMOCLAW_YES === "1";
 }
 
 function note(message: string): void {
@@ -614,7 +623,9 @@ function streamGatewayStart(
   command: string,
   env: NodeJS.ProcessEnv = process.env,
 ): Promise<{ status: number; output: string }> {
-  const child = spawn("bash", ["-lc", command], {
+  const [shell, shellArgs] = runner.getShell(true);
+
+  const child = spawn(shell, [...shellArgs, command], {
     cwd: ROOT,
     env,
     stdio: ["ignore", "pipe", "pipe"],
@@ -1575,7 +1586,7 @@ async function promptValidationRecovery(
     const looksLikeToken =
       API_KEY_PREFIXES.some((p) => choice.startsWith(p)) ||
       (!choice.includes(" ") && choice.length > 40) ||
-      // Regex fallback: base64-safe token pattern (20+ chars, no spaces, mixed alphanum)
+      // Secondary regex pattern: base64-safe token pattern (20+ chars, no spaces, mixed alphanum)
       /^[A-Za-z0-9_\-\.]{20,}$/.test(choice);
     // validateNvidiaApiKeyValue is provider-aware: it only enforces the
     // nvapi- prefix when credentialEnv === "NVIDIA_API_KEY", so passing it
@@ -1716,7 +1727,7 @@ function upsertProvider(
     if (stagedValue !== undefined) {
       // openshell receives `--credential <ENV>` and reads the value from the
       // `env` block passed here, falling back to the inherited process.env.
-      // Use getCredential() for the env-fallback branch (per the
+      // Use getCredential() for the env-recovery branch (per the
       // direct credential env guard from PR #2306) — it mirrors
       // openshell's resolution order while the staging contract has
       // already populated the same value into process.env.
@@ -3701,7 +3712,7 @@ async function preflight(
           bridgeNote = `     (detected your docker bridge gateway at ${detectedBridgeIp})`;
         } else if (!detectedBridgeIp) {
           bridgeNote =
-            "     (could not auto-detect bridge IP; using docker's default — verify with:\n" +
+            "     (could not discover bridge IP; using docker's default — verify with:\n" +
             "      docker network inspect bridge --format '{{range .IPAM.Config}}{{.Gateway}}{{end}}')";
         }
         console.error("  1. Make systemd-resolved reachable from containers (recommended):");
@@ -3754,7 +3765,7 @@ async function preflight(
         console.error(
           "  2. If you run docker natively inside WSL (not Docker Desktop), apply the Linux fix:",
         );
-        // Reuse the same bridge-IP detection the Linux branch uses — a
+        // Reuse the same bridge-IP discovery the Linux branch uses — a
         // native-docker-in-WSL install can have a custom bridge subnet
         // just like any other Linux host, so a hardcoded 172.17.0.1
         // would break those users' copy-paste.
@@ -4750,22 +4761,35 @@ function formatOnboardConfigSummary({
   const webSearch =
     webSearchConfig && webSearchConfig.fetchEnabled === true ? "enabled" : "disabled";
   const apiKeyLine = credentialEnv
-    ? `  API key:       ${credentialEnv} (staged for OpenShell gateway registration)`
-    : `  API key:       (not required for ${provider ?? "this provider"})`;
+    ? `  ✓  API key:       ${credentialEnv} (staged for gateway)`
+    : `  ✓  API key:       not required for this provider`;
+  const providerLine = provider
+    ? `  ✓  Provider:      ${provider}`
+    : `  ⚠ Provider:      (unset)`;
+  const modelLine = model
+    ? `  ✓  Model:         ${model}`
+    : `  ⚠ Model:         (unset)`;
+  const sandboxLine = sandboxName
+    ? `  ✓  Sandbox name:  ${sandboxName}`
+    : `  ⚠ Sandbox name:  (unset)`;
+  const webLine = `  ✓  Web search:    ${webSearch}`;
+  const msgLine = messaging !== "none"
+    ? `  ✓  Messaging:     ${messaging}`
+    : `     Messaging:     ${messaging}`;
   const noteLines = (Array.isArray(notes) ? notes : [])
     .filter((n) => typeof n === "string" && n.length > 0)
-    .map((n) => `  Note:          ${n}`);
+    .map((n) => `  ⚠ Note:          ${n}`);
   return [
     "",
     bar,
-    "  Review configuration",
+    `  ${BOLD}Review your configuration${RESET}`,
     bar,
-    `  Provider:      ${provider ?? "(unset)"}`,
-    `  Model:         ${model ?? "(unset)"}`,
+    providerLine,
+    modelLine,
     apiKeyLine,
-    `  Web search:    ${webSearch}`,
-    `  Messaging:     ${messaging}`,
-    `  Sandbox name:  ${sandboxName}`,
+    sandboxLine,
+    webLine,
+    msgLine,
     ...noteLines,
     bar,
   ].join("\n");
@@ -6003,7 +6027,7 @@ async function selectAndValidateOllamaModel(
     if (!installedModels.includes(selectedModel)) {
       const lookup = ollamaModelSize.getOllamaModelSize(selectedModel);
       const sizeLabel = ollamaModelSize.formatModelSize(lookup);
-      if (isAutoYes()) {
+      if (isProgrammaticYes()) {
         note(`  Pulling Ollama model '${selectedModel}' (${sizeLabel}).`);
       } else if (isNonInteractive()) {
         console.error(
@@ -6250,7 +6274,7 @@ async function setupNim(
       label: "Install Ollama on Windows host (recommended)",
     });
   }
-  // Without any Ollama, offer to install one locally as a fallback (e.g. when
+  // Without any Ollama, offer to install one locally as a recovery path (e.g. when
   // the NVIDIA API server is down and cloud keys are unavailable).
   if (!hasOllama && !ollamaRunning && !hasWindowsOllama) {
     if (process.platform === "darwin") {
@@ -6485,7 +6509,7 @@ async function setupNim(
         hydrateCredentialEnv(credentialEnv);
 
         if (selected.key === "build") {
-          // Allow NEMOCLAW_PROVIDER_KEY as a fallback for NVIDIA_API_KEY.
+          // Allow NEMOCLAW_PROVIDER_KEY as a defaultVal for NVIDIA_API_KEY.
           // Check raw process.env first — NEMOCLAW_PROVIDER_KEY is a user-facing
           // override that should take precedence before resolving from credentials.json.
           const _nvProviderKey = (process.env.NEMOCLAW_PROVIDER_KEY || "").trim();
@@ -7406,7 +7430,7 @@ async function setupInference(
     const baseUrl = getLocalProviderBaseUrl(provider);
     let ollamaCredential = "ollama";
     if (!isWsl()) {
-      // Skip if already started during the fallback recovery above.
+      // Skip if already started during the recovery path above.
       if (!proxyReady) ensureOllamaAuthProxy();
       const proxyToken = getOllamaProxyToken();
       if (!proxyToken) {
@@ -8081,7 +8105,7 @@ async function selectPolicyTier(): Promise<string> {
   const RADIO_ON = USE_COLOR ? "[\x1b[32m✓\x1b[0m]" : "[✓]";
   const RADIO_OFF = USE_COLOR ? "\x1b[2m[ ]\x1b[0m" : "[ ]";
 
-  // ── Fallback: non-TTY ─────────────────────────────────────────────
+  // ── Execution: programmatic / non-TTY ──────────────────────────────
   if (!process.stdin.isTTY || !process.stdout.isTTY) {
     console.log("");
     console.log("  Policy tier — controls which network presets are enabled:");
@@ -8258,7 +8282,7 @@ async function selectTierPresetsAndAccess(
       .map((p) => ({ name: p.name, access: accessModes[p.name] }));
   }
 
-  // ── Fallback: non-TTY ─────────────────────────────────────────────
+  // ── Execution: programmatic / non-TTY ──────────────────────────────
   if (!process.stdin.isTTY || !process.stdout.isTTY) {
     console.log("");
     console.log(label);
@@ -8413,7 +8437,7 @@ async function presetsCheckboxSelector(
 
   const GREEN_CHECK = USE_COLOR ? "[\x1b[32m✓\x1b[0m]" : "[✓]";
 
-  // ── Fallback: non-TTY or redirected stdout (piped input) ──────────
+  // ── Execution: programmatic / non-TTY / redirected ─────────────────
   if (!process.stdin.isTTY || !process.stdout.isTTY) {
     console.log("");
     console.log("  Available policy presets:");
@@ -9483,8 +9507,9 @@ function skippedStepMessage(
 async function onboard(opts: OnboardOptions = {}): Promise<void> {
   setOnboardBrandingAgent(opts.agent || process.env.NEMOCLAW_AGENT || null);
   NON_INTERACTIVE = opts.nonInteractive || process.env.NEMOCLAW_NON_INTERACTIVE === "1";
+  QUICK_MODE = opts.quick || process.env.NEMOCLAW_QUICK === "1";
   RECREATE_SANDBOX = opts.recreateSandbox || process.env.NEMOCLAW_RECREATE_SANDBOX === "1";
-  AUTO_YES = opts.autoYes === true || process.env.NEMOCLAW_YES === "1";
+  PROGRAMMATIC_YES = opts.programmaticYes === true || process.env.NEMOCLAW_YES === "1";
   _preflightDashboardPort = opts.controlUiPort || null;
   delete process.env.OPENSHELL_GATEWAY;
   const resume = opts.resume === true;
@@ -10082,7 +10107,14 @@ async function onboard(opts: OnboardOptions = {}): Promise<void> {
     }
 
     const webSearchSupportProbePath = fromDockerfile ? path.resolve(fromDockerfile) : null;
-    const webSearchSupported = agentSupportsWebSearch(agent, webSearchSupportProbePath);
+    let webSearchSupported = false;
+    if (isQuickMode()) {
+      note("  [quick mode] Skipping optional features — web search, messaging, and network presets.");
+      selectedMessagingChannels = [];
+      webSearchConfig = null;
+    } else {
+      webSearchSupported = agentSupportsWebSearch(agent, webSearchSupportProbePath);
+    }
     if (webSearchConfig && !webSearchSupported) {
       note(
         `  Web search is not yet supported by ${agent?.displayName ?? "this sandbox image"}. Clearing stale config.`,
@@ -10172,7 +10204,10 @@ async function onboard(opts: OnboardOptions = {}): Promise<void> {
         }
       }
       let nextWebSearchConfig = webSearchConfig;
-      if (nextWebSearchConfig) {
+      if (isQuickMode()) {
+        nextWebSearchConfig = null;
+        selectedMessagingChannels = [];
+      } else if (nextWebSearchConfig) {
         note("  [resume] Revalidating Brave Search configuration for sandbox recreation.");
         const braveApiKey = await ensureValidatedBraveSearchCredential();
         nextWebSearchConfig = braveApiKey ? { fetchEnabled: true } : null;
@@ -10313,7 +10348,13 @@ async function onboard(opts: OnboardOptions = {}): Promise<void> {
     );
     const resumePolicies =
       resume && sandboxName && arePolicyPresetsApplied(sandboxName, recordedPolicyPresetsForSupport);
-    if (resumePolicies) {
+    if (isQuickMode()) {
+      note("  [quick mode] Skipping network policy presets.");
+      onboardSession.markStepComplete(
+        "policies",
+        toSessionUpdates({ sandboxName, provider, model, policyPresets: [] }),
+      );
+    } else if (resumePolicies) {
       skippedStepMessage("policies", recordedPolicyPresetsForSupport.join(", "));
       onboardSession.markStepComplete(
         "policies",
@@ -10509,6 +10550,7 @@ module.exports = {
   isInferenceRouteReady,
   shouldRunCompatibleEndpointSandboxSmoke,
   isNonInteractive,
+  isProgrammaticYes,
   isOpenclawReady,
   arePolicyPresetsApplied,
   getSuggestedPolicyPresets,

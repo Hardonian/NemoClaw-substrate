@@ -102,6 +102,7 @@ const GLOBAL_ROUTES: Readonly<Record<string, string>> = {
   uninstall: "uninstall",
   update: "update",
   list: "list",
+  operator: "operator",
   "backup-all": "backup-all",
   "upgrade-sandboxes": "upgrade-sandboxes",
   gc: "gc",
@@ -126,6 +127,12 @@ export function resolveGlobalOclifDispatch(cmd: string, args: string[]): Dispatc
 
   if (cmd === "version" || cmd === "--version" || cmd === "-v") {
     return oclif("root:version", []);
+  }
+
+  if (cmd === "policy") {
+    const sub = args[0];
+    if (sub === "lint") return oclif("policy:lint", args.slice(1));
+    return { kind: "usageError", lines: ["policy lint [--schema sandbox-policy|policy-preset] [--policy-file <path>]"] };
   }
 
   return { kind: "usageError", lines: [] };

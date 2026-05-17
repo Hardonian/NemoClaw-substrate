@@ -1,16 +1,16 @@
 // SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-import { describe, it, expect, beforeEach, vi } from "vitest";
 import { homedir } from "node:os";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
+  clearOnboardConfig,
   describeOnboardEndpoint,
   describeOnboardProvider,
-  loadOnboardConfig,
-  saveOnboardConfig,
-  clearOnboardConfig,
-  type NemoClawOnboardConfig,
   type EndpointType,
+  loadOnboardConfig,
+  type NemoClawOnboardConfig,
+  saveOnboardConfig,
 } from "./config.js";
 
 // Mock node:fs so tests don't touch the real filesystem.

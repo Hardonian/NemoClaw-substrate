@@ -8,7 +8,7 @@ This page documents every configurable knob, its default, what it protects, the 
 
 For background on how the layers fit together, refer to How It Works (use the `nemoclaw-user-overview` skill).
 
-<!-- TODO: uncomment after the OpenShell docs are published
+<!-- Uncomment after the OpenShell docs are published
 :::{seealso}
 OpenShell enforces the platform-level mechanisms that NemoClaw configures, including network namespace isolation, seccomp filters, SSRF protection, TLS termination, and gateway authentication.
 For the full platform-level controls reference, see [OpenShell Security Best Practices](https://docs.nvidia.com/openshell/latest/security/best-practices.html).

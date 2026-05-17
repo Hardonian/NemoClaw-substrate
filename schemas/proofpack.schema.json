@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Proofpack",
+  "description": "Content-addressed bundle manifest with hash integrity.",
+  "type": "object",
+  "properties": {
+    "id": { "type": "string" },
+    "type": { "type": "string", "const": "Proofpack" },
+    "timestamp": { "type": "string", "format": "date-time" },
+    "redacted": { "type": "boolean" },
+    "manifestHash": { "type": "string" },
+    "receipts": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "trustDecisions": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "runId": { "type": "string" },
+    "planId": { "type": "string" }
+  },
+  "required": ["id", "type", "timestamp", "manifestHash"]
+}

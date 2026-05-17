@@ -459,7 +459,7 @@ export async function rebuildSandbox(
       // Propagate that consent so the size-confirm gate inside the
       // non-interactive onboard does not abort after the old sandbox has
       // been deleted (#2639 follow-up).
-      autoYes: skipConfirm || rebuildConfirmed,
+      programmaticYes: skipConfirm || rebuildConfirmed,
     });
     log("onboard() returned successfully");
   } catch (err) {

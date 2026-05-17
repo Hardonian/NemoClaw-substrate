@@ -64,7 +64,7 @@ export function buildRuntimeReceipt(input: {
   completedAt: string;
   policy?: PolicyEvaluationResult;
   degradedStates?: DegradedState[];
-  fallbackReason?: string;
+  degradedStateTriggerReason?: string;
   executionLineage?: ExecutionReceipt["executionLineage"];
 }): ExecutionReceipt {
   const policyDecision: PolicyDecision | undefined = input.policy
@@ -93,7 +93,7 @@ export function buildRuntimeReceipt(input: {
     modelId: input.action.model,
     policyDecision,
     degradedEvents: input.degradedStates ?? [],
-    fallbackAttempts: input.fallbackReason ? [{ at: input.completedAt, reason: input.fallbackReason }] : [],
+    degradedStateTriggers: input.degradedStateTriggerReason ? [{ at: input.completedAt, reason: input.degradedStateTriggerReason }] : [],
     toolInvocations: input.action.toolName
       ? [{ name: input.action.toolName, at: input.completedAt, status: "ok" }]
       : [],
