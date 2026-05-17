@@ -4519,7 +4519,9 @@ async function recoverGatewayRuntime() {
       }
       return true;
     }
-    if (i < recoveryPollCount - 1) sleep(recoveryPollInterval);
+    if (i < recoveryPollCount - 1) {
+      await new Promise((resolve) => setTimeout(resolve, recoveryPollInterval * 1000));
+    }
   }
 
   return false;
