@@ -1,6 +1,9 @@
 // SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+import { createHash } from "crypto";
+import { exec, execFile } from "child_process";
+import { promisify } from "util";
 import { evaluatePolicy, type PolicyBundle } from "./governance";
 import type { DeviceRegistry } from "./device-registry";
 import { type OperationalEvent, type OperationalMemoryLog, buildEventsFromReceipt } from "./operational-memory";
@@ -23,6 +26,9 @@ import {
   validateCommandString,
   validateRemoteUrl,
 } from "../security/security-policy";
+
+const execAsync = promisify(exec);
+const execFileAsync = promisify(execFile);
 
 export type RemoteExecutionStatus = "disabled" | "policy_denied" | "approval_required" | "authorization_denied" | "unavailable" | "degraded" | "failed" | "succeeded" | "not_supported";
 export interface RemoteExecutionRequest { requestId: string; nowIso: string; action: string; command: string; commandDescriptor?: CommandDescriptor; nodeId?: string; targetEndpoint?: string; auth?: { headerName?: string; token?: string }; approved?: boolean; timeoutMs?: number; executionPlanRequired?: boolean; commandPolicy?: CommandExecutionPolicy; }
@@ -49,6 +55,114 @@ export function parseRemoteExecutionConfig(env: NodeJS.ProcessEnv): RemoteExecut
 function redact(auth?: { headerName?: string; token?: string }): Record<string, string> {
   if (!auth?.headerName) return {};
   return redactSecurityPayload({ [auth.headerName]: auth.token ?? "<present>" }) as Record<string, string>;
+}
+
+export function computeOutputHash(output: string): string {
+  return createHash("sha256").update(output).digest("hex");
+}
+
+export function verifyResultHash(output: string, expectedHash: string): boolean {
+  if (!expectedHash) return true;
+  return computeOutputHash(output) === expectedHash;
+}
+
+export async function executeSshCommand(credentials: SshCredentials, command: string, timeoutMs: number): Promise<{ stdout: string; stderr: string; exitCode: number }> {
+  const sshArgs = [
+    "-o", "StrictHostKeyChecking=no",
+    "-o", `ConnectTimeout=${Math.max(1, Math.floor(timeoutMs / 1000))}`,
+    "-o", "BatchMode=yes",
+    "-p", String(credentials.port),
+  ];
+  if (credentials.privateKeyPath) {
+    sshArgs.push("-i", credentials.privateKeyPath);
+  }
+  sshArgs.push(`${credentials.user}@${credentials.host}`);
+  sshArgs.push(command);
+
+  try {
+    const { stdout, stderr } = await execFileAsync("ssh", sshArgs, { timeout: timeoutMs });
+    return { stdout, stderr, exitCode: 0 };
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    const isTimeout = msg.toLowerCase().includes("timeout") || msg.toLowerCase().includes("timed out");
+    const codeMatch = msg.match(/exit code (\d+)/);
+    const exitCode = codeMatch ? parseInt(codeMatch[1], 10) : (isTimeout ? 124 : 1);
+    const stderr = msg;
+    const stdout = "";
+    return { stdout, stderr, exitCode };
+  }
+}
+
+export async function executeSignedHttps(endpoint: string, command: string, timeoutMs: number, signingKey: string): Promise<{ status: number; body: string }> {
+  const payload = JSON.stringify({ command, timestamp: Date.now() });
+  const signature = createHash("sha256").update(signingKey + payload).digest("hex");
+
+  let url: URL;
+  try {
+    url = new URL(endpoint);
+  } catch {
+    return { status: 500, body: JSON.stringify({ error: "invalid_endpoint_url" }) };
+  }
+  url.searchParams.set("sig", signature);
+
+  try {
+    const response = await fetch(url.toString(), {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-Signature": signature },
+      body: payload,
+      signal: AbortSignal.timeout(timeoutMs),
+    });
+    const body = await response.text();
+    return { status: response.status, body };
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    const isTimeout = msg.toLowerCase().includes("timeout") || msg.toLowerCase().includes("timed out") || msg.toLowerCase().includes("abort");
+    return { status: isTimeout ? 408 : 500, body: JSON.stringify({ error: msg }) };
+  }
+}
+
+export async function executeRemoteWorkerProof(config: RemoteWorkerProofConfig, command: string): Promise<RemoteWorkerProofResult> {
+  const start = Date.now();
+
+  if (config.transportType === "ssh") {
+    const creds = config.credentials as SshCredentials;
+    if (!creds.host || !creds.user) {
+      return { success: false, output: "", outputHash: "", hashMatches: false, durationMs: Date.now() - start, error: "missing_ssh_credentials" };
+    }
+    const result = await executeSshCommand(creds, command, config.timeoutMs);
+    const output = result.exitCode === 0 ? result.stdout : result.stderr;
+    const outputHash = computeOutputHash(output);
+    const hashMatches = config.expectedOutputHash ? outputHash === config.expectedOutputHash : true;
+    return {
+      success: result.exitCode === 0 && hashMatches,
+      output,
+      outputHash,
+      hashMatches,
+      durationMs: Date.now() - start,
+      error: result.exitCode !== 0 ? `exit_code_${result.exitCode}` : !hashMatches ? "hash_mismatch" : undefined,
+    };
+  }
+
+  if (config.transportType === "https-signed") {
+    const signedCreds = config.credentials as { endpoint: string; signingKey: string };
+    if (!signedCreds.endpoint || !signedCreds.signingKey) {
+      return { success: false, output: "", outputHash: "", hashMatches: false, durationMs: Date.now() - start, error: "missing_signed_https_credentials" };
+    }
+    const response = await executeSignedHttps(signedCreds.endpoint, command, config.timeoutMs, signedCreds.signingKey);
+    const output = response.body;
+    const outputHash = computeOutputHash(output);
+    const hashMatches = config.expectedOutputHash ? outputHash === config.expectedOutputHash : true;
+    return {
+      success: response.status >= 200 && response.status < 300 && hashMatches,
+      output,
+      outputHash,
+      hashMatches,
+      durationMs: Date.now() - start,
+      error: response.status < 200 || response.status >= 300 ? `http_${response.status}` : !hashMatches ? "hash_mismatch" : undefined,
+    };
+  }
+
+  return { success: false, output: "", outputHash: "", hashMatches: false, durationMs: Date.now() - start, error: "unsupported_transport" };
 }
 
 export async function runRemoteExecution(input: { request: RemoteExecutionRequest; config: RemoteExecutionConfig; transport: RemoteExecutionTransport; policyBundle: PolicyBundle; registry: DeviceRegistry; operationalMemory?: OperationalMemoryLog; executionPlan?: ExecutionPlan; executionApproval?: ExecutionApproval }): Promise<RemoteExecutionResult> {
