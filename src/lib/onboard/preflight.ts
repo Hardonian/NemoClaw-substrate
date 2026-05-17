@@ -39,7 +39,7 @@ export interface PortProbeResult {
 export interface CheckPortOpts {
   /** Inject fake lsof output (skips shell). */
   lsofOutput?: string;
-  /** Force the static net-probe recovery path. */
+  /** Force the net-probe fallback path. */
   skipLsof?: boolean;
   /** Async probe implementation for testing. */
   probeImpl?: (port: number) => Promise<PortProbeResult>;
@@ -220,7 +220,7 @@ export function parseDockerUsesContainerdSnapshotter(info = ""): boolean {
 // `"CDISpecDirs": ["/etc/cdi", "/var/run/cdi"]` whenever the daemon is built
 // with CDI support and `features.cdi=true` (the default on recent installs).
 // An empty list means CDI device injection is not enabled, so OpenShell will
-// recover via the legacy `nvidia` runtime path and there is no spec gap to
+// fall back to the legacy `nvidia` runtime path and there is no spec gap to
 // worry about.
 export function parseDockerCdiSpecDirs(info = ""): string[] {
   const match = info.match(/"CDISpecDirs"\s*:\s*\[([^\]]*)\]/);
@@ -539,175 +539,207 @@ export function assessHost(opts: AssessHostOpts = {}): HostAssessment {
   return assessment;
 }
 
+function getDockerInstallAction(assessment: HostAssessment): RemediationAction {
+  const installCommands: Record<PackageManager, string> = {
+    apt: "Install Docker Engine, then rerun `nemoclaw onboard`.",
+    dnf: "Install Docker Engine with your package manager, then rerun `nemoclaw onboard`.",
+    yum: "Install Docker Engine with your package manager, then rerun `nemoclaw onboard`.",
+    brew: "Install Docker Desktop or Colima, then rerun `nemoclaw onboard`.",
+    pacman: "Install Docker Engine with your package manager, then rerun `nemoclaw onboard`.",
+    unknown: "Install Docker, then rerun `nemoclaw onboard`.",
+  };
+  return {
+    id: "install_docker",
+    title: "Install Docker",
+    kind: "manual",
+    reason: "Docker is required before onboarding can create a gateway or sandbox.",
+    commands:
+      assessment.platform === "darwin"
+        ? ["Install Docker Desktop or Colima, then rerun `nemoclaw onboard`."]
+        : [installCommands[assessment.packageManager ?? "unknown"]],
+    blocking: true,
+  };
+}
+
+function getDockerReachableAction(assessment: HostAssessment): RemediationAction {
+  // On Linux, if the systemd service is already active but the daemon is
+  // unreachable, the most likely cause is a permissions / docker-group issue
+  // rather than a stopped service.
+  const likelyGroupIssue =
+    assessment.platform === "linux" && assessment.dockerServiceActive === true;
+
+  if (likelyGroupIssue) {
+    return {
+      id: "docker_group_permission",
+      title: "Add user to docker group",
+      kind: "sudo",
+      reason:
+        "Docker is installed and the service is running, but the current user cannot reach the daemon. " +
+        "This usually means your user is not in the docker group.",
+      commands: [
+        "sudo usermod -aG docker $USER",
+        "newgrp docker   # or log out and back in",
+        "nemoclaw onboard",
+      ],
+      blocking: true,
+    };
+  }
+
+  return {
+    id: "start_docker",
+    title: "Start Docker",
+    kind: "manual",
+    reason: "Docker is installed but NemoClaw could not talk to the Docker daemon.",
+    commands:
+      assessment.platform === "darwin"
+        ? ["Start Docker Desktop or Colima, then rerun `nemoclaw onboard`."]
+        : assessment.systemctlAvailable
+          ? ["sudo systemctl start docker", "nemoclaw onboard"]
+          : ["Start the Docker daemon, then rerun `nemoclaw onboard`."],
+    blocking: true,
+  };
+}
+
+function getUnderProvisionedAction(assessment: HostAssessment): RemediationAction {
+  const cpus = assessment.dockerCpus;
+  const memGiB =
+    typeof assessment.dockerMemTotalBytes === "number"
+      ? assessment.dockerMemTotalBytes / 1024 ** 3
+      : undefined;
+  const detected: string[] = [];
+  if (typeof cpus === "number") detected.push(`${cpus} vCPU`);
+  if (typeof memGiB === "number") detected.push(`${memGiB.toFixed(1)} GiB`);
+  const detectedStr = detected.length > 0 ? detected.join(" / ") : "unknown";
+  const recommendedStr = `${MIN_RECOMMENDED_DOCKER_CPUS} vCPU / ${MIN_RECOMMENDED_DOCKER_MEM_GIB} GiB`;
+  const isColima = assessment.runtime === "colima";
+  const isDockerDesktop = assessment.runtime === "docker-desktop";
+  const reason =
+    `Container runtime is under-provisioned (detected ${detectedStr}; recommended ${recommendedStr}). ` +
+    "Sandbox build will be slow and may stall when runtime resources are too low.";
+  const commands: string[] = [];
+  if (isColima) {
+    commands.push(
+      "colima stop",
+      `colima start --cpu ${MIN_RECOMMENDED_DOCKER_CPUS} --memory ${MIN_RECOMMENDED_DOCKER_MEM_GIB} --disk 100`,
+    );
+  } else if (isDockerDesktop) {
+    commands.push(
+      `Open Docker Desktop → Settings → Resources and raise CPUs to ≥ ${MIN_RECOMMENDED_DOCKER_CPUS} and memory to ≥ ${MIN_RECOMMENDED_DOCKER_MEM_GIB} GiB.`,
+    );
+  } else {
+    commands.push(
+      `Raise your container runtime's resource limits to ≥ ${MIN_RECOMMENDED_DOCKER_CPUS} vCPU and ≥ ${MIN_RECOMMENDED_DOCKER_MEM_GIB} GiB of memory before retrying.`,
+    );
+  }
+  return {
+    id: "container_runtime_under_provisioned",
+    title: "Increase container runtime resources",
+    kind: "manual",
+    reason,
+    commands,
+    blocking: false,
+  };
+}
+
+function getUnsupportedRuntimeAction(assessment: HostAssessment): RemediationAction {
+  return {
+    id: "unsupported_runtime_warning",
+    title: "Use a supported Docker runtime if problems appear",
+    kind: "manual",
+    reason:
+      "OpenShell officially documents Docker-based runtimes. Podman may work in some environments, but it is not a supported runtime and behavior may vary.",
+    commands:
+      assessment.platform === "darwin"
+        ? ["If onboarding or sandbox lifecycle fails, switch to Docker Desktop or Colima."]
+        : ["If onboarding or sandbox lifecycle fails, switch to a Docker-supported runtime."],
+    blocking: false,
+  };
+}
+
+function getNodeInstallAction(): RemediationAction {
+  return {
+    id: "install_nodejs",
+    title: "Install Node.js",
+    kind: "manual",
+    reason: "NemoClaw requires Node.js for its CLI and plugin build steps.",
+    commands: ["Run the NemoClaw installer to install Node.js automatically."],
+    blocking: false,
+  };
+}
+
+function getOpenShellInstallAction(): RemediationAction {
+  return {
+    id: "install_openshell",
+    title: "Install OpenShell",
+    kind: "manual",
+    reason: "OpenShell is required before onboarding can create or manage a gateway.",
+    commands: ["Run the NemoClaw installer or `scripts/install-openshell.sh`."],
+    blocking: false,
+  };
+}
+
+function getHeadlessRemoteHintAction(): RemediationAction {
+  return {
+    id: "headless_remote_hint",
+    title: "Review remote/headless UI settings",
+    kind: "info",
+    reason:
+      "Headless Linux hosts often need explicit remote UI handling if you want browser access.",
+    commands: ["Set `CHAT_UI_URL` when remote browser access matters."],
+    blocking: false,
+  };
+}
+
+function getNvidiaCdiSpecAction(assessment: HostAssessment): RemediationAction {
+  const specDir = assessment.dockerCdiSpecDirs[0] ?? "/etc/cdi";
+  return {
+    id: "generate_nvidia_cdi_spec",
+    title: "Generate NVIDIA CDI device specs",
+    kind: "sudo",
+    reason:
+      "Docker is configured for CDI device injection (CDISpecDirs is set) but no " +
+      "nvidia.com/gpu CDI spec is present on the host. OpenShell's `gateway start --gpu` " +
+      "will fail with `unresolvable CDI devices nvidia.com/gpu=all` until a spec is generated.",
+    commands: [
+      `sudo nvidia-ctk cdi generate --output=${specDir.replace(/\/+$/, "")}/nvidia.yaml`,
+      "nvidia-ctk cdi list   # verify nvidia.com/gpu entries appear",
+      "nemoclaw onboard      # or rerun with --no-gpu to skip GPU passthrough",
+    ],
+    blocking: true,
+  };
+}
+
 export function planHostRemediation(assessment: HostAssessment): RemediationAction[] {
   const actions: RemediationAction[] = [];
 
   if (!assessment.dockerInstalled) {
-    const installCommands: Record<PackageManager, string> = {
-      apt: "Install Docker Engine, then rerun `nemoclaw onboard`.",
-      dnf: "Install Docker Engine with your package manager, then rerun `nemoclaw onboard`.",
-      yum: "Install Docker Engine with your package manager, then rerun `nemoclaw onboard`.",
-      brew: "Install Docker Desktop or Colima, then rerun `nemoclaw onboard`.",
-      pacman: "Install Docker Engine with your package manager, then rerun `nemoclaw onboard`.",
-      unknown: "Install Docker, then rerun `nemoclaw onboard`.",
-    };
-    actions.push({
-      id: "install_docker",
-      title: "Install Docker",
-      kind: "manual",
-      reason: "Docker is required before onboarding can create a gateway or sandbox.",
-      commands:
-        assessment.platform === "darwin"
-          ? ["Install Docker Desktop or Colima, then rerun `nemoclaw onboard`."]
-          : [installCommands[assessment.packageManager ?? "unknown"]],
-      blocking: true,
-    });
+    actions.push(getDockerInstallAction(assessment));
   } else if (!assessment.dockerReachable) {
-    // On Linux, if the systemd service is already active but the daemon is
-    // unreachable, the most likely cause is a permissions / docker-group issue
-    // rather than a stopped service.
-    const likelyGroupIssue =
-      assessment.platform === "linux" && assessment.dockerServiceActive === true;
-
-    if (likelyGroupIssue) {
-      actions.push({
-        id: "docker_group_permission",
-        title: "Add user to docker group",
-        kind: "sudo",
-        reason:
-          "Docker is installed and the service is running, but the current user cannot reach the daemon. " +
-          "This usually means your user is not in the docker group.",
-        commands: [
-          "sudo usermod -aG docker $USER",
-          "newgrp docker   # or log out and back in",
-          "nemoclaw onboard",
-        ],
-        blocking: true,
-      });
-    } else {
-      actions.push({
-        id: "start_docker",
-        title: "Start Docker",
-        kind: "manual",
-        reason: "Docker is installed but NemoClaw could not talk to the Docker daemon.",
-        commands:
-          assessment.platform === "darwin"
-            ? ["Start Docker Desktop or Colima, then rerun `nemoclaw onboard`."]
-            : assessment.systemctlAvailable
-              ? ["sudo systemctl start docker", "nemoclaw onboard"]
-              : ["Start the Docker daemon, then rerun `nemoclaw onboard`."],
-        blocking: true,
-      });
-    }
+    actions.push(getDockerReachableAction(assessment));
   }
 
   if (assessment.dockerReachable && assessment.isContainerRuntimeUnderProvisioned) {
-    const cpus = assessment.dockerCpus;
-    const memGiB =
-      typeof assessment.dockerMemTotalBytes === "number"
-        ? assessment.dockerMemTotalBytes / 1024 ** 3
-        : undefined;
-    const detected: string[] = [];
-    if (typeof cpus === "number") detected.push(`${cpus} vCPU`);
-    if (typeof memGiB === "number") detected.push(`${memGiB.toFixed(1)} GiB`);
-    const detectedStr = detected.length > 0 ? detected.join(" / ") : "unknown";
-    const recommendedStr = `${MIN_RECOMMENDED_DOCKER_CPUS} vCPU / ${MIN_RECOMMENDED_DOCKER_MEM_GIB} GiB`;
-    const isColima = assessment.runtime === "colima";
-    const isDockerDesktop = assessment.runtime === "docker-desktop";
-    const reason =
-      `Container runtime is under-provisioned (detected ${detectedStr}; recommended ${recommendedStr}). ` +
-      "Sandbox build will be slow and may stall when runtime resources are too low.";
-    const commands: string[] = [];
-    if (isColima) {
-      commands.push(
-        "colima stop",
-        `colima start --cpu ${MIN_RECOMMENDED_DOCKER_CPUS} --memory ${MIN_RECOMMENDED_DOCKER_MEM_GIB} --disk 100`,
-      );
-    } else if (isDockerDesktop) {
-      commands.push(
-        `Open Docker Desktop → Settings → Resources and raise CPUs to ≥ ${MIN_RECOMMENDED_DOCKER_CPUS} and memory to ≥ ${MIN_RECOMMENDED_DOCKER_MEM_GIB} GiB.`,
-      );
-    } else {
-      commands.push(
-        `Raise your container runtime's resource limits to ≥ ${MIN_RECOMMENDED_DOCKER_CPUS} vCPU and ≥ ${MIN_RECOMMENDED_DOCKER_MEM_GIB} GiB of memory before retrying.`,
-      );
-    }
-    actions.push({
-      id: "container_runtime_under_provisioned",
-      title: "Increase container runtime resources",
-      kind: "manual",
-      reason,
-      commands,
-      blocking: false,
-    });
+    actions.push(getUnderProvisionedAction(assessment));
   }
 
   if (assessment.isUnsupportedRuntime) {
-    actions.push({
-      id: "unsupported_runtime_warning",
-      title: "Use a supported Docker runtime if problems appear",
-      kind: "manual",
-      reason:
-        "OpenShell officially documents Docker-based runtimes. Podman may work in some environments, but it is not a supported runtime and behavior may vary.",
-      commands:
-        assessment.platform === "darwin"
-          ? ["If onboarding or sandbox lifecycle fails, switch to Docker Desktop or Colima."]
-          : ["If onboarding or sandbox lifecycle fails, switch to a Docker-supported runtime."],
-      blocking: false,
-    });
+    actions.push(getUnsupportedRuntimeAction(assessment));
   }
 
   if (!assessment.nodeInstalled) {
-    actions.push({
-      id: "install_nodejs",
-      title: "Install Node.js",
-      kind: "manual",
-      reason: "NemoClaw requires Node.js for its CLI and plugin build steps.",
-      commands: ["Run the NemoClaw installer to install Node.js automatically."],
-      blocking: false,
-    });
+    actions.push(getNodeInstallAction());
   }
 
   if (!assessment.openshellInstalled) {
-    actions.push({
-      id: "install_openshell",
-      title: "Install OpenShell",
-      kind: "manual",
-      reason: "OpenShell is required before onboarding can create or manage a gateway.",
-      commands: ["Run the NemoClaw installer or `scripts/install-openshell.sh`."],
-      blocking: false,
-    });
+    actions.push(getOpenShellInstallAction());
   }
 
   if (assessment.isHeadlessLikely && !assessment.hasNvidiaGpu) {
-    actions.push({
-      id: "headless_remote_hint",
-      title: "Review remote/headless UI settings",
-      kind: "info",
-      reason:
-        "Headless Linux hosts often need explicit remote UI handling if you want browser access.",
-      commands: ["Set `CHAT_UI_URL` when remote browser access matters."],
-      blocking: false,
-    });
+    actions.push(getHeadlessRemoteHintAction());
   }
 
   if (assessment.cdiNvidiaGpuSpecMissing) {
-    const specDir = assessment.dockerCdiSpecDirs[0] ?? "/etc/cdi";
-    actions.push({
-      id: "generate_nvidia_cdi_spec",
-      title: "Generate NVIDIA CDI device specs",
-      kind: "sudo",
-      reason:
-        "Docker is configured for CDI device injection (CDISpecDirs is set) but no " +
-        "nvidia.com/gpu CDI spec is present on the host. OpenShell's `gateway start --gpu` " +
-        "will fail with `unresolvable CDI devices nvidia.com/gpu=all` until a spec is generated.",
-      commands: [
-        `sudo nvidia-ctk cdi generate --output=${specDir.replace(/\/+$/, "")}/nvidia.yaml`,
-        "nvidia-ctk cdi list   # verify nvidia.com/gpu entries appear",
-        "nemoclaw onboard      # or rerun with --no-gpu to skip GPU passthrough",
-      ],
-      blocking: true,
-    });
+    actions.push(getNvidiaCdiSpecAction(assessment));
   }
 
   return actions;
@@ -772,7 +804,7 @@ function parseLsofLines(output: string): PortProbeResult | null {
  *
  * Detection chain:
  *   1. lsof (primary) — identifies the blocking process name + PID
- *   2. Node.js net probe (recovery) — cross-platform, detects EADDRINUSE
+ *   2. Node.js net probe (fallback) — cross-platform, detects EADDRINUSE
  */
 export async function checkPortAvailable(
   port?: number,
@@ -808,8 +840,8 @@ export async function checkPortAvailable(
 
       // Empty lsof output is not authoritative — non-root users cannot
       // see listeners owned by root (e.g., docker-proxy, leftover gateway).
-      // Retry with sudo -n to identify root-owned listeners before recovering
-      // with the net probe (which can only detect EADDRINUSE but not
+      // Retry with sudo -n to identify root-owned listeners before falling
+      // through to the net probe (which can only detect EADDRINUSE but not
       // the owning process).
       if (!o.lsofOutput) {
         const sudoOut: string | undefined = runCapture(
@@ -829,7 +861,7 @@ export async function checkPortAvailable(
     }
   }
 
-  // ── net probe recovery ──────────────────────────────────────────
+  // ── net probe fallback ─────────────────────────────────────────
   return probePortAvailability(p, o);
 }
 

@@ -3,7 +3,7 @@
 
 # Control-plane contributor rules
 
-- No hidden degraded states.
+- No hidden fallbacks.
 - No prompt-defined policy enforcement.
 - Deterministic ordering is required for registry, receipts, and serialized contracts.
 - Degraded state must be explicit and truthful.
@@ -11,8 +11,8 @@
 - State transitions must be explicit and explainable.
 - Reuse upstream NemoClaw terminology (shields, provider, runner, state, registry, audit).
 
-## Governance foundation (May 2026)
 
+## Governance foundation (May 2026)
 Implemented deterministic policy, classification, and scheduler planning primitives. Runtime routing remains intentionally unchanged; full enforcement and receipt wiring are follow-up work.
 
 ## Runtime seam rules
@@ -25,28 +25,24 @@ Implemented deterministic policy, classification, and scheduler planning primiti
 - New rule: policy-promotion proposals must be review-only artifacts; automatic policy mutation is forbidden.
 
 ## 2026-05-09 adapter/dry-run update
-
 Worker/provider adapter contracts and scheduler-to-provider dry-run bridge are implemented for diagnostics and receipt/event emission only. Live provider routing is unchanged. Remote execution, Dynamo adapters, and GPU telemetry remain planned future work.
 
 ## 2026-05-09 governed routing update
-
 Opt-in governed provider routing is available behind `NEMOCLAW_GOVERNED_ROUTING=1` (default off). Default routing is preserved when disabled. Remote worker execution, Dynamo orchestration, and GPU telemetry adapters are not implemented in this phase.
 
-## Worker probe and telemetry adapter note (2026-05-09)
 
+## Worker probe and telemetry adapter note (2026-05-09)
 - Probes are explicit operator-invoked actions (manual/invoked-only), not autonomous loops.
 - Remote execution remains disabled in this phase; governed routing remains opt-in.
 - Telemetry fields can be unavailable/stale and are surfaced truthfully without fabrication.
 - Dynamo integration is planned only and not implemented.
 
 ## 2026-05-09 guarded remote execution rules update
-
 - Remote execution must remain disabled unless `NEMOCLAW_REMOTE_EXECUTION=1` is explicitly set.
 - Deny and `approval_required` outcomes must block transport calls and emit receipts/events.
 - No autonomous distributed orchestration, no automatic worker routing, no SSH execution in this phase.
 
 ## 2026-05-09 heterogeneous routing update
-
 - Default local/provider behavior remains unchanged unless heterogeneous routing is explicitly enabled.
 - Heterogeneous routing is opt-in via `NEMOCLAW_HETEROGENEOUS_ROUTING=1` and does not imply remote execution enablement.
 - Remote execution requires separate `NEMOCLAW_REMOTE_EXECUTION=1` and policy eligibility.

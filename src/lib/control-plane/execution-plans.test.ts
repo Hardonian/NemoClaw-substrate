@@ -61,14 +61,14 @@ function trustedNode(overrides: Partial<NodeDescriptor> = {}): NodeDescriptor {
 
 function planFrom(policyBundle = approvalPolicy, node: NodeDescriptor | null = trustedNode()) {
   const intent = { requestId: "r-plan", actor: "operator", action: "worker:execute", command: "run:model", targetNodeId: "worker-1", executionMode: "remote" as const, metadata: {} };
-  const policy = evaluatePolicy(policyBundle, { request: request(), actionClass: "runtime" });
+  const policy = evaluatePolicy(policyBundle, { request: request(), actionClass: "generic" });
   const policySnapshot = createExecutionPolicySnapshot({
     capturedAt: now,
     governedRoutingEnabled: true,
     heterogeneousRoutingEnabled: true,
     remoteExecutionEnabled: true,
     policy,
-    degradedStateTriggerPermitted: false,
+    fallbackPermitted: false,
     selectedCandidateClass: "remote_worker",
     workerTrustLevel: node?.workerTrustLevel,
     workerAttestationStatus: node?.workerAttestationStatus,
@@ -112,12 +112,12 @@ describe("execution plans and approval lineage", () => {
     expect(validateExecutionAuthorization({ nowIso: now, plan: approved, approval: mismatched }).reasonCodes).toContain("approval_scope_mismatch");
   });
 
-  it("rejects policy drift, degraded state trigger drift, and intent drift", () => {
+  it("rejects policy drift, fallback drift, and intent drift", () => {
     const plan = planFrom(allowPolicy);
     const denySnapshot = createExecutionPolicySnapshot({
       ...plan.policySnapshot,
-      policy: evaluatePolicy(denyPolicy, { request: request(), actionClass: "runtime" }),
-      degradedStateTriggerPermitted: false,
+      policy: evaluatePolicy(denyPolicy, { request: request(), actionClass: "generic" }),
+      fallbackPermitted: false,
       capturedAt: now,
       executionMode: "remote",
       governedRoutingEnabled: true,
@@ -125,7 +125,7 @@ describe("execution plans and approval lineage", () => {
       remoteExecutionEnabled: true,
     });
     expect(validateExecutionSnapshotIntegrity({ plan, currentPolicySnapshot: denySnapshot })).toContain("policy_snapshot_mismatch");
-    expect(validateExecutionAuthorization({ nowIso: now, plan, degradedStateTriggerPermitted: true }).reasonCodes).toContain("degraded_state_trigger_permission_mismatch");
+    expect(validateExecutionAuthorization({ nowIso: now, plan, fallbackPermitted: true }).reasonCodes).toContain("fallback_permission_mismatch");
     expect(validateExecutionSnapshotIntegrity({ plan, currentIntent: { ...plan.intent, command: "different" } })).toContain("execution_intent_mismatch");
   });
 

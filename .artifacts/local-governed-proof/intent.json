@@ -1,7 +1,0 @@
-{
-  "id": "intent-local-safe-echo",
-  "action": "safe.local.echo",
-  "payload": {
-    "message": "NemoClaw governed local proof"
-  }
-}

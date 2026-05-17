@@ -22,7 +22,7 @@ Eliminate any PR failing Tier 0. Among survivors:
 2. **Smaller diff.** Lines changed proportional to the issue's scope. Bug fixes target <200 LOC.
 3. **Better edge-case test coverage.** Compare Tier 1.3 (negative test coverage) outputs.
 4. **Most recent activity.** Compare last commit timestamps. Catches stalled-PR-replaced-by-fresh patterns.
-5. **Earlier PR (final deterministic resolution).** Use only when nothing above distinguishes — first-mover gets the tie.
+5. **Earlier PR (final deterministic fallback).** Use only when nothing above distinguishes — first-mover gets the tie.
 
 If after all five tiebreakers no PR wins: recommend "merge A, cherry-pick relevant tests from B," picking A by lowest PR number deterministically.
 

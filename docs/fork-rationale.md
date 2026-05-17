@@ -5,20 +5,37 @@
 
 # Fork Rationale
 
-The fork exists to make NemoClaw easier to review as a control-plane project, not to claim a new autonomous runtime.
+## Why this fork exists
 
-Upstream NemoClaw provides the CLI, OpenShell sandbox workflow, blueprint, and onboarding path. This fork adds evidence-oriented contracts around execution decisions: plans, queue records, leases, receipts, replay validation, degraded states, and proofpack/export helpers.
+Upstream NemoClaw provides an alpha reference stack for running OpenClaw inside OpenShell sandboxes. This fork keeps that foundation and sharpens it for **local operator-grade AI execution and governance**.
 
-The review question is simple: when a decision happens, can a human trace the request, policy context, trust context, result, and failure reason without trusting prose?
+The operating problem this fork addresses: local operators need deterministic, inspectable, and governable behavior across heterogeneous devices and inference runtimes, including honest reporting when execution is degraded.
 
-## Current Shape
+## Governing principles
 
-- Default local behavior remains the baseline.
-- Governed routing and remote execution are opt-in.
-- Operator demo output is fixture-backed.
-- Verification relies on local tests and scripts.
-- Future distributed execution remains a non-claim.
+1. **Heterogeneous device awareness is mandatory**
+   - Capability and health differences across devices/runtimes influence real outcomes and must be explicit inputs to control decisions.
+2. **Deterministic control matters**
+   - Equivalent state + policy + request should produce equivalent control outcomes.
+3. **Truthful degraded-state reporting matters**
+   - Failures, fallbacks, or constrained operation must be reported explicitly and durably.
+4. **Policy must not live only inside prompts**
+   - Governance requires enforceable code/config artifacts and review history.
+5. **Repeated operator decisions should become supervised policy intelligence**
+   - Repeated decisions can inform policy evolution, but only through visible, reviewable promotion paths (not silent drift).
 
-## Why This Is Worth Keeping
+## Current state vs intended state
 
-The fork makes later orchestration safer to review because it first defines how evidence is created, validated, rejected, and exported.
+### Current state (repo today)
+
+- NemoClaw CLI, plugin, blueprint, policy presets, and related documentation are present in this fork.
+- The repository already contains command flows, policy files, and contributor/test tooling inherited from upstream structure.
+
+### Intended state (roadmap)
+
+- Stronger deterministic control-plane contracts.
+- Explicit device capability and scheduler semantics.
+- Structured receipts/provenance and degraded-state contracts.
+- Supervised policy-promotion workflows informed by operator repetition.
+
+Roadmap details are tracked in `docs/roadmap.md`.

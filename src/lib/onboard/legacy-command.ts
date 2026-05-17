@@ -18,7 +18,7 @@ export interface OnboardCommandOptions {
   controlUiPort: number | null;
   gpu: boolean;
   noGpu: boolean;
-  programmaticYes: boolean;
+  autoYes: boolean;
 }
 
 export interface RunOnboardCommandDeps {
@@ -188,7 +188,7 @@ export function parseOnboardArgs(
     controlUiPort,
     gpu,
     noGpu,
-    programmaticYes: parsedArgs.includes("--yes") || parsedArgs.includes("-y"),
+    autoYes: parsedArgs.includes("--yes") || parsedArgs.includes("-y"),
   };
 }
 

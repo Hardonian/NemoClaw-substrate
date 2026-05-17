@@ -72,14 +72,8 @@ function shouldPatchCoredns(runtime: ContainerRuntime, opts: WslDetectionOptions
   return runtime === "colima" || runtime === "podman";
 }
 
-function getHomeDir(): string {
-  // Use os.homedir() as it's the most reliable cross-platform way.
-  // We still allow HOME override for testing/legacy support.
-  return process.env.HOME || os.homedir() || "/tmp";
-}
-
 function getColimaDockerSocketCandidates(opts: PlatformLookupOptions = {}): string[] {
-  const home = opts.home ?? getHomeDir();
+  const home = opts.home ?? process.env.HOME ?? "/tmp";
   return [
     path.join(home, ".colima/default/docker.sock"),
     path.join(home, ".config/colima/default/docker.sock"),
@@ -94,9 +88,9 @@ function findColimaDockerSocket(
 }
 
 function getPodmanSocketCandidates(opts: PlatformLookupOptions = {}): string[] {
-  const home = opts.home ?? getHomeDir();
+  const home = opts.home ?? process.env.HOME ?? "/tmp";
   const platform = opts.platform ?? process.platform;
-  const uid = opts.uid ?? (process.platform !== "win32" ? process.getuid?.() : undefined) ?? 1000;
+  const uid = opts.uid ?? process.getuid?.() ?? 1000;
 
   if (platform === "darwin") {
     return [
@@ -113,7 +107,7 @@ function getPodmanSocketCandidates(opts: PlatformLookupOptions = {}): string[] {
 }
 
 function getDockerSocketCandidates(opts: PlatformLookupOptions = {}): string[] {
-  const home = opts.home ?? getHomeDir();
+  const home = opts.home ?? process.env.HOME ?? "/tmp";
   const platform = opts.platform ?? process.platform;
 
   if (platform === "darwin") {
@@ -132,10 +126,6 @@ function getDockerSocketCandidates(opts: PlatformLookupOptions = {}): string[] {
     ];
   }
 
-  if (platform === "win32") {
-    return ["//./pipe/docker_engine"];
-  }
-
   return [];
 }
 
@@ -152,9 +142,8 @@ function detectDockerHost(opts: DockerHostDetectionOptions = {}): DockerHostDete
   const fileExists = opts.existsSync ?? defaultExistsSync;
   for (const socketPath of getDockerSocketCandidates(opts)) {
     if (fileExists(socketPath)) {
-      const isNamedPipe = socketPath.startsWith("//./pipe/");
       return {
-        dockerHost: isNamedPipe ? `npipe://${socketPath}` : `unix://${socketPath}`,
+        dockerHost: `unix://${socketPath}`,
         source: "socket",
         socketPath,
       };
@@ -169,7 +158,6 @@ export {
   findColimaDockerSocket,
   getColimaDockerSocketCandidates,
   getDockerSocketCandidates,
-  getHomeDir,
   getPodmanSocketCandidates,
   inferContainerRuntime,
   isWsl,

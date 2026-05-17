@@ -24,7 +24,7 @@ export interface VersionOptions {
  * Resolve the NemoClaw version from (in order):
  *   1. `git describe --tags --match "v*"` — works in dev / source checkouts
  *   2. `.version` file at repo root       — stamped at publish time
- *   3. `package.json` version             — hard-coded default
+ *   3. `package.json` version             — hard-coded fallback
  */
 export function getVersion(opts: VersionOptions = {}): string {
   // Compiled location: dist/lib/core/version.js → repo root is 3 levels up

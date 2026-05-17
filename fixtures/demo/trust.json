@@ -1,5 +1,0 @@
-[
-  {"id":"trust-1","state":"ok","detail":"trust deterministic record token=abc123"},
-  {"id":"trust-2","state":"unavailable","detail":"trust explicit unavailable path","unavailable":true},
-  {"id":"trust-3","state":"degraded","detail":"trust explicit degraded reason=policy_guard","degraded":true}
-]

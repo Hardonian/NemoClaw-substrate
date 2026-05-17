@@ -4,7 +4,7 @@
 import type { ControlRequestEnvelope } from "./types";
 
 export interface TaskClassification {
-  taskKind: "chat" | "tooling" | "shell" | "file_mutation" | "network" | "batch" | "runtime";
+  taskKind: "chat" | "tooling" | "shell" | "file_mutation" | "network" | "batch";
   riskLevel: "low" | "medium" | "high";
   latencySensitivity: "interactive" | "standard" | "deferred";
   contextRequirement: "small" | "medium" | "large";
@@ -13,7 +13,6 @@ export interface TaskClassification {
   batchSuitable: boolean;
   remoteExecutionEligible: boolean;
   approvalRequirementHint: "none" | "recommended" | "required";
-  actionClass: "tool" | "shell" | "file_mutation" | "remote_node" | "provider" | "degraded_state_trigger" | "network_sensitive" | "high_risk" | "generic" | "runtime";
   providerConstraints: string[];
 }
 
@@ -34,7 +33,6 @@ export function classifyRequest(request: ControlRequestEnvelope): TaskClassifica
     batchSuitable: taskKind === "batch" || has("batch-ok"),
     remoteExecutionEligible: !has("local-only") && !highRisk,
     approvalRequirementHint: highRisk ? "required" : has("approval-recommended") ? "recommended" : "none",
-    actionClass: highRisk ? "high_risk" : "generic",
     providerConstraints: [...constraints].filter((item) => item.startsWith("provider:") || item.startsWith("model:"))
       .sort(),
   };

@@ -13,15 +13,16 @@
  */
 
 import { randomUUID } from "node:crypto";
-import { mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { join, sep } from "node:path";
 
 import { execa } from "execa";
 import YAML from "yaml";
-import { DASHBOARD_PORT } from "../lib/ports.js";
-import { buildSubprocessEnv } from "../lib/subprocess-env.js";
+
 import { validateEndpointUrl } from "./ssrf.js";
+import { buildSubprocessEnv } from "../lib/subprocess-env.js";
+import { DASHBOARD_PORT } from "../lib/ports.js";
 
 type Action = "plan" | "apply" | "status" | "rollback";
 
