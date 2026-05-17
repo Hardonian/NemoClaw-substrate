@@ -1,7 +1,7 @@
 {
   "name": "nemoclaw",
   "version": "0.1.0",
-  "description": "NemoClaw — run OpenClaw inside OpenShell with NVIDIA inference",
+  "description": "NemoClaw \u2014 run OpenClaw inside OpenShell with NVIDIA inference",
   "license": "Apache-2.0",
   "bin": {
     "nemoclaw": "./bin/nemoclaw.js",
@@ -75,7 +75,7 @@
     "check-fixtures": "tsx scripts/check-fixtures.ts",
     "demo:local-proof": "node scripts/demo/run-local-governed-proof.mjs",
     "demo:local-proof:verify": "node scripts/demo/verify-local-governed-proof.mjs",
-    "demo:local-proof:clean": "node -e \"require('node:fs').rmSync('.artifacts/local-governed-proof',{recursive:true,force:true});console.log('cleaned .artifacts/local-governed-proof')\""
+    "demo:local-proof:clean": "node scripts/demo/clean-local-governed-proof.mjs"
   },
   "dependencies": {
     "@oclif/core": "^4.10.5",
