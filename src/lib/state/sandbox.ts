@@ -9,7 +9,7 @@
 //
 // Credentials are stripped from backups using shared credential-filter.ts.
 
-import { spawnSync } from "child_process";
+import { createHash } from "node:crypto";
 import {
   chmodSync,
   existsSync,
@@ -21,17 +21,16 @@ import {
   rmSync,
   writeFileSync,
 } from "node:fs";
-import { createHash } from "node:crypto";
 import os from "node:os";
 import path from "node:path";
-
-import * as registry from "./registry.js";
-import { loadAgent } from "../agent/defs.js";
-import type { AgentStateFile } from "../agent/defs.js";
-import { resolveOpenshell } from "../adapters/openshell/resolve.js";
+import { spawnSync } from "child_process";
 import { captureOpenshellCommand } from "../adapters/openshell/client.js";
-import { sanitizeConfigFile, isSensitiveFile } from "../security/credential-filter.js";
+import { resolveOpenshell } from "../adapters/openshell/resolve.js";
+import type { AgentStateFile } from "../agent/defs.js";
+import { loadAgent } from "../agent/defs.js";
 import { shellQuote } from "../runner.js";
+import { isSensitiveFile, sanitizeConfigFile } from "../security/credential-filter.js";
+import * as registry from "./registry.js";
 
 const HOME_DIR = path.resolve(process.env.HOME || os.homedir());
 const REBUILD_BACKUPS_DIR = path.join(HOME_DIR, ".nemoclaw", "rebuild-backups");
@@ -820,6 +819,202 @@ function restoreStateFile(
  * Back up all state directories from a running sandbox.
  * Uses the agent manifest to determine which directories contain state.
  */
+
+function validateProvidedName(
+  sandboxName: string,
+  providedName: string | null,
+  existingBackups: SnapshotEntry[],
+): string | null {
+  if (providedName === null) return null;
+
+  const validationError = validateSnapshotName(providedName);
+  if (validationError) {
+    return validationError;
+  }
+  const conflict = existingBackups.find((b) => b.name === providedName);
+  if (conflict) {
+    return (
+      `Snapshot name '${providedName}' already exists for '${sandboxName}' ` +
+      `(at ${conflict.timestamp}). Pick a different name or delete the existing snapshot.`
+    );
+  }
+  return null;
+}
+
+function backupStateDirectories(
+  configFile: string,
+  sandboxName: string,
+  dir: string,
+  stateDirs: string[],
+  backupPath: string,
+): { backedUpDirs: string[]; failedDirs: string[]; error?: string; earlyReturn?: boolean } {
+  const backedUpDirs: string[] = [];
+  const failedDirs: string[] = [];
+
+  // Build tar command that only includes existing directories.
+  // First, check which declared state dirs actually exist in the sandbox,
+  // then additionally discover per-agent `workspace-*` directories produced
+  // by multi-agent OpenClaw deployments (see issue #1260) so they get
+  // snapshotted alongside the manifest-declared dirs. `awk '!seen[$0]++'`
+  // dedupes while preserving order.
+  const existCheckCmd = stateDirs
+    .map((d) => `[ -d ${shellQuote(`${dir}/${d}`)} ] && printf '%s\\n' ${shellQuote(d)}`)
+    .join("; ");
+  const workspaceGlobCmd = `for d in ${shellQuote(dir)}/workspace-*/; do [ -d "$d" ] && basename "$d"; done 2>/dev/null`;
+  const fullCheckCmd = `{ ${existCheckCmd}; ${workspaceGlobCmd}; } 2>/dev/null | awk '!seen[$0]++'`;
+  _log(`Checking existing dirs via SSH: ${fullCheckCmd.substring(0, 100)}...`);
+  const existResult = spawnSync("ssh", [...sshArgs(configFile, sandboxName), fullCheckCmd], {
+    encoding: "utf-8",
+    stdio: ["ignore", "pipe", "pipe"],
+    timeout: 30000,
+  });
+  _log(
+    `Dir check: exit=${existResult.status}, stdout=${(existResult.stdout || "").trim().substring(0, 200)}, stderr=${(existResult.stderr || "").trim().substring(0, 200)}`,
+  );
+  const existingDirs = (existResult.stdout || "")
+    .trim()
+    .split("\n")
+    .filter((d) => d.length > 0);
+  _log(
+    `Existing dirs in sandbox: [${existingDirs.join(",")}] (${existingDirs.length}/${stateDirs.length})`,
+  );
+
+  if (existResult.status !== 0) {
+    _log(
+      `FAILED: SSH dir check exited ${existResult.status} — cannot determine which dirs exist`,
+    );
+    return {
+      backedUpDirs,
+      failedDirs: [...stateDirs],
+      earlyReturn: true,
+    };
+  }
+
+  if (existingDirs.length === 0) {
+    _log("No state dirs found in sandbox (all empty)");
+    return { backedUpDirs, failedDirs };
+  }
+
+  // NC-2227-04: Pre-backup audit — reject symlinks, hardlinks, and special
+  // files inside state dirs. A compromised agent could plant a symlink like
+  // workspace/copy -> ../openclaw.json to exfiltrate config via backup.
+  const auditCmd = existingDirs
+    .map(
+      (d) =>
+        `find ${shellQuote(`${dir}/${d}`)} \\( -type l -o \\( -type f -a -links +1 \\) -o \\( ! -type f -a ! -type d \\) \\) -printf "%y %p\\n" 2>/dev/null`,
+    )
+    .join(" && ");
+  _log(`Pre-backup audit: checking for symlinks, hard links, and special files`);
+  const auditResult = spawnSync("ssh", [...sshArgs(configFile, sandboxName), auditCmd], {
+    encoding: "utf-8",
+    stdio: ["ignore", "pipe", "pipe"],
+    timeout: 30000,
+  });
+  if (auditResult.status !== 0) {
+    const stderr = (auditResult.stderr || "").trim();
+    const detail =
+      stderr || auditResult.error?.message || `exit ${String(auditResult.status)}`;
+    _log(`FAILED: Pre-backup audit command failed — ${detail}`);
+    return {
+      backedUpDirs,
+      failedDirs: [...existingDirs],
+      error: `Pre-backup audit failed: ${detail}`,
+      earlyReturn: true,
+    };
+  }
+  const auditOutput = (auditResult.stdout || "").trim();
+  if (auditOutput.length > 0) {
+    // Found symlinks or special files — log them and reject the backup
+    const violations = auditOutput.split("\n").filter((l) => l.length > 0);
+    _log(
+      `SECURITY: Pre-backup audit found ${violations.length} unsafe entries: ${violations.slice(0, 5).join("; ")}`,
+    );
+    return {
+      backedUpDirs,
+      failedDirs: [...existingDirs],
+      error: `Pre-backup audit rejected: symlinks, hard links, or special files found in state dirs: ${violations.slice(0, 3).join("; ")}`,
+      earlyReturn: true,
+    };
+  }
+  _log("Pre-backup audit passed — no symlinks, hard links, or special files found");
+
+  // Download via SSH+tar
+  // NC-2227-04: Removed -h flag (was following symlinks). State dirs are
+  // now agent-writable and co-located with config — a compromised agent
+  // could create symlinks to exfiltrate config contents via backup.
+  const tarCmd = `tar -cf - -C ${shellQuote(dir)} -- ${existingDirs.map(shellQuote).join(" ")}`;
+  _log(`Downloading via SSH+tar: ${tarCmd}`);
+  const result = spawnSync("ssh", [...sshArgs(configFile, sandboxName), tarCmd], {
+    stdio: ["ignore", "pipe", "pipe"],
+    timeout: 120000,
+    maxBuffer: 256 * 1024 * 1024,
+  });
+  _log(
+    `SSH+tar download: exit=${result.status}, stdout=${result.stdout ? result.stdout.length + " bytes" : "null"}, stderr=${(result.stderr?.toString() || "").substring(0, 200)}`,
+  );
+
+  // GNU tar exit codes: 0 = success, 1 = files changed during archive,
+  // 2 = errors (e.g. permission denied) but archive still written to stdout.
+  // Accept exit 0, 1, or 2 when stdout has data — extract what tar produced
+  // and determine per-dir success from tar's reported read errors.
+  const tarExitedWithData =
+    result.stdout && result.stdout.length > 0 && (result.status === 0 || result.status === 1 || result.status === 2);
+
+  if (result.status !== 0 && result.stdout && result.stdout.length > 0) {
+    _log(
+      `tar exited ${result.status} but produced ${result.stdout.length} bytes — attempting partial extraction`,
+    );
+  }
+
+  if (tarExitedWithData) {
+    // SECURITY: Validate tar entries, extract safely, audit symlinks
+    const extractResult = safeTarExtract(result.stdout, backupPath);
+    if (extractResult.success) {
+      const extractedDirs = new Set(existingBackupDirs(backupPath, existingDirs));
+      if (result.status === 0) {
+        for (const d of existingDirs) {
+          if (extractedDirs.has(d)) {
+            backedUpDirs.push(d);
+          } else {
+            _log(`Dir ${d} missing from clean tar extraction — marking failed`);
+            failedDirs.push(d);
+          }
+        }
+      } else {
+        const tarFailedDirs = failedDirsFromTarStderr(
+          result.stderr?.toString() || "",
+          existingDirs,
+        );
+        if (tarFailedDirs.size === 0) {
+          _log(
+            `tar exited ${result.status} without attributable failed dirs — marking all dirs failed`,
+          );
+          failedDirs.push(...existingDirs);
+        } else {
+          for (const d of existingDirs) {
+            if (tarFailedDirs.has(d)) {
+              _log(`Dir ${d} had tar read errors — marking failed`);
+              failedDirs.push(d);
+            } else if (!extractedDirs.has(d)) {
+              _log(`Dir ${d} missing from partial tar extraction — marking failed`);
+              failedDirs.push(d);
+            } else {
+              backedUpDirs.push(d);
+            }
+          }
+        }
+      }
+    } else {
+      _log(`SECURITY: tar extraction blocked: ${extractResult.error}`);
+      failedDirs.push(...existingDirs);
+    }
+  } else {
+    failedDirs.push(...existingDirs);
+  }
+
+  return { backedUpDirs, failedDirs };
+}
+
 export function backupSandboxState(sandboxName: string, options: BackupOptions = {}): BackupResult {
   const sb = registry.getSandbox(sandboxName);
   const agentName = sb?.agent || "openclaw";
@@ -837,31 +1032,16 @@ export function backupSandboxState(sandboxName: string, options: BackupOptions =
   // Preserve empty strings so `--name ""` hits validateSnapshotName and fails
   // with a clear error instead of silently creating an unnamed snapshot.
   const providedName = options.name ?? null;
-  if (providedName !== null) {
-    const validationError = validateSnapshotName(providedName);
-    if (validationError) {
-      return {
-        success: false,
-        backedUpDirs: [],
-        failedDirs: [],
-        backedUpFiles: [],
-        failedFiles: [],
-        error: validationError,
-      };
-    }
-    const conflict = existingBackups.find((b) => b.name === providedName);
-    if (conflict) {
-      return {
-        success: false,
-        backedUpDirs: [],
-        failedDirs: [],
-        backedUpFiles: [],
-        failedFiles: [],
-        error:
-          `Snapshot name '${providedName}' already exists for '${sandboxName}' ` +
-          `(at ${conflict.timestamp}). Pick a different name or delete the existing snapshot.`,
-      };
-    }
+  const validationError = validateProvidedName(sandboxName, providedName, existingBackups);
+  if (validationError) {
+    return {
+      success: false,
+      backedUpDirs: [],
+      failedDirs: [],
+      backedUpFiles: [],
+      failedFiles: [],
+      error: validationError,
+    };
   }
   const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
   const backupPath = path.join(REBUILD_BACKUPS_DIR, sandboxName, timestamp);
@@ -998,6 +1178,110 @@ export function backupSandboxState(sandboxName: string, options: BackupOptions =
 /**
  * Restore state directories into a sandbox from a prior backup.
  */
+function restoreStateDirs(
+  configFile: string,
+  sandboxName: string,
+  dir: string,
+  backupPath: string,
+  localDirs: string[],
+): { fatal: boolean; restoredDirs: string[]; failedDirs: string[] } {
+  const restoredDirs: string[] = [];
+  const failedDirs: string[] = [];
+
+  // Upload via tar pipe
+  // NC-2227-04: Removed -h flag from restore as well — no symlink following.
+  const tarResult = spawnSync("tar", ["-cf", "-", "-C", backupPath, ...localDirs], {
+    stdio: ["ignore", "pipe", "pipe"],
+    timeout: 60000,
+    maxBuffer: 256 * 1024 * 1024,
+  });
+
+  if (tarResult.status !== 0 || !tarResult.stdout) {
+    return { fatal: true, restoredDirs, failedDirs: [...localDirs] };
+  }
+
+  // Remove existing state dirs before extracting so stale files from
+  // later snapshots don't persist after restoring an earlier one.
+  const rmCmd = localDirs.map((d) => `rm -rf -- ${shellQuote(`${dir}/${d}`)}`).join(" && ");
+  _log(`Cleaning target dirs before restore: ${rmCmd}`);
+  const rmResult = spawnSync("ssh", [...sshArgs(configFile, sandboxName), rmCmd], {
+    stdio: ["ignore", "pipe", "pipe"],
+    timeout: 30000,
+  });
+  if (rmResult.status !== 0 || rmResult.error || rmResult.signal) {
+    const stderr = (rmResult.stderr?.toString() || "").trim();
+    const detail =
+      stderr ||
+      rmResult.error?.message ||
+      (rmResult.signal ? `signal ${rmResult.signal}` : `exit ${String(rmResult.status)}`);
+    _log(`FAILED: pre-restore cleanup failed: ${detail.substring(0, 200)}`);
+    return { fatal: true, restoredDirs, failedDirs: [...localDirs] };
+  }
+
+  const extractCmd = `tar --no-same-owner -xf - -C ${shellQuote(dir)}`;
+  const sshResult = spawnSync("ssh", [...sshArgs(configFile, sandboxName), extractCmd], {
+    input: tarResult.stdout,
+    stdio: ["pipe", "pipe", "pipe"],
+    timeout: 120000,
+  });
+
+  if (sshResult.status === 0) {
+    const restoredPaths = localDirs.map((d) => `${dir}/${d}`);
+
+    // Best-effort only: OpenShell exec/SSH normally runs as the sandbox user,
+    // which cannot chown even files it owns. The tar restore above runs as the
+    // same user, so the real restore gate is whether the restored state dirs
+    // are usable by that user.
+    const chownCmd = `chown -R sandbox:sandbox -- ${restoredPaths.map(shellQuote).join(" ")} 2>/dev/null || true`;
+    _log(`Best-effort ownership repair: ${chownCmd}`);
+    const chownResult = spawnSync("ssh", [...sshArgs(configFile, sandboxName), chownCmd], {
+      stdio: ["ignore", "pipe", "pipe"],
+      timeout: 30000,
+    });
+    if (chownResult.error || chownResult.signal) {
+      const detail =
+        chownResult.error?.message ||
+        (chownResult.signal ? `signal ${chownResult.signal}` : "unknown error");
+      _log(
+        `WARNING: post-restore ownership repair did not complete: ${detail.substring(0, 200)}`,
+      );
+    }
+
+    const usabilityCmd = restoredPaths
+      .map(
+        (p) =>
+          `[ -d ${shellQuote(p)} ] && [ ! -L ${shellQuote(p)} ] && [ -r ${shellQuote(p)} ] && [ -w ${shellQuote(p)} ]`,
+      )
+      .join(" && ");
+    _log(`Verifying restored state usability: ${usabilityCmd}`);
+    const usabilityResult = spawnSync(
+      "ssh",
+      [...sshArgs(configFile, sandboxName), usabilityCmd],
+      {
+        stdio: ["ignore", "pipe", "pipe"],
+        timeout: 30000,
+      },
+    );
+    if (usabilityResult.status === 0 && !usabilityResult.error && !usabilityResult.signal) {
+      restoredDirs.push(...localDirs);
+    } else {
+      const stderr = (usabilityResult.stderr?.toString() || "").trim();
+      const detail =
+        stderr ||
+        usabilityResult.error?.message ||
+        (usabilityResult.signal
+          ? `signal ${usabilityResult.signal}`
+          : `exit ${String(usabilityResult.status)}`);
+      _log(`FAILED: restored state usability check failed: ${detail.substring(0, 200)}`);
+      failedDirs.push(...localDirs);
+    }
+  } else {
+    failedDirs.push(...localDirs);
+  }
+
+  return { fatal: false, restoredDirs, failedDirs };
+}
+
 export function restoreSandboxState(sandboxName: string, backupPath: string): RestoreResult {
   _log(`restoreSandboxState: sandbox=${sandboxName}, backupPath=${backupPath}`);
   const manifest = readManifest(backupPath);
@@ -1063,107 +1347,18 @@ export function restoreSandboxState(sandboxName: string, backupPath: string): Re
   const configFile = writeTempSshConfig(sshConfig);
   try {
     if (localDirs.length > 0) {
-      // Upload via tar pipe
-      // NC-2227-04: Removed -h flag from restore as well — no symlink following.
-      const tarResult = spawnSync("tar", ["-cf", "-", "-C", backupPath, ...localDirs], {
-        stdio: ["ignore", "pipe", "pipe"],
-        timeout: 60000,
-        maxBuffer: 256 * 1024 * 1024,
-      });
+      const dirsResult = restoreStateDirs(configFile, sandboxName, dir, backupPath, localDirs);
+      restoredDirs.push(...dirsResult.restoredDirs);
+      failedDirs.push(...dirsResult.failedDirs);
 
-      if (tarResult.status !== 0 || !tarResult.stdout) {
+      if (dirsResult.fatal) {
         return {
           success: false,
           restoredDirs,
-          failedDirs: [...localDirs],
+          failedDirs,
           restoredFiles,
           failedFiles: localFiles.map((f) => f.path),
         };
-      }
-
-      // Remove existing state dirs before extracting so stale files from
-      // later snapshots don't persist after restoring an earlier one.
-      const rmCmd = localDirs.map((d) => `rm -rf -- ${shellQuote(`${dir}/${d}`)}`).join(" && ");
-      _log(`Cleaning target dirs before restore: ${rmCmd}`);
-      const rmResult = spawnSync("ssh", [...sshArgs(configFile, sandboxName), rmCmd], {
-        stdio: ["ignore", "pipe", "pipe"],
-        timeout: 30000,
-      });
-      if (rmResult.status !== 0 || rmResult.error || rmResult.signal) {
-        const stderr = (rmResult.stderr?.toString() || "").trim();
-        const detail =
-          stderr ||
-          rmResult.error?.message ||
-          (rmResult.signal ? `signal ${rmResult.signal}` : `exit ${String(rmResult.status)}`);
-        _log(`FAILED: pre-restore cleanup failed: ${detail.substring(0, 200)}`);
-        return {
-          success: false,
-          restoredDirs,
-          failedDirs: [...localDirs],
-          restoredFiles,
-          failedFiles: localFiles.map((f) => f.path),
-        };
-      }
-
-      const extractCmd = `tar --no-same-owner -xf - -C ${shellQuote(dir)}`;
-      const sshResult = spawnSync("ssh", [...sshArgs(configFile, sandboxName), extractCmd], {
-        input: tarResult.stdout,
-        stdio: ["pipe", "pipe", "pipe"],
-        timeout: 120000,
-      });
-
-      if (sshResult.status === 0) {
-        const restoredPaths = localDirs.map((d) => `${dir}/${d}`);
-
-        // Best-effort only: OpenShell exec/SSH normally runs as the sandbox user,
-        // which cannot chown even files it owns. The tar restore above runs as the
-        // same user, so the real restore gate is whether the restored state dirs
-        // are usable by that user.
-        const chownCmd = `chown -R sandbox:sandbox -- ${restoredPaths.map(shellQuote).join(" ")} 2>/dev/null || true`;
-        _log(`Best-effort ownership repair: ${chownCmd}`);
-        const chownResult = spawnSync("ssh", [...sshArgs(configFile, sandboxName), chownCmd], {
-          stdio: ["ignore", "pipe", "pipe"],
-          timeout: 30000,
-        });
-        if (chownResult.error || chownResult.signal) {
-          const detail =
-            chownResult.error?.message ||
-            (chownResult.signal ? `signal ${chownResult.signal}` : "unknown error");
-          _log(
-            `WARNING: post-restore ownership repair did not complete: ${detail.substring(0, 200)}`,
-          );
-        }
-
-        const usabilityCmd = restoredPaths
-          .map(
-            (p) =>
-              `[ -d ${shellQuote(p)} ] && [ ! -L ${shellQuote(p)} ] && [ -r ${shellQuote(p)} ] && [ -w ${shellQuote(p)} ]`,
-          )
-          .join(" && ");
-        _log(`Verifying restored state usability: ${usabilityCmd}`);
-        const usabilityResult = spawnSync(
-          "ssh",
-          [...sshArgs(configFile, sandboxName), usabilityCmd],
-          {
-            stdio: ["ignore", "pipe", "pipe"],
-            timeout: 30000,
-          },
-        );
-        if (usabilityResult.status === 0 && !usabilityResult.error && !usabilityResult.signal) {
-          restoredDirs.push(...localDirs);
-        } else {
-          const stderr = (usabilityResult.stderr?.toString() || "").trim();
-          const detail =
-            stderr ||
-            usabilityResult.error?.message ||
-            (usabilityResult.signal
-              ? `signal ${usabilityResult.signal}`
-              : `exit ${String(usabilityResult.status)}`);
-          _log(`FAILED: restored state usability check failed: ${detail.substring(0, 200)}`);
-          failedDirs.push(...localDirs);
-        }
-      } else {
-        failedDirs.push(...localDirs);
       }
     }
 

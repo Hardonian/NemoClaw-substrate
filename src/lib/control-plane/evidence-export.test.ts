@@ -22,7 +22,6 @@ import { DEFAULT_PROOFPACK_EXPORT_OPTIONS } from "./evidence-types";
 import type { OperationalEvent } from "./operational-memory";
 import type { ReplayEnvelope } from "./replay";
 import { buildReplayEnvelope } from "./replay";
-import { deterministicSerialize } from "./serde";
 
 const T0 = "2026-05-09T12:00:00Z";
 const T1 = "2026-05-09T12:00:01Z";
