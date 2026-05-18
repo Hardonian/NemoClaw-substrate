@@ -129,7 +129,7 @@ export function canRunNimWithMemory(totalMemoryMB: number): boolean {
   return nimImages.models.some((m: NimModel) => m.minGpuMemoryMB <= totalMemoryMB);
 }
 
-export function detectGpu(): GpuDetection | null {
+function detectNvidiaGpu(): GpuDetection | null {
   // Try NVIDIA first — query name and VRAM in a single call so the preflight
   // line can show the GPU model alongside the memory size.
   try {
@@ -177,7 +177,10 @@ export function detectGpu(): GpuDetection | null {
   } catch {
     /* ignored */
   }
+  return null;
+}
 
+function detectUnifiedNvidiaGpu(): GpuDetection | null {
   // Fallback: unified-memory NVIDIA devices
   try {
     const nameOutput = runCapture(
@@ -232,7 +235,10 @@ export function detectGpu(): GpuDetection | null {
   } catch {
     /* ignored */
   }
+  return null;
+}
 
+function detectAppleGpu(): GpuDetection | null {
   // macOS: detect Apple Silicon or discrete GPU
   if (process.platform === "darwin") {
     try {
@@ -275,8 +281,11 @@ export function detectGpu(): GpuDetection | null {
       /* ignored */
     }
   }
-
   return null;
+}
+
+export function detectGpu(): GpuDetection | null {
+  return detectNvidiaGpu() || detectUnifiedNvidiaGpu() || detectAppleGpu();
 }
 
 // Check if Docker has stored credentials for nvcr.io.
@@ -323,7 +332,7 @@ export function pullNimImage(model: string): string {
   }
   console.log(`  Pulling NIM image: ${image}`);
   dockerPull(image);
-  return image;
+  return image as string;
 }
 
 export function startNimContainer(sandboxName: string, model: string, port = VLLM_PORT): string {
