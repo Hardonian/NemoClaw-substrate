@@ -164,9 +164,13 @@ function evaluateAllRules(
   return matchedRules;
 }
 
-export function evaluatePolicyEngine(inheritance: PolicyInheritance, context: PolicyEvaluationContext): PolicyEvaluationTrace {
+export function evaluatePolicy(
+  inheritance: PolicyInheritance,
+  context: PolicyEvaluationContext
+): PolicyEvaluationTrace {
   const nodes: PolicyDecisionGraphNode[] = [];
   const edges: PolicyDecisionGraphEdge[] = [];
+
   const allRules = flattenRulesAndOverrides(inheritance, edges);
   const matchedRules = evaluateAllRules(allRules, context, nodes);
 

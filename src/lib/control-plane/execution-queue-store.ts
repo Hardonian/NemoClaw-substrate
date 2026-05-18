@@ -3,6 +3,7 @@ import { readJsonFileSync } from "../core/file-utils.js";
 // SPDX-License-Identifier: Apache-2.0
 import fs from "node:fs";
 import path from "node:path";
+import { readJsonFileSync } from "../core/json-file";
 
 export interface ExecutionQueueItem { id: string; planId: string; idempotencyKey: string; status: "queued"|"leased"|"completed"|"failed"; }
 export interface ExecutionLease { id: string; queueId: string; ownerId: string; status: "active"|"released"|"expired"; }

@@ -1,3 +1,4 @@
+import { readJsonFileSync } from "../core/json-file";
 // SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
@@ -47,7 +48,7 @@ export function cleanLocalGovernedProofArtifacts(rootDir: string): string {
 }
 
 function readJson(runDir: string, name: string): Record<string, unknown> {
-  return JSON.parse(fs.readFileSync(path.join(runDir, name), "utf8")) as Record<string, unknown>;
+  return readJsonFileSync(path.join(runDir, name)) as Record<string, unknown>;
 }
 
 function readNdjson(runDir: string, name: string): Record<string, unknown>[] {

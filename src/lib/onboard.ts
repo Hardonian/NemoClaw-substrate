@@ -1,4 +1,5 @@
-import { readJsonFileSync } from "./core/file-utils.js";
+import { readJsonFileSync } from "./core/json-file";
+
 // SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -314,6 +315,7 @@ import type { AgentDefinition } from "./agent/defs";
 import type { CurlProbeResult } from "./http-probe";
 import type { GatewayInference, ProviderSelectionConfig } from "./inference/config";
 import type { GpuInfo, ValidationResult } from "./inference/local";
+import type { WebSearchConfig } from "./inference/web-search";
 import {
   hydrateMessagingChannelConfig,
   type MessagingChannelConfig,
@@ -322,22 +324,21 @@ import {
   readMessagingChannelConfigFromEnv,
   sanitizeMessagingChannelConfig,
 } from "./messaging-channel-config";
-import type { ContainerRuntime } from "./platform";
-import type { Session, SessionUpdates } from "./state/onboard-session";
 import type {
   ModelCatalogFetchResult,
   ModelValidationResult,
   ProbeResult,
   ValidationFailureLike,
 } from "./onboard/types";
+import type { ContainerRuntime } from "./platform";
 import { listChannels } from "./sandbox-channels";
 import type { StreamSandboxCreateResult } from "./sandbox-create-stream";
+import type { Session, SessionUpdates } from "./state/onboard-session";
 import type { SandboxEntry } from "./state/registry";
 import type { BackupResult } from "./state/sandbox";
 import type { TierDefinition, TierPreset } from "./tiers";
 import type { SandboxCreateFailure, ValidationClassification } from "./validation";
 import type { ProbeRecovery } from "./validation-recovery";
-import type { WebSearchConfig } from "./inference/web-search";
 
 /**
  * Create a temp file inside a directory with a cryptographically random name.
