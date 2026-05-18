@@ -1729,7 +1729,7 @@ function upsertProvider(
         // A later upsert under the same env-key wrote a different value
         // (e.g. a retry-loop after validation failure replaced the legacy
         // key with a freshly entered one, or a placeholder like "dummy"
-        // for vllm-local). The gateway no longer holds the staged legacy
+        // used by vllm-local). The gateway no longer holds the staged legacy
         // value under this env-key, so withdraw the migration mark — the
         // cleanup gate must keep the legacy file intact.
         migratedLegacyKeys.delete(credentialEnv);
@@ -4064,7 +4064,7 @@ async function preflight(
       }
       // Auto-cleanup orphaned SSH port-forward from a previous NemoClaw session
       // (e.g. dashboard forward left behind after destroy). Only kill the process
-      // if its command line contains "openshell" to avoid killing unrelated SSH
+      // when its command line contains "openshell" to avoid killing unrelated SSH
       // tunnels the user may have set up on the same port. (#1950)
       if (port === DASHBOARD_PORT && portCheck.process === "ssh" && portCheck.pid) {
         // Use `ps` to get the command line — works on Linux, macOS, and WSL.
@@ -9503,7 +9503,7 @@ async function onboard(opts: OnboardOptions = {}): Promise<void> {
     (isNonInteractive() ? process.env.NEMOCLAW_FROM_DOCKERFILE || null : null);
   // Resolve the explicit sandbox name early so both validation and the
   // --from guard work off the same source. --name always counts; the env
-  // var is used as the interactive prompt default via getSandboxPromptDefault,
+  // variable is used as the interactive prompt default via getSandboxPromptDefault,
   // and also as the resolved name when we cannot prompt (non-interactive or
   // missing-TTY runs such as CI scripts and piped stdin).
   const stdinIsTty = Boolean(process.stdin && process.stdin.isTTY);
@@ -10028,7 +10028,7 @@ async function onboard(opts: OnboardOptions = {}): Promise<void> {
       // Prompt for the sandbox name and show the review gate BEFORE
       // setupInference runs upsertProvider / `inference set` on the gateway.
       // On retry (inferenceResult.retry === "selection") the user is re-prompted
-      // for provider/model above and sees this gate again with the new config.
+      // regarding provider/model above and sees this gate again with the new config.
       // See #2221 (CodeRabbit).
       if (!sandboxName) {
         sandboxName = await promptValidatedSandboxName(agent);
