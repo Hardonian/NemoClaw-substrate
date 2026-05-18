@@ -1,4 +1,13 @@
-{
-  "description": "🎯 **What:** Several files in src/lib/control-plane and src/lib/execution were failing the TypeScript compiler step (npm run build:cli -> tsc) during CI.\n\n📊 **Coverage:**\n- Extracted and added the ExecutionReceiptLineage interface and executionLineage to ExecutionReceipt inside types.ts.\n- Appended runtime to actionClass type in governance.ts.\n- Fallback to generic actionClass in scheduler-dry-run-bridge.ts.\n- Added missing as any casts to runtime-seams.ts.\n- Nullish-coalesced undefined string arguments to empty string in queue.ts.\n\n✨ **Result:**\nnpm run build:cli now completes without error. verify:core passes successfully.\n\nSigned-off-by: Your Name <your-email@example.com>",
-  "commit_message": "🧪 [test] Fix control-plane tests"
-}
+🎯 **What:**
+Extract the duplicated pattern `JSON.parse(fs.readFileSync(filePath, "utf-8"))` into a centralized utility function `readJsonFileSync` inside `src/lib/core/file-utils.ts`.
+
+💡 **Why:**
+This improves the maintainability and readability of the codebase by replacing repeated one-liners across multiple files with a single, clear abstraction.
+
+✅ **Verification:**
+I created a unit test `src/lib/core/file-utils.test.ts` for the new utility. I ran `npm run test` on the changed files and `npm run verify:core` over the codebase to ensure nothing was broken. No functionality was altered.
+
+✨ **Result:**
+A cleaner codebase with centralized logic for JSON file reads.
+
+Signed-off-by: Jules <jules@example.com>

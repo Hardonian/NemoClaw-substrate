@@ -1,3 +1,4 @@
+import { readJsonFileSync } from "../core/file-utils.js";
 // SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
@@ -215,7 +216,7 @@ describe("shields — unit logic", () => {
       const markerPath = path.join(stateDir, "shields-timer-openclaw.json");
       fs.writeFileSync(markerPath, JSON.stringify(marker), { mode: 0o600 });
 
-      const loaded = JSON.parse(fs.readFileSync(markerPath, "utf-8"));
+      const loaded = readJsonFileSync(markerPath);
       expect(loaded.pid).toBe(12345);
       expect(loaded.sandboxName).toBe("openclaw");
       expect(loaded.restoreAt).toBeDefined();

@@ -1,3 +1,4 @@
+import { readJsonFileSync } from "../core/file-utils.js";
 // SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 import fs from "node:fs";
@@ -8,7 +9,7 @@ export interface ExecutionLease { id: string; queueId: string; ownerId: string; 
 export interface ExecutionOwnership { queueId: string; ownerId: string; }
 export interface IdempotencyRecord { key: string; queueId: string; }
 
-function read<T>(file: string, fallback: T): T { if (!fs.existsSync(file)) return fallback; return JSON.parse(fs.readFileSync(file,"utf8")) as T; }
+function read<T>(file: string, fallback: T): T { if (!fs.existsSync(file)) return fallback; return readJsonFileSync(file) as T; }
 function write(file: string, value: unknown): void { fs.writeFileSync(file, JSON.stringify(value, null, 2)); }
 
 export function rejectDuplicateExecution(runDir: string, key: string): void {
