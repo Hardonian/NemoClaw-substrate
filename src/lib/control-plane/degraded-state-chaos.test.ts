@@ -39,7 +39,7 @@ function fakeProbe(status: WorkerProbeResult["status"], overrides: Partial<Worke
       runtimeMetrics: { queueDepth: { state: "observed", value: 1 } },
       ...overrides,
     },
-    degradedStates: status === "degraded" ? [{ category: "degraded", reason: "probe degraded", affectedSubsystem: "probe", severity: "warning", reasonCode: "telemetry_unavailable", explanation: "probe degraded", sourceComponent: "worker-probes", timestamp: "2026-05-09T00:00:00.000Z" }] : [],
+    degradedStates: status === "degraded" ? [{ category: "degraded", reason: "probe degraded", affectedSubsystem: "probe", severity: "warning", reasonCode: "unknown_error", explanation: "probe degraded", sourceComponent: "worker-probes", timestamp: "2026-05-09T00:00:00.000Z" }] : [],
   };
 }
 

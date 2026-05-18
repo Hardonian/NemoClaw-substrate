@@ -61,7 +61,7 @@ function trustedNode(overrides: Partial<NodeDescriptor> = {}): NodeDescriptor {
 
 function planFrom(policyBundle = approvalPolicy, node: NodeDescriptor | null = trustedNode()) {
   const intent = { requestId: "r-plan", actor: "operator", action: "worker:execute", command: "run:model", targetNodeId: "worker-1", executionMode: "remote" as const, metadata: {} };
-  const policy = evaluatePolicy(policyBundle, { request: request(), actionClass: "runtime" });
+  const policy = evaluatePolicy(policyBundle, { request: request(), actionClass: "generic" });
   const policySnapshot = createExecutionPolicySnapshot({
     capturedAt: now,
     governedRoutingEnabled: true,
@@ -116,7 +116,7 @@ describe("execution plans and approval lineage", () => {
     const plan = planFrom(allowPolicy);
     const denySnapshot = createExecutionPolicySnapshot({
       ...plan.policySnapshot,
-      policy: evaluatePolicy(denyPolicy, { request: request(), actionClass: "runtime" }),
+      policy: evaluatePolicy(denyPolicy, { request: request(), actionClass: "generic" }),
       fallbackPermitted: false,
       capturedAt: now,
       executionMode: "remote",

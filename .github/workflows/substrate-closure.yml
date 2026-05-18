@@ -1,0 +1,70 @@
+# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
+name: substrate-closure
+
+on:
+  workflow_dispatch:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  verify-substrate-closure:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22.16.0
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Tests
+        run: npm test
+
+      - name: Verify core
+        run: npm run verify:core
+
+      - name: Verify release
+        run: npm run verify:release
+
+      - name: Demo local proof clean
+        run: npm run demo:local-proof:clean
+
+      - name: Demo local proof
+        run: npm run demo:local-proof
+
+      - name: Demo local proof verify
+        run: npm run demo:local-proof:verify
+
+      - name: Verify changelog hygiene
+        run: npm run verify:changelog-hygiene
+
+      - name: Git diff check
+        run: git diff --check
+
+      - name: Upload proof artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: local-governed-proof-artifacts
+          path: |
+            .tmp/local-governed-proof/**
+            artifacts/**
+          if-no-files-found: ignore
