@@ -1,3 +1,4 @@
+import { readJsonFileSync } from "../core/json-file";
 // SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
@@ -14,8 +15,8 @@ import { isErrnoException } from "../core/errno";
 import type { JsonObject, JsonValue } from "../core/json-types";
 import type { WebSearchConfig } from "../inference/web-search";
 import {
-  sanitizeMessagingChannelConfig,
   type MessagingChannelConfig,
+  sanitizeMessagingChannelConfig,
 } from "../messaging-channel-config";
 import { redactSensitiveText, redactUrl } from "../security/redact";
 
@@ -386,7 +387,7 @@ export function loadSession(): Session | null {
     if (!fs.existsSync(SESSION_FILE)) {
       return null;
     }
-    const parsed = JSON.parse(fs.readFileSync(SESSION_FILE, "utf-8"));
+    const parsed = readJsonFileSync(SESSION_FILE);
     return normalizeSession(parsed);
   } catch {
     return null;

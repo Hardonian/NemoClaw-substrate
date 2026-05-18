@@ -1,3 +1,5 @@
+import { readJsonFileSync } from "./core/json-file";
+
 // SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -313,6 +315,7 @@ import type { AgentDefinition } from "./agent/defs";
 import type { CurlProbeResult } from "./http-probe";
 import type { GatewayInference, ProviderSelectionConfig } from "./inference/config";
 import type { GpuInfo, ValidationResult } from "./inference/local";
+import type { WebSearchConfig } from "./inference/web-search";
 import {
   hydrateMessagingChannelConfig,
   type MessagingChannelConfig,
@@ -321,22 +324,21 @@ import {
   readMessagingChannelConfigFromEnv,
   sanitizeMessagingChannelConfig,
 } from "./messaging-channel-config";
-import type { ContainerRuntime } from "./platform";
-import type { Session, SessionUpdates } from "./state/onboard-session";
 import type {
   ModelCatalogFetchResult,
   ModelValidationResult,
   ProbeResult,
   ValidationFailureLike,
 } from "./onboard/types";
+import type { ContainerRuntime } from "./platform";
 import { listChannels } from "./sandbox-channels";
 import type { StreamSandboxCreateResult } from "./sandbox-create-stream";
+import type { Session, SessionUpdates } from "./state/onboard-session";
 import type { SandboxEntry } from "./state/registry";
 import type { BackupResult } from "./state/sandbox";
 import type { TierDefinition, TierPreset } from "./tiers";
 import type { SandboxCreateFailure, ValidationClassification } from "./validation";
 import type { ProbeRecovery } from "./validation-recovery";
-import type { WebSearchConfig } from "./inference/web-search";
 
 /**
  * Create a temp file inside a directory with a cryptographically random name.
@@ -2242,7 +2244,7 @@ function readSandboxSelectionConfig(sandboxName: string): ProviderSelectionConfi
     const configPath = findSelectionConfigPath(tmpDir);
     if (!configPath) return null;
     try {
-      const parsed = JSON.parse(fs.readFileSync(configPath, "utf-8"));
+      const parsed = readJsonFileSync(configPath);
       return parsed && typeof parsed === "object" ? parsed : null;
     } catch {
       return null;
@@ -9100,7 +9102,7 @@ function fetchGatewayAuthTokenFromSandbox(sandboxName: string): string | null {
     if (result.status !== 0) return null;
     const jsonPath = findOpenclawJsonPath(tmpDir);
     if (!jsonPath) return null;
-    const cfg = JSON.parse(fs.readFileSync(jsonPath, "utf-8"));
+    const cfg = readJsonFileSync(jsonPath);
     const token = cfg && cfg.gateway && cfg.gateway.auth && cfg.gateway.auth.token;
     return typeof token === "string" && token.length > 0 ? token : null;
   } catch {
@@ -9324,7 +9326,6 @@ function printDashboard(
 
   console.log("");
   console.log(`  ${"─".repeat(50)}`);
-  // console.log(`  Dashboard    http://localhost:${DASHBOARD_PORT}/`);
   console.log(`  Sandbox      ${sandboxName} (Landlock + seccomp + netns)`);
   console.log(`  Model        ${model} (${providerLabel})`);
   if (showNim) {

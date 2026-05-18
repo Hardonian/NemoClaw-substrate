@@ -471,20 +471,20 @@ export async function executeDeploy(opts: DeployExecutionOptions): Promise<void>
       credentials,
       shellQuote,
     });
-    const envDir = fs.mkdtempSync(path.join(os.tmpdir(), "nemoclaw-env-"));
+    const envDir = await fs.promises.mkdtemp(path.join(os.tmpdir(), "nemoclaw-env-"));
     const envTmp = path.join(envDir, "env");
-    fs.writeFileSync(envTmp, envLines.join("\n") + "\n", { mode: 0o600 });
+    await fs.promises.writeFile(envTmp, envLines.join("\n") + "\n", { mode: 0o600 });
     try {
       run(["scp", "-q", ...sshArgs, envTmp, `${name}:${remoteDir}/.env`]);
       run(["ssh", "-q", ...sshArgs, name, `chmod 600 ${shellQuote(`${remoteDir}/.env`)}`]);
     } finally {
       try {
-        fs.unlinkSync(envTmp);
+        await fs.promises.unlink(envTmp);
       } catch {
         /* ignored */
       }
       try {
-        fs.rmdirSync(envDir);
+        await fs.promises.rmdir(envDir);
       } catch {
         /* ignored */
       }
