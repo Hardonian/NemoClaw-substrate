@@ -8,6 +8,7 @@
  */
 
 import fs from "node:fs";
+import { readJsonFileSync } from "../core/json-file";
 import path from "node:path";
 
 import { isErrnoException } from "../core/errno";
@@ -386,7 +387,7 @@ export function loadSession(): Session | null {
     if (!fs.existsSync(SESSION_FILE)) {
       return null;
     }
-    const parsed = JSON.parse(fs.readFileSync(SESSION_FILE, "utf-8"));
+    const parsed = readJsonFileSync(SESSION_FILE);
     return normalizeSession(parsed);
   } catch {
     return null;

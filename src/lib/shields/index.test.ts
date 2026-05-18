@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import fs from "node:fs";
+import { readJsonFileSync } from "../core/json-file";
 import os from "node:os";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -215,7 +216,7 @@ describe("shields — unit logic", () => {
       const markerPath = path.join(stateDir, "shields-timer-openclaw.json");
       fs.writeFileSync(markerPath, JSON.stringify(marker), { mode: 0o600 });
 
-      const loaded = JSON.parse(fs.readFileSync(markerPath, "utf-8"));
+      const loaded = readJsonFileSync(markerPath);
       expect(loaded.pid).toBe(12345);
       expect(loaded.sandboxName).toBe("openclaw");
       expect(loaded.restoreAt).toBeDefined();

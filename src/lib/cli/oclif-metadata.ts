@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import fs from "node:fs";
+import { readJsonFileSync } from "../core/json-file";
 import path from "node:path";
 
 import type { CommandDisplayEntry } from "./command-display";
@@ -67,7 +68,7 @@ function loadPatternDiscoveredCommands(): Record<string, OclifCommandMetadata> |
   const packageJsonPath = path.join(root, "package.json");
   if (!fs.existsSync(packageJsonPath)) return null;
 
-  const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf-8")) as {
+  const packageJson = readJsonFileSync(packageJsonPath) as {
     oclif?: { commands?: { strategy?: string; target?: string } };
   };
   const commandDiscovery = packageJson.oclif?.commands;

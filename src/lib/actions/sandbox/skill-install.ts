@@ -3,6 +3,7 @@
 
 
 import fs from "node:fs";
+import { readJsonFileSync } from "../../core/json-file";
 import os from "node:os";
 import path from "node:path";
 
@@ -39,7 +40,7 @@ export function looksLikeOpenClawPlugin(candidatePath: string): boolean {
   const packageJsonPath = path.join(dir, "package.json");
   if (!fs.existsSync(packageJsonPath)) return false;
   try {
-    const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf-8"));
+    const packageJson = readJsonFileSync(packageJsonPath);
     const openclawBlock = packageJson?.openclaw;
     return Boolean(
       packageJson?.["openclaw.plugin"] === true ||

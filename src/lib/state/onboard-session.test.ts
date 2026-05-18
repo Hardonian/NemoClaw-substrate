@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { readJsonFileSync } from "../core/json-file";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -361,7 +362,7 @@ describe("onboard session", () => {
     // parseTelegramConfig() path.
     const seed = session.createSession();
     session.saveSession(seed);
-    const onDisk = JSON.parse(fs.readFileSync(session.SESSION_FILE, "utf-8"));
+    const onDisk = readJsonFileSync(session.SESSION_FILE);
     onDisk.telegramConfig = { requireMention: "yes" };
     fs.writeFileSync(session.SESSION_FILE, JSON.stringify(onDisk));
 
@@ -450,7 +451,7 @@ describe("onboard session", () => {
     const acquired = session.acquireOnboardLock("nemoclaw onboard --resume");
     expect(acquired.acquired).toBe(true);
 
-    const written = JSON.parse(fs.readFileSync(session.LOCK_FILE, "utf8"));
+    const written = readJsonFileSync(session.LOCK_FILE);
     expect(written.pid).toBe(process.pid);
   });
 
@@ -489,7 +490,7 @@ describe("onboard session", () => {
       const acquired = session.acquireOnboardLock("nemoclaw onboard --resume");
       expect(acquired.acquired).toBe(true);
 
-      const written = JSON.parse(fs.readFileSync(session.LOCK_FILE, "utf8"));
+      const written = readJsonFileSync(session.LOCK_FILE);
       expect(written.pid).toBe(process.pid);
     } finally {
       readSpy.mockRestore();
@@ -560,7 +561,7 @@ describe("onboard session", () => {
       // The fresh lock that the simulated concurrent process wrote
       // should still be on disk after acquireOnboardLock returns.
       expect(fs.existsSync(session.LOCK_FILE)).toBe(true);
-      const onDisk = JSON.parse(fs.readFileSync(session.LOCK_FILE, "utf8"));
+      const onDisk = readJsonFileSync(session.LOCK_FILE);
       // The lock content should be the fresh claim, NOT the stale one
       // and NOT a new one written by acquireOnboardLock after a wrong
       // unlink.
@@ -599,7 +600,7 @@ describe("onboard session", () => {
     const acquired = session.acquireOnboardLock("nemoclaw onboard --resume");
     expect(acquired.acquired).toBe(true);
     expect(fs.existsSync(session.LOCK_FILE)).toBe(true);
-    const written = JSON.parse(fs.readFileSync(session.LOCK_FILE, "utf8"));
+    const written = readJsonFileSync(session.LOCK_FILE);
     expect(written.pid).toBe(process.pid);
     session.releaseOnboardLock();
   });
@@ -636,7 +637,7 @@ describe("onboard session", () => {
       const acquired = session.acquireOnboardLock("nemoclaw onboard --resume");
       expect(acquired.acquired).toBe(false);
       expect(acquired.holderPid).toBe(process.pid);
-      const onDisk = JSON.parse(fs.readFileSync(session.LOCK_FILE, "utf8"));
+      const onDisk = readJsonFileSync(session.LOCK_FILE);
       expect(onDisk.command).toContain("fresh malformed-cleanup race claimant");
     } finally {
       statSpy.mockRestore();

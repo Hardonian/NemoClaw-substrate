@@ -9,6 +9,7 @@
 //   node shields-timer.js <sandbox-name> <snapshot-path> <restore-at-iso> <config-path> <config-dir>
 
 import fs from "node:fs";
+import { readJsonFileSync } from "../core/json-file";
 import path from "node:path";
 
 import { buildPolicySetCommand } from "../policies";
@@ -79,7 +80,7 @@ function readStateFile(stateFile: string): UnknownRecord {
     if (!fs.existsSync(stateFile)) {
       return {};
     }
-    const parsed = JSON.parse(fs.readFileSync(stateFile, "utf-8"));
+    const parsed = readJsonFileSync(stateFile);
     return isRecord(parsed) ? parsed : {};
   } catch {
     return {};

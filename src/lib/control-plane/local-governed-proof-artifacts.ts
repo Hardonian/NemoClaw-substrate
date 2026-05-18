@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { createHash } from "node:crypto";
+import { readJsonFileSync } from "../core/json-file";
 import fs from "node:fs";
 import path from "node:path";
 
