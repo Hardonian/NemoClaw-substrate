@@ -246,53 +246,14 @@ export function ensurePatchedClusterImage(opts: EnsurePatchedClusterImageOpts): 
 
   const dockerfile = buildPatchDockerfile(snapshotter);
 
-  // Phase 1: resolve the upstream digest. Prefer the local cache (works
-  // air-gapped with pre-staged images, and is sub-second when warm).
-  let upstreamDigest = inspectImageDigest(
-    opts.upstreamImage,
+  const upstreamDigest = resolveUpstreamDigest({
+    upstreamImage: opts.upstreamImage,
     runCaptureImpl,
+    runImpl,
+    log,
+    pullTimeoutMs,
     inspectTimeoutMs,
-  );
-
-  if (!upstreamDigest) {
-    // Upstream is not local. Probe network reachability with a short
-    // budget BEFORE committing to the multi-minute pull, so air-gapped
-    // and restricted-network hosts fail in seconds instead of minutes.
-    const probeResult = runImpl(["docker", "manifest", "inspect", opts.upstreamImage], {
-      ignoreError: true,
-      timeoutMs: inspectTimeoutMs,
-    });
-    if (probeResult.status !== 0) {
-      throw new ClusterImagePatchError(
-        `cannot reach upstream registry for ${opts.upstreamImage} ` +
-          `(docker manifest inspect exit ${probeResult.status} within ${inspectTimeoutMs} ms). ` +
-          "See docs/reference/troubleshooting.md for the manual daemon.json workaround.",
-      );
-    }
-
-    log(`  Pulling upstream cluster image: ${opts.upstreamImage}`);
-    const pullResult = runImpl(["docker", "pull", opts.upstreamImage], {
-      ignoreError: true,
-      timeoutMs: pullTimeoutMs,
-    });
-    if (pullResult.status !== 0) {
-      throw new ClusterImagePatchError(
-        `failed to pull upstream cluster image ${opts.upstreamImage} ` +
-          `(docker pull exit ${pullResult.status}; timeout ${pullTimeoutMs} ms)`,
-      );
-    }
-
-    upstreamDigest = inspectImageDigest(
-      opts.upstreamImage,
-      runCaptureImpl,
-      inspectTimeoutMs,
-    );
-    if (!upstreamDigest) {
-      throw new ClusterImagePatchError(
-        `failed to resolve digest for ${opts.upstreamImage} after successful pull`,
-      );
-    }
-  }
+  });
 
   // Phase 2: digest-bound tag. A re-pushed upstream produces a different
   // digest, hence a different SHA, hence a different patched tag — and
@@ -312,40 +273,123 @@ export function ensurePatchedClusterImage(opts: EnsurePatchedClusterImageOpts): 
   log(`  Source: ${opts.upstreamImage} (${upstreamDigest})`);
   log(`  Snapshotter: ${snapshotter}`);
 
-  const tmpDir = fsApi.mkdtempSync(path.join(tmpdirImpl(), "nemoclaw-cluster-patch-"));
+  buildPatchedImage({
+    upstreamImage: opts.upstreamImage,
+    tag,
+    dockerfile,
+    fsApi,
+    tmpdirImpl,
+    runImpl,
+    buildTimeoutMs,
+  });
+
+  log(`  Patched image ready: ${tag}`);
+  return tag;
+}
+
+interface ResolveUpstreamDigestOpts {
+  upstreamImage: string;
+  runCaptureImpl: (cmd: readonly string[], opts?: RunOpts) => string;
+  runImpl: (cmd: readonly string[], opts?: RunOpts) => { status: number | null };
+  log: (msg: string) => void;
+  pullTimeoutMs: number;
+  inspectTimeoutMs: number;
+}
+
+function resolveUpstreamDigest(opts: ResolveUpstreamDigestOpts): string {
+  // Phase 1: resolve the upstream digest. Prefer the local cache (works
+  // air-gapped with pre-staged images, and is sub-second when warm).
+  let upstreamDigest = inspectImageDigest(
+    opts.upstreamImage,
+    opts.runCaptureImpl,
+    opts.inspectTimeoutMs,
+  );
+
+  if (!upstreamDigest) {
+    // Upstream is not local. Probe network reachability with a short
+    // budget BEFORE committing to the multi-minute pull, so air-gapped
+    // and restricted-network hosts fail in seconds instead of minutes.
+    const probeResult = opts.runImpl(["docker", "manifest", "inspect", opts.upstreamImage], {
+      ignoreError: true,
+      timeoutMs: opts.inspectTimeoutMs,
+    });
+    if (probeResult.status !== 0) {
+      throw new ClusterImagePatchError(
+        `cannot reach upstream registry for ${opts.upstreamImage} ` +
+          `(docker manifest inspect exit ${probeResult.status} within ${opts.inspectTimeoutMs} ms). ` +
+          "See docs/reference/troubleshooting.md for the manual daemon.json workaround.",
+      );
+    }
+
+    opts.log(`  Pulling upstream cluster image: ${opts.upstreamImage}`);
+    const pullResult = opts.runImpl(["docker", "pull", opts.upstreamImage], {
+      ignoreError: true,
+      timeoutMs: opts.pullTimeoutMs,
+    });
+    if (pullResult.status !== 0) {
+      throw new ClusterImagePatchError(
+        `failed to pull upstream cluster image ${opts.upstreamImage} ` +
+          `(docker pull exit ${pullResult.status}; timeout ${opts.pullTimeoutMs} ms)`,
+      );
+    }
+
+    upstreamDigest = inspectImageDigest(
+      opts.upstreamImage,
+      opts.runCaptureImpl,
+      opts.inspectTimeoutMs,
+    );
+    if (!upstreamDigest) {
+      throw new ClusterImagePatchError(
+        `failed to resolve digest for ${opts.upstreamImage} after successful pull`,
+      );
+    }
+  }
+
+  return upstreamDigest;
+}
+
+interface BuildPatchedImageOpts {
+  upstreamImage: string;
+  tag: string;
+  dockerfile: string;
+  fsApi: PatchFsApi;
+  tmpdirImpl: () => string;
+  runImpl: (cmd: readonly string[], opts?: RunOpts) => { status: number | null };
+  buildTimeoutMs: number;
+}
+
+function buildPatchedImage(opts: BuildPatchedImageOpts): void {
+  const tmpDir = opts.fsApi.mkdtempSync(path.join(opts.tmpdirImpl(), "nemoclaw-cluster-patch-"));
   try {
     const dockerfilePath = path.join(tmpDir, "Dockerfile");
-    fsApi.writeFileSync(dockerfilePath, dockerfile, "utf-8");
+    opts.fsApi.writeFileSync(dockerfilePath, opts.dockerfile, "utf-8");
 
-    const buildResult = runImpl(
+    const buildResult = opts.runImpl(
       [
         "docker",
         "build",
         "--build-arg",
         `UPSTREAM=${opts.upstreamImage}`,
         "-t",
-        tag,
+        opts.tag,
         tmpDir,
       ],
-      { ignoreError: true, timeoutMs: buildTimeoutMs },
+      { ignoreError: true, timeoutMs: opts.buildTimeoutMs },
     );
 
     if (buildResult.status !== 0) {
       throw new ClusterImagePatchError(
         `failed to build patched cluster image ` +
-          `(docker build exit ${buildResult.status}; timeout ${buildTimeoutMs} ms)`,
+          `(docker build exit ${buildResult.status}; timeout ${opts.buildTimeoutMs} ms)`,
       );
     }
   } finally {
     try {
-      fsApi.rmSync(tmpDir, { recursive: true, force: true });
+      opts.fsApi.rmSync(tmpDir, { recursive: true, force: true });
     } catch {
       // Best-effort cleanup; don't mask the build outcome with a tmp-cleanup error.
     }
   }
-
-  log(`  Patched image ready: ${tag}`);
-  return tag;
 }
 
 function imageExists(
