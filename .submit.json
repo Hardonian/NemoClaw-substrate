@@ -1,4 +1,4 @@
 {
-  "description": "🎯 **What:** Several files in src/lib/control-plane and src/lib/execution were failing the TypeScript compiler step (npm run build:cli -> tsc) during CI.\n\n📊 **Coverage:**\n- Extracted and added the ExecutionReceiptLineage interface and executionLineage to ExecutionReceipt inside types.ts.\n- Appended runtime to actionClass type in governance.ts.\n- Fallback to generic actionClass in scheduler-dry-run-bridge.ts.\n- Added missing as any casts to runtime-seams.ts.\n- Nullish-coalesced undefined string arguments to empty string in queue.ts.\n\n✨ **Result:**\nnpm run build:cli now completes without error. verify:core passes successfully.\n\nSigned-off-by: Your Name <your-email@example.com>",
-  "commit_message": "🧪 [test] Fix control-plane tests"
+  "description": "🎯 **What:** Fixed false positive code smell with commented-out code by modifying comment language, and removed actual unused console.log that provided no value in `src/lib/onboard.ts`.\n\n💡 **Why:** Reduces noise in code health scans and keeps code maintainable and clean.\n\n✅ **Verification:** Verified by running `npm run verify:core`.\n\n✨ **Result:** Better maintainability and readability without altering logic.\n\nSigned-off-by: Jules <jules@example.com>",
+  "commit_message": "🧹 chore: [code health] fix commented out logic false positive and remove dead code"
 }
