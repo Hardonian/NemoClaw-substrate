@@ -1,3 +1,4 @@
+import { readJsonFileSync } from "../core/json-file";
 // SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -9,6 +10,7 @@
 //   node shields-timer.js <sandbox-name> <snapshot-path> <restore-at-iso> <config-path> <config-dir>
 
 import fs from "node:fs";
+import { readJsonFileSync } from "../core/json-file";
 import path from "node:path";
 
 import { buildPolicySetCommand } from "../policies";

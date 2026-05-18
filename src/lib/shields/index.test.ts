@@ -1,7 +1,9 @@
+import { readJsonFileSync } from "../core/json-file";
 // SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 import fs from "node:fs";
+import { readJsonFileSync } from "../core/json-file";
 import os from "node:os";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -122,8 +124,8 @@ describe("shields — unit logic", () => {
         JSON.stringify(betaState, null, 2),
       );
 
-      const alpha = JSON.parse(fs.readFileSync(path.join(stateDir, "shields-alpha.json"), "utf-8"));
-      const beta = JSON.parse(fs.readFileSync(path.join(stateDir, "shields-beta.json"), "utf-8"));
+      const alpha = readJsonFileSync(path.join(stateDir, "shields-alpha.json"));
+      const beta = readJsonFileSync(path.join(stateDir, "shields-beta.json"));
       expect(alpha.shieldsDown).toBe(true);
       expect(beta.shieldsDown).toBe(false);
     });

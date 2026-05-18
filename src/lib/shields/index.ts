@@ -13,6 +13,7 @@ import { readJsonSync } from "../core/json-file";
 // host-initiated (security invariant).
 
 const fs = require("fs");
+const { readJsonFileSync } = require("../core/json-file");
 const path = require("path");
 const { fork } = require("child_process");
 const { run, runCapture, validateName, shellQuote } = require("../runner");
@@ -936,14 +937,14 @@ function isShieldsDown(sandboxName: string): boolean {
 // ---------------------------------------------------------------------------
 
 export {
-  shieldsDown,
-  shieldsUp,
-  shieldsStatus,
-  isShieldsDown,
-  deriveShieldsMode,
-  parseDuration,
-  lockAgentConfig,
-  unlockAgentConfig,
-  MAX_TIMEOUT_SECONDS,
   DEFAULT_TIMEOUT_SECONDS,
+  deriveShieldsMode,
+  isShieldsDown,
+  lockAgentConfig,
+  MAX_TIMEOUT_SECONDS,
+  parseDuration,
+  shieldsDown,
+  shieldsStatus,
+  shieldsUp,
+  unlockAgentConfig,
 };

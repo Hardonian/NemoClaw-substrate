@@ -1,7 +1,9 @@
+import { readJsonFileSync } from "../core/json-file";
 // SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 import fs from "node:fs";
+import { readJsonFileSync } from "../core/json-file";
 import path from "node:path";
 
 import type { CommandDisplayEntry } from "./command-display";

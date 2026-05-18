@@ -224,6 +224,7 @@ export function evaluatePolicy(
   return trace;
 }
 
+
 // ── Mutation Audit ─────────────────────────────────────────────────────────
 
 export function computePolicyPackDigest(pack: Omit<PolicyPack, "version">): string {
