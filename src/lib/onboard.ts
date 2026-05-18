@@ -1,3 +1,4 @@
+import { readJsonFileSync } from "./core/file-utils.js";
 // SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -2242,7 +2243,7 @@ function readSandboxSelectionConfig(sandboxName: string): ProviderSelectionConfi
     const configPath = findSelectionConfigPath(tmpDir);
     if (!configPath) return null;
     try {
-      const parsed = JSON.parse(fs.readFileSync(configPath, "utf-8"));
+      const parsed = readJsonFileSync(configPath);
       return parsed && typeof parsed === "object" ? parsed : null;
     } catch {
       return null;
@@ -9100,7 +9101,7 @@ function fetchGatewayAuthTokenFromSandbox(sandboxName: string): string | null {
     if (result.status !== 0) return null;
     const jsonPath = findOpenclawJsonPath(tmpDir);
     if (!jsonPath) return null;
-    const cfg = JSON.parse(fs.readFileSync(jsonPath, "utf-8"));
+    const cfg = readJsonFileSync(jsonPath);
     const token = cfg && cfg.gateway && cfg.gateway.auth && cfg.gateway.auth.token;
     return typeof token === "string" && token.length > 0 ? token : null;
   } catch {

@@ -1,3 +1,4 @@
+import { readJsonFileSync } from "../core/file-utils.js";
 // SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -79,7 +80,7 @@ function readStateFile(stateFile: string): UnknownRecord {
     if (!fs.existsSync(stateFile)) {
       return {};
     }
-    const parsed = JSON.parse(fs.readFileSync(stateFile, "utf-8"));
+    const parsed = readJsonFileSync(stateFile);
     return isRecord(parsed) ? parsed : {};
   } catch {
     return {};

@@ -164,6 +164,12 @@ function evaluateAllRules(
   return matchedRules;
 }
 
+export function evaluatePolicyEngine(inheritance: PolicyInheritance, context: PolicyEvaluationContext): PolicyEvaluationTrace {
+  const nodes: PolicyDecisionGraphNode[] = [];
+  const edges: PolicyDecisionGraphEdge[] = [];
+  const allRules = flattenRulesAndOverrides(inheritance, edges);
+  const matchedRules = evaluateAllRules(allRules, context, nodes);
+
   // 3. Determine winner
   // Precedence:
   // 1. Highest Scope

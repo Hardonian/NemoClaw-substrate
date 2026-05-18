@@ -1,3 +1,4 @@
+import { readJsonFileSync } from "../../core/file-utils.js";
 // SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
@@ -39,7 +40,7 @@ export function looksLikeOpenClawPlugin(candidatePath: string): boolean {
   const packageJsonPath = path.join(dir, "package.json");
   if (!fs.existsSync(packageJsonPath)) return false;
   try {
-    const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf-8"));
+    const packageJson = readJsonFileSync(packageJsonPath);
     const openclawBlock = packageJson?.openclaw;
     return Boolean(
       packageJson?.["openclaw.plugin"] === true ||
