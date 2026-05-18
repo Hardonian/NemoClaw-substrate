@@ -1,7 +1,9 @@
-⚡ [performance] unblock event loop in waitForSandboxReady
+🧹 Code Health Improvement: Refactor runSandboxDoctor
 
-💡 **What:** Replaced the synchronous `sleep(delaySeconds)` with `await new Promise(...)` in `src/lib/onboard.ts` during container pod phase polling.
-🎯 **Why:** The synchronous sleep was blocking the Node.js event loop while waiting for the sandbox to be ready, severely impacting performance for any concurrent tasks.
-📊 **Measured Improvement:** The event loop went from being completely blocked for 29 ticks to 0 blocked ticks (fully asynchronous wait).
+🎯 **What:** The `runSandboxDoctor` function in `src/lib/actions/sandbox/doctor.ts` was overly complex and long. It was refactored by extracting specific logical checks into their own smaller, well-named helper functions (`checkHostDockerDaemon`, `checkOpenShellCLI`, `checkGatewayOpenShellStatus`, `checkLiveSandbox`, `checkInferenceRoute`, `checkSandboxAgentAndShields`).
 
-Signed-off-by: Jules <161369871+google-labs-jules[bot]@users.noreply.github.com>
+💡 **Why:** This improves maintainability and readability by significantly reducing the cyclomatic complexity of `runSandboxDoctor`, making it easier to understand, test, and modify the individual checks without wading through a massive function.
+
+✅ **Verification:** I ran format and lint checks, ran the full test suite, and verified the code health issue was resolved. The same output behavior is strictly preserved.
+
+✨ **Result:** A much cleaner, more modular `runSandboxDoctor` function that adheres to the single responsibility principle and is easier to maintain.

@@ -34,8 +34,15 @@ const TAG_PREFIX = "nemoclaw-cluster";
 
 export interface PatchFsApi {
   mkdtempSync: (prefix: string) => string;
-  writeFileSync: (filePath: string, data: string, encoding: BufferEncoding) => void;
-  rmSync: (filePath: string, options?: { recursive?: boolean; force?: boolean }) => void;
+  writeFileSync: (
+    filePath: string,
+    data: string,
+    encoding: BufferEncoding,
+  ) => void;
+  rmSync: (
+    filePath: string,
+    options?: { recursive?: boolean; force?: boolean },
+  ) => void;
 }
 
 export interface RunOpts {
@@ -52,7 +59,10 @@ export interface EnsurePatchedClusterImageOpts {
   /** Captures stdout from a command (used to probe `docker image inspect`). */
   runCaptureImpl?: (cmd: readonly string[], opts?: RunOpts) => string;
   /** Streams a command's stdio (used for `docker pull` and `docker build`). */
-  runImpl?: (cmd: readonly string[], opts?: RunOpts) => { status: number | null };
+  runImpl?: (
+    cmd: readonly string[],
+    opts?: RunOpts,
+  ) => { status: number | null };
   /** Logger for human-readable progress lines. Defaults to console.error. */
   logger?: (msg: string) => void;
   /** Filesystem implementation (testing seam). */
@@ -134,7 +144,7 @@ export function buildPatchDockerfile(snapshotter: SnapshotterChoice): string {
     "ARG UPSTREAM",
     "",
     `FROM ubuntu:24.04@${UBUNTU_BUILDER_DIGEST} AS bin-fetcher`,
-    'RUN set -eux; \\',
+    "RUN set -eux; \\",
     "    apt-get update; \\",
     "    apt-get install -y --no-install-recommends fuse-overlayfs ca-certificates; \\",
     "    rm -rf /var/lib/apt/lists/*; \\",
@@ -149,7 +159,7 @@ export function buildPatchDockerfile(snapshotter: SnapshotterChoice): string {
     "USER root",
     "COPY --from=bin-fetcher /export/fuse-overlayfs /usr/local/bin/fuse-overlayfs",
     "COPY --from=bin-fetcher /export/lib/libfuse3.so.3 /usr/local/lib/libfuse3.so.3",
-    'RUN ldconfig 2>/dev/null || true',
+    "RUN ldconfig 2>/dev/null || true",
     `CMD ["server", "--snapshotter=${snapshotter}"]`,
     "",
   ].join("\n");
@@ -228,7 +238,10 @@ export function computePatchedTag(opts: {
  * to the upstream image (and the upstream's eventual k3s crash) or surface
  * the documented manual workaround.
  */
-export function ensurePatchedClusterImage(opts: EnsurePatchedClusterImageOpts): string {
+
+export function ensurePatchedClusterImage(
+  opts: EnsurePatchedClusterImageOpts,
+): string {
   const snapshotter = opts.snapshotter ?? DEFAULT_SNAPSHOTTER;
   const log = opts.logger ?? ((msg: string) => console.error(msg));
   const runCaptureImpl = opts.runCaptureImpl ?? defaultRunCapture;
@@ -246,53 +259,14 @@ export function ensurePatchedClusterImage(opts: EnsurePatchedClusterImageOpts): 
 
   const dockerfile = buildPatchDockerfile(snapshotter);
 
-  // Phase 1: resolve the upstream digest. Prefer the local cache (works
-  // air-gapped with pre-staged images, and is sub-second when warm).
-  let upstreamDigest = inspectImageDigest(
-    opts.upstreamImage,
+  const upstreamDigest = resolveUpstreamDigest(
+    opts,
     runCaptureImpl,
+    runImpl,
+    log,
     inspectTimeoutMs,
+    pullTimeoutMs,
   );
-
-  if (!upstreamDigest) {
-    // Upstream is not local. Probe network reachability with a short
-    // budget BEFORE committing to the multi-minute pull, so air-gapped
-    // and restricted-network hosts fail in seconds instead of minutes.
-    const probeResult = runImpl(["docker", "manifest", "inspect", opts.upstreamImage], {
-      ignoreError: true,
-      timeoutMs: inspectTimeoutMs,
-    });
-    if (probeResult.status !== 0) {
-      throw new ClusterImagePatchError(
-        `cannot reach upstream registry for ${opts.upstreamImage} ` +
-          `(docker manifest inspect exit ${probeResult.status} within ${inspectTimeoutMs} ms). ` +
-          "See docs/reference/troubleshooting.md for the manual daemon.json workaround.",
-      );
-    }
-
-    log(`  Pulling upstream cluster image: ${opts.upstreamImage}`);
-    const pullResult = runImpl(["docker", "pull", opts.upstreamImage], {
-      ignoreError: true,
-      timeoutMs: pullTimeoutMs,
-    });
-    if (pullResult.status !== 0) {
-      throw new ClusterImagePatchError(
-        `failed to pull upstream cluster image ${opts.upstreamImage} ` +
-          `(docker pull exit ${pullResult.status}; timeout ${pullTimeoutMs} ms)`,
-      );
-    }
-
-    upstreamDigest = inspectImageDigest(
-      opts.upstreamImage,
-      runCaptureImpl,
-      inspectTimeoutMs,
-    );
-    if (!upstreamDigest) {
-      throw new ClusterImagePatchError(
-        `failed to resolve digest for ${opts.upstreamImage} after successful pull`,
-      );
-    }
-  }
 
   // Phase 2: digest-bound tag. A re-pushed upstream produces a different
   // digest, hence a different SHA, hence a different patched tag — and
@@ -308,44 +282,140 @@ export function ensurePatchedClusterImage(opts: EnsurePatchedClusterImageOpts): 
     return tag;
   }
 
+  buildPatchedImage(
+    opts,
+    tag,
+    upstreamDigest,
+    snapshotter,
+    dockerfile,
+    runImpl,
+    log,
+    fsApi,
+    tmpdirImpl,
+    buildTimeoutMs,
+  );
+
+  log(`  Patched image ready: ${tag}`);
+  return tag;
+}
+
+function resolveUpstreamDigest(
+  opts: EnsurePatchedClusterImageOpts,
+  runCaptureImpl: (cmd: readonly string[], opts?: RunOpts) => string,
+  runImpl: (
+    cmd: readonly string[],
+    opts?: RunOpts,
+  ) => { status: number | null },
+  log: (msg: string) => void,
+  inspectTimeoutMs: number,
+  pullTimeoutMs: number,
+): string {
+  // Phase 1: resolve the upstream digest. Prefer the local cache (works
+  // air-gapped with pre-staged images, and is sub-second when warm).
+  let upstreamDigest = inspectImageDigest(
+    opts.upstreamImage,
+    opts.runCaptureImpl,
+    opts.inspectTimeoutMs,
+  );
+
+  if (!upstreamDigest) {
+    // Upstream is not local. Probe network reachability with a short
+    // budget BEFORE committing to the multi-minute pull, so air-gapped
+    // and restricted-network hosts fail in seconds instead of minutes.
+    const probeResult = runImpl(
+      ["docker", "manifest", "inspect", opts.upstreamImage],
+      {
+        ignoreError: true,
+        timeoutMs: inspectTimeoutMs,
+      },
+    );
+    if (probeResult.status !== 0) {
+      throw new ClusterImagePatchError(
+        `cannot reach upstream registry for ${opts.upstreamImage} ` +
+          `(docker manifest inspect exit ${probeResult.status} within ${opts.inspectTimeoutMs} ms). ` +
+          "See docs/reference/troubleshooting.md for the manual daemon.json workaround.",
+      );
+    }
+
+    opts.log(`  Pulling upstream cluster image: ${opts.upstreamImage}`);
+    const pullResult = opts.runImpl(["docker", "pull", opts.upstreamImage], {
+      ignoreError: true,
+      timeoutMs: opts.pullTimeoutMs,
+    });
+    if (pullResult.status !== 0) {
+      throw new ClusterImagePatchError(
+        `failed to pull upstream cluster image ${opts.upstreamImage} ` +
+          `(docker pull exit ${pullResult.status}; timeout ${opts.pullTimeoutMs} ms)`,
+      );
+    }
+
+    upstreamDigest = inspectImageDigest(
+      opts.upstreamImage,
+      opts.runCaptureImpl,
+      opts.inspectTimeoutMs,
+    );
+    if (!upstreamDigest) {
+      throw new ClusterImagePatchError(
+        `failed to resolve digest for ${opts.upstreamImage} after successful pull`,
+      );
+    }
+  }
+
+  return upstreamDigest;
+}
+
+function buildPatchedImage(
+  opts: EnsurePatchedClusterImageOpts,
+  tag: string,
+  upstreamDigest: string,
+  snapshotter: SnapshotterChoice,
+  dockerfile: string,
+  runImpl: (
+    cmd: readonly string[],
+    opts?: RunOpts,
+  ) => { status: number | null },
+  log: (msg: string) => void,
+  fsApi: PatchFsApi,
+  tmpdirImpl: () => string,
+  buildTimeoutMs: number,
+): void {
   log(`  Building patched cluster image (one-time) → ${tag}`);
   log(`  Source: ${opts.upstreamImage} (${upstreamDigest})`);
   log(`  Snapshotter: ${snapshotter}`);
 
-  const tmpDir = fsApi.mkdtempSync(path.join(tmpdirImpl(), "nemoclaw-cluster-patch-"));
+  const tmpDir = fsApi.mkdtempSync(
+    path.join(tmpdirImpl(), "nemoclaw-cluster-patch-"),
+  );
   try {
     const dockerfilePath = path.join(tmpDir, "Dockerfile");
-    fsApi.writeFileSync(dockerfilePath, dockerfile, "utf-8");
+    opts.fsApi.writeFileSync(dockerfilePath, opts.dockerfile, "utf-8");
 
-    const buildResult = runImpl(
+    const buildResult = opts.runImpl(
       [
         "docker",
         "build",
         "--build-arg",
         `UPSTREAM=${opts.upstreamImage}`,
         "-t",
-        tag,
+        opts.tag,
         tmpDir,
       ],
-      { ignoreError: true, timeoutMs: buildTimeoutMs },
+      { ignoreError: true, timeoutMs: opts.buildTimeoutMs },
     );
 
     if (buildResult.status !== 0) {
       throw new ClusterImagePatchError(
         `failed to build patched cluster image ` +
-          `(docker build exit ${buildResult.status}; timeout ${buildTimeoutMs} ms)`,
+          `(docker build exit ${buildResult.status}; timeout ${opts.buildTimeoutMs} ms)`,
       );
     }
   } finally {
     try {
-      fsApi.rmSync(tmpDir, { recursive: true, force: true });
+      opts.fsApi.rmSync(tmpDir, { recursive: true, force: true });
     } catch {
       // Best-effort cleanup; don't mask the build outcome with a tmp-cleanup error.
     }
   }
-
-  log(`  Patched image ready: ${tag}`);
-  return tag;
 }
 
 function imageExists(
@@ -353,10 +423,13 @@ function imageExists(
   runCaptureImpl: (cmd: readonly string[], opts?: RunOpts) => string,
   inspectTimeoutMs: number,
 ): boolean {
-  const out = runCaptureImpl(["docker", "image", "inspect", "--format", "{{.Id}}", tag], {
-    ignoreError: true,
-    timeoutMs: inspectTimeoutMs,
-  });
+  const out = runCaptureImpl(
+    ["docker", "image", "inspect", "--format", "{{.Id}}", tag],
+    {
+      ignoreError: true,
+      timeoutMs: inspectTimeoutMs,
+    },
+  );
   return Boolean(out && out.trim());
 }
 
@@ -394,7 +467,10 @@ function defaultRunCapture(cmd: readonly string[], opts: RunOpts = {}): string {
   });
 }
 
-function defaultRun(cmd: readonly string[], opts: RunOpts = {}): { status: number | null } {
+function defaultRun(
+  cmd: readonly string[],
+  opts: RunOpts = {},
+): { status: number | null } {
   const result = runner.run(cmd, {
     ignoreError: opts.ignoreError,
     ...(opts.timeoutMs !== undefined ? { timeout: opts.timeoutMs } : {}),

@@ -43,7 +43,6 @@ section() {
 }
 info() { printf '\033[1;34m  [info]\033[0m %s\n' "$1"; }
 
-# TODO(#2562): replace shell timeout with structured timeout once unified abstraction lands
 
 # Per-phase timeout in seconds (20 min per onboard phase, generous for CI)
 PHASE_TIMEOUT="${NEMOCLAW_E2E_PHASE_TIMEOUT:-1200}"
@@ -162,17 +161,10 @@ HTTPServer((HOST, PORT), Handler).serve_forever()
 PY
   FAKE_PID=$!
 
-  for _ in $(seq 1 20); do
-    if curl -sf "${FAKE_BASE_URL}/models" >/dev/null 2>&1; then
-      return 0
-    fi
-    sleep 1
-  done
-
-  return 1
+  # Wait up to 20 seconds, polling every 1 second
+  wait_for_condition 20 1 curl -sf "${FAKE_BASE_URL}/models" >/dev/null 2>&1
 }
 
-# TODO(#2562): replace shell timeout with structured timeout once unified abstraction lands
 run_onboard() {
   local sandbox_name="$1"
   local recreate="${2:-0}"
