@@ -1,3 +1,4 @@
+import { readJsonFileSync } from "../core/json-file";
 // SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
@@ -67,7 +68,7 @@ function loadPatternDiscoveredCommands(): Record<string, OclifCommandMetadata> |
   const packageJsonPath = path.join(root, "package.json");
   if (!fs.existsSync(packageJsonPath)) return null;
 
-  const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf-8")) as {
+  const packageJson = readJsonFileSync(packageJsonPath) as {
     oclif?: { commands?: { strategy?: string; target?: string } };
   };
   const commandDiscovery = packageJson.oclif?.commands;
