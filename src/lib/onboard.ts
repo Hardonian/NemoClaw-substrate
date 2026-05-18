@@ -4066,7 +4066,7 @@ async function preflight(
       }
       // Auto-cleanup orphaned SSH port-forward from a previous NemoClaw session
       // (e.g. dashboard forward left behind after destroy). Only kill the process
-      // if its command line contains "openshell" to avoid killing unrelated SSH
+      // when its command line contains "openshell" to avoid killing unrelated SSH
       // tunnels the user may have set up on the same port. (#1950)
       if (port === DASHBOARD_PORT && portCheck.process === "ssh" && portCheck.pid) {
         // Use `ps` to get the command line — works on Linux, macOS, and WSL.
@@ -9326,7 +9326,6 @@ function printDashboard(
 
   console.log("");
   console.log(`  ${"─".repeat(50)}`);
-  // console.log(`  Dashboard    http://localhost:${DASHBOARD_PORT}/`);
   console.log(`  Sandbox      ${sandboxName} (Landlock + seccomp + netns)`);
   console.log(`  Model        ${model} (${providerLabel})`);
   if (showNim) {
