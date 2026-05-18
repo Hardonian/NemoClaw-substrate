@@ -9502,9 +9502,9 @@ async function onboard(opts: OnboardOptions = {}): Promise<void> {
     opts.fromDockerfile ||
     (isNonInteractive() ? process.env.NEMOCLAW_FROM_DOCKERFILE || null : null);
   // Resolve the explicit sandbox name early so both validation and the
-  // --from guard work off the same source. --name always counts; the env
-  // var is used as the interactive prompt default via getSandboxPromptDefault,
-  // and also as the resolved name when we cannot prompt (non-interactive or
+  // --from guard work off the same source. --name always counts; the
+  // environment variable is used as the interactive prompt default via
+  // getSandboxPromptDefault, and also as the resolved name when we cannot prompt (non-interactive or
   // missing-TTY runs such as CI scripts and piped stdin).
   const stdinIsTty = Boolean(process.stdin && process.stdin.isTTY);
   const stdoutIsTty = Boolean(process.stdout && process.stdout.isTTY);
