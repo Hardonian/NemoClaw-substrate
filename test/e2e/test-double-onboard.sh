@@ -161,14 +161,8 @@ HTTPServer((HOST, PORT), Handler).serve_forever()
 PY
   FAKE_PID=$!
 
-  for _ in $(seq 1 20); do
-    if curl -sf "${FAKE_BASE_URL}/models" >/dev/null 2>&1; then
-      return 0
-    fi
-    sleep 1
-  done
-
-  return 1
+  # Wait up to 20 seconds, polling every 1 second
+  wait_for_condition 20 1 curl -sf "${FAKE_BASE_URL}/models" >/dev/null 2>&1
 }
 
 run_onboard() {
