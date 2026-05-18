@@ -1,9 +1,0 @@
-⚡ [performance] Switch deploy file writing to async to unblock event loop
-
-💡 **What:** The optimization replaces `fs.writeFileSync`, `fs.mkdtempSync`, `fs.unlinkSync`, and `fs.rmdirSync` with their asynchronous counterparts (`fs.promises`) inside the `executeDeploy` method in `src/lib/deploy.ts`.
-
-🎯 **Why:** Synchronous file I/O operations block the entire Node.js event loop, preventing concurrent task execution. By converting to asynchronous operations, we allow other operations to progress during file manipulation.
-
-📊 **Measured Improvement:**
-- Background tick execution improved from 0 ticks (fully blocked) to 1023 ticks per iteration interval.
-- Event loop lag dropped from over 250ms (in a simulated large payload) down to almost 0ms.

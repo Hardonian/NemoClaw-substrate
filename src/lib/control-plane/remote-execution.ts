@@ -1,3 +1,26 @@
+
+export interface SshCredentials {
+  host: string;
+  user: string;
+  port: number;
+  privateKeyPath?: string;
+}
+
+export interface RemoteWorkerProofConfig {
+  transportType: "ssh" | "http" | "https-signed";
+  credentials: SshCredentials | any;
+  timeoutMs: number;
+  expectedOutputHash?: string;
+}
+
+export interface RemoteWorkerProofResult {
+  success: boolean;
+  output: string;
+  outputHash: string;
+  hashMatches: boolean;
+  durationMs: number;
+  error?: string;
+}
 // SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 

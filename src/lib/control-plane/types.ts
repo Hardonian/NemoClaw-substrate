@@ -192,7 +192,6 @@ export interface ExecutionReceipt {
   timing: { totalMs?: number; queueMs?: number; executionMs?: number };
   provenance: { source: string; lineage: string[]; replayVersion: string; exportedAt?: string };
   operatorOverrides: Array<{ at: string; actor: string; reason: string }>;
-  executionLineage?: ExecutionReceiptLineage;
 }
 
 export interface ExecutionReceiptLineage {
@@ -206,15 +205,6 @@ export interface ExecutionReceiptLineage {
   replayReferenceId?: string;
 }
 
-export interface ExecutionReceiptLineage {
-  executionPlanId?: string;
-  executionApprovalId?: string;
-  authorizationLineageId?: string;
-  executionIntentHash?: string;
-  executionPolicySnapshotHash?: string;
-  authorizationSource?: string;
-  executionTrustSnapshotHash?: string;
-  replayReferenceId?: string;
-}
+
 
 // Add authorizationSource to ExecutionReceiptLineage
