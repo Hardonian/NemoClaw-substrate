@@ -1,3 +1,4 @@
+import { readJsonFileSync } from "../../core/json-file";
 // SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
@@ -6,12 +7,11 @@ import fs from "node:fs";
 import { readJsonFileSync } from "../../core/json-file";
 import os from "node:os";
 import path from "node:path";
-
-import { CLI_NAME } from "../../cli/branding";
 import { captureOpenshell } from "../../adapters/openshell/runtime";
-import { ensureLiveSandboxOrExit } from "./gateway-state";
-import * as skillInstall from "../../skill-install";
+import { CLI_NAME } from "../../cli/branding";
 import { D, G, R, YW } from "../../cli/terminal-style";
+import * as skillInstall from "../../skill-install";
+import { ensureLiveSandboxOrExit } from "./gateway-state";
 
 const agentRuntime = require("../../../../bin/lib/agent-runtime");
 

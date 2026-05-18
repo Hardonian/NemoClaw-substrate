@@ -722,13 +722,13 @@ async function configSet(sandboxName: string, opts: ConfigSetOpts = {}): Promise
   setDotpath(config, opts.key, safeValue);
 
   // Write to temp file in the agent's native format
-  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "nemoclaw-config-"));
+  const tmpDir = await fs.promises.mkdtemp(path.join(os.tmpdir(), "nemoclaw-config-"));
   const tmpFile = path.join(tmpDir, target.configFile);
-  fs.writeFileSync(tmpFile, serializeConfig(config, target.format), { mode: 0o600 });
+  await fs.promises.writeFile(tmpFile, serializeConfig(config, target.format), { mode: 0o600 });
 
   // Write config to sandbox via kubectl exec (bypasses Landlock)
   console.log(`  Writing config to sandbox (${target.configPath})...`);
-  const content = fs.readFileSync(tmpFile, "utf-8");
+  const content = await fs.promises.readFile(tmpFile, "utf-8");
   dockerExecFileSync(
     [
       "exec",
@@ -776,8 +776,8 @@ async function configSet(sandboxName: string, opts: ConfigSetOpts = {}): Promise
 
   // Cleanup temp
   try {
-    fs.unlinkSync(tmpFile);
-    fs.rmdirSync(tmpDir);
+    await fs.promises.unlink(tmpFile);
+    await fs.promises.rmdir(tmpDir);
   } catch {
     // Best effort
   }
