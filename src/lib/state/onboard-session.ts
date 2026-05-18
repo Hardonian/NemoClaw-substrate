@@ -20,6 +20,8 @@ import {
   sanitizeMessagingChannelConfig,
 } from "../messaging-channel-config";
 import { redactSensitiveText, redactUrl } from "../security/redact";
+import { readJsonSync } from "../core/json-file";
+
 
 export const SESSION_VERSION = 1;
 export const SESSION_DIR = path.join(process.env.HOME || "/tmp", ".nemoclaw");
@@ -388,7 +390,7 @@ export function loadSession(): Session | null {
     if (!fs.existsSync(SESSION_FILE)) {
       return null;
     }
-    const parsed = readJsonFileSync(SESSION_FILE);
+    const parsed = readJsonSync(SESSION_FILE);
     return normalizeSession(parsed);
   } catch {
     return null;

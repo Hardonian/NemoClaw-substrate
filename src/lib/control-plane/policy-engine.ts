@@ -164,7 +164,6 @@ function evaluateAllRules(
   return matchedRules;
 }
 
-
 export function evaluatePolicy(
   inheritance: PolicyInheritance,
   context: PolicyEvaluationContext
@@ -172,10 +171,7 @@ export function evaluatePolicy(
   const nodes: PolicyDecisionGraphNode[] = [];
   const edges: PolicyDecisionGraphEdge[] = [];
 
-  // 1. Flatten all rules and their overrides
   const allRules = flattenRulesAndOverrides(inheritance, edges);
-
-  // 2. Evaluate each rule
   const matchedRules = evaluateAllRules(allRules, context, nodes);
 
   // 3. Determine winner

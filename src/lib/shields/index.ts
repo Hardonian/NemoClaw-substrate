@@ -1,4 +1,4 @@
-import { readJsonFileSync } from "../core/json-file";
+import { readJsonSync } from "../core/json-file";
 
 // SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
@@ -119,7 +119,7 @@ function loadShieldsState(sandboxName: string): ShieldsState & { _hasStateFile: 
   const filePath = stateFilePath(sandboxName);
   if (!fs.existsSync(filePath)) return { _hasStateFile: false };
   try {
-    const parsed = readJsonFileSync(filePath);
+    const parsed = readJsonSync(filePath);
     const state: ShieldsState = isShieldsState(parsed) ? parsed : {};
     return { ...state, _hasStateFile: true };
   } catch {
@@ -208,7 +208,7 @@ function readTimerMarker(sandboxName: string): TimerMarker | null {
   const p = timerMarkerPath(sandboxName);
   if (!fs.existsSync(p)) return null;
   try {
-    const parsed = readJsonFileSync(p);
+    const parsed = readJsonSync(p);
     return isTimerMarker(parsed) ? parsed : null;
   } catch {
     return null;

@@ -14,6 +14,7 @@ const os = require("os");
 const path = require("path");
 const { spawn, spawnSync } = require("child_process");
 const pRetry = require("p-retry");
+const { readJsonSync } = require("./core/json-file");
 
 /** Parse a numeric env var, returning `fallback` when unset or non-finite. */
 function envInt(name: string, fallback: number): number {
@@ -2245,7 +2246,7 @@ function readSandboxSelectionConfig(sandboxName: string): ProviderSelectionConfi
     const configPath = findSelectionConfigPath(tmpDir);
     if (!configPath) return null;
     try {
-      const parsed = readJsonFileSync(configPath);
+      const parsed = readJsonSync(configPath);
       return parsed && typeof parsed === "object" ? parsed : null;
     } catch {
       return null;
@@ -9103,7 +9104,7 @@ function fetchGatewayAuthTokenFromSandbox(sandboxName: string): string | null {
     if (result.status !== 0) return null;
     const jsonPath = findOpenclawJsonPath(tmpDir);
     if (!jsonPath) return null;
-    const cfg = readJsonFileSync(jsonPath);
+    const cfg = readJsonSync(jsonPath);
     const token = cfg && cfg.gateway && cfg.gateway.auth && cfg.gateway.auth.token;
     return typeof token === "string" && token.length > 0 ? token : null;
   } catch {

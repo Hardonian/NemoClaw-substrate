@@ -7,6 +7,8 @@ import { readJsonFileSync } from "../core/json-file";
 import path from "node:path";
 
 import type { CommandDisplayEntry } from "./command-display";
+import { readJsonSync } from "../core/json-file";
+
 
 export type OclifCommandMetadata = {
   args?: Record<string, unknown>;
@@ -69,7 +71,7 @@ function loadPatternDiscoveredCommands(): Record<string, OclifCommandMetadata> |
   const packageJsonPath = path.join(root, "package.json");
   if (!fs.existsSync(packageJsonPath)) return null;
 
-  const packageJson = readJsonFileSync(packageJsonPath) as {
+  const packageJson = readJsonSync(packageJsonPath) as {
     oclif?: { commands?: { strategy?: string; target?: string } };
   };
   const commandDiscovery = packageJson.oclif?.commands;
