@@ -43,7 +43,6 @@ section() {
 }
 info() { printf '\033[1;34m  [info]\033[0m %s\n' "$1"; }
 
-
 # Per-phase timeout in seconds (20 min per onboard phase, generous for CI)
 PHASE_TIMEOUT="${NEMOCLAW_E2E_PHASE_TIMEOUT:-1200}"
 
