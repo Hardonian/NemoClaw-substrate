@@ -62,7 +62,7 @@ export async function dispatchWithHeterogeneousRouting<T>(input: {
       constraints: [],
       metadata: { provider: input.provider, model: input.model },
     },
-    actionClass: "runtime",
+    actionClass: "generic",
   });
   if (!policyEval.allowed) return { status: "blocked", error: `governed routing blocked (${policyEval.reasonCode})`, events: [], diagnostics: summarizeHeterogeneousDiagnostics({ routing: input.config.hetero, governedEnabled: input.config.governedEnabled, remote: input.config.remote }) };
   if (policyEval.requiredApproval && !input.approved) return { status: "blocked", error: "governed routing blocked (approval_required)", events: [], diagnostics: summarizeHeterogeneousDiagnostics({ routing: input.config.hetero, governedEnabled: input.config.governedEnabled, remote: input.config.remote }) };
