@@ -2,13 +2,14 @@
 // SPDX-License-Identifier: Apache-2.0
 import fs from "node:fs";
 import path from "node:path";
+import { readJsonFileSync } from "../core/json-file";
 
 export interface ExecutionQueueItem { id: string; planId: string; idempotencyKey: string; status: "queued"|"leased"|"completed"|"failed"; }
 export interface ExecutionLease { id: string; queueId: string; ownerId: string; status: "active"|"released"|"expired"; }
 export interface ExecutionOwnership { queueId: string; ownerId: string; }
 export interface IdempotencyRecord { key: string; queueId: string; }
 
-function read<T>(file: string, fallback: T): T { if (!fs.existsSync(file)) return fallback; return JSON.parse(fs.readFileSync(file,"utf8")) as T; }
+function read<T>(file: string, fallback: T): T { if (!fs.existsSync(file)) return fallback; return readJsonFileSync(file) as T; }
 function write(file: string, value: unknown): void { fs.writeFileSync(file, JSON.stringify(value, null, 2)); }
 
 export function rejectDuplicateExecution(runDir: string, key: string): void {

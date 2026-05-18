@@ -1,3 +1,5 @@
+import { readJsonFileSync } from "../core/json-file";
+
 // SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -116,7 +118,7 @@ function loadShieldsState(sandboxName: string): ShieldsState & { _hasStateFile: 
   const filePath = stateFilePath(sandboxName);
   if (!fs.existsSync(filePath)) return { _hasStateFile: false };
   try {
-    const parsed = JSON.parse(fs.readFileSync(filePath, "utf-8"));
+    const parsed = readJsonFileSync(filePath);
     const state: ShieldsState = isShieldsState(parsed) ? parsed : {};
     return { ...state, _hasStateFile: true };
   } catch {
@@ -205,7 +207,7 @@ function readTimerMarker(sandboxName: string): TimerMarker | null {
   const p = timerMarkerPath(sandboxName);
   if (!fs.existsSync(p)) return null;
   try {
-    const parsed = JSON.parse(fs.readFileSync(p, "utf-8"));
+    const parsed = readJsonFileSync(p);
     return isTimerMarker(parsed) ? parsed : null;
   } catch {
     return null;
@@ -934,14 +936,14 @@ function isShieldsDown(sandboxName: string): boolean {
 // ---------------------------------------------------------------------------
 
 export {
-  shieldsDown,
-  shieldsUp,
-  shieldsStatus,
-  isShieldsDown,
-  deriveShieldsMode,
-  parseDuration,
-  lockAgentConfig,
-  unlockAgentConfig,
-  MAX_TIMEOUT_SECONDS,
   DEFAULT_TIMEOUT_SECONDS,
+  deriveShieldsMode,
+  isShieldsDown,
+  lockAgentConfig,
+  MAX_TIMEOUT_SECONDS,
+  parseDuration,
+  shieldsDown,
+  shieldsStatus,
+  shieldsUp,
+  unlockAgentConfig,
 };
