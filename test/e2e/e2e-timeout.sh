@@ -61,3 +61,25 @@ run_with_timeout() {
     "$@"
   fi
 }
+
+# ── Polling timeout helper ───────────────────────────────────────────────────
+# Usage: wait_for_condition <timeout_seconds> <interval_seconds> <command> [args...]
+#
+# Runs <command> repeatedly every <interval_seconds> until it returns 0.
+# Fails and returns 1 if <timeout_seconds> is reached.
+wait_for_condition() {
+  local timeout="$1"
+  local interval="$2"
+  shift 2
+  local elapsed=0
+
+  while [ "$elapsed" -lt "$timeout" ]; do
+    if "$@"; then
+      return 0
+    fi
+    sleep "$interval"
+    elapsed=$((elapsed + interval))
+  done
+
+  return 1
+}
