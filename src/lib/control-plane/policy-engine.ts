@@ -164,7 +164,7 @@ function evaluateAllRules(
   return matchedRules;
 }
 
-function determineWinner(matchedRules: MatchedRule[]): MatchedRule | undefined {
+  // 3. Determine winner
   // Precedence:
   // 1. Highest Scope
   // 2. Deny > Approval > Allow
@@ -180,21 +180,7 @@ function determineWinner(matchedRules: MatchedRule[]): MatchedRule | undefined {
     return effectWeight(b.effect) - effectWeight(a.effect);
   });
 
-  return matchedRules[0];
-}
-
-export function evaluatePolicyEngine(inheritance: PolicyInheritance, context: PolicyEvaluationContext): PolicyEvaluationTrace {
-  const nodes: PolicyDecisionGraphNode[] = [];
-  const edges: PolicyDecisionGraphEdge[] = [];
-
-  // 1. Flatten all rules and overrides
-  const allRules = flattenRulesAndOverrides(inheritance, edges);
-
-  // 2. Evaluate all rules
-  const matchedRules = evaluateAllRules(allRules, context, nodes);
-
-  // 3. Determine winner
-  const winner = determineWinner(matchedRules);
+  const winner = matchedRules[0];
 
   const finalEffect = winner ? winner.effect : "deny";
   const finalReasonCode = winner ? winner.reasonCode : "policy_default_deny";
