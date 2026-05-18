@@ -88,12 +88,14 @@ export interface PolicyMutationRecord {
 
 // ── Evaluation ─────────────────────────────────────────────────────────────
 
-export function evaluatePolicyEngine(inheritance: PolicyInheritance, context: PolicyEvaluationContext): PolicyEvaluationTrace {
-  const nodes: PolicyDecisionGraphNode[] = [];
-  const edges: PolicyDecisionGraphEdge[] = [];
+type FlattenedRule = { rule: PolicyRule; scope: PolicyScope; overriddenBy?: PolicyOverride };
+type MatchedRule = { ruleId: string; scope: PolicyScope; effect: PolicyEffect; reasonCode: PolicyReasonCode; isOverride: boolean };
 
-  // 1. Flatten all rules and overrides
-  const allRules: Array<{ rule: PolicyRule; scope: PolicyScope; overriddenBy?: PolicyOverride }> = [];
+function flattenRulesAndOverrides(
+  inheritance: PolicyInheritance,
+  edges: PolicyDecisionGraphEdge[]
+): FlattenedRule[] {
+  const allRules: FlattenedRule[] = [];
   const allOverrides = inheritance.packs.flatMap(p => p.overrides);
 
   for (const pack of inheritance.packs) {
@@ -118,9 +120,15 @@ export function evaluatePolicyEngine(inheritance: PolicyInheritance, context: Po
       }
     }
   }
+  return allRules;
+}
 
-  // 2. Evaluate all rules
-  const matchedRules: Array<{ ruleId: string; scope: PolicyScope; effect: PolicyEffect; reasonCode: PolicyReasonCode; isOverride: boolean }> = [];
+function evaluateAllRules(
+  allRules: FlattenedRule[],
+  context: PolicyEvaluationContext,
+  nodes: PolicyDecisionGraphNode[]
+): MatchedRule[] {
+  const matchedRules: MatchedRule[] = [];
 
   for (const item of allRules) {
     let matches = false;
@@ -153,8 +161,10 @@ export function evaluatePolicyEngine(inheritance: PolicyInheritance, context: Po
       });
     }
   }
+  return matchedRules;
+}
 
-  // 3. Determine winner
+function determineWinner(matchedRules: MatchedRule[]): MatchedRule | undefined {
   // Precedence:
   // 1. Highest Scope
   // 2. Deny > Approval > Allow
@@ -170,7 +180,21 @@ export function evaluatePolicyEngine(inheritance: PolicyInheritance, context: Po
     return effectWeight(b.effect) - effectWeight(a.effect);
   });
 
-  const winner = matchedRules[0];
+  return matchedRules[0];
+}
+
+export function evaluatePolicyEngine(inheritance: PolicyInheritance, context: PolicyEvaluationContext): PolicyEvaluationTrace {
+  const nodes: PolicyDecisionGraphNode[] = [];
+  const edges: PolicyDecisionGraphEdge[] = [];
+
+  // 1. Flatten all rules and overrides
+  const allRules = flattenRulesAndOverrides(inheritance, edges);
+
+  // 2. Evaluate all rules
+  const matchedRules = evaluateAllRules(allRules, context, nodes);
+
+  // 3. Determine winner
+  const winner = determineWinner(matchedRules);
 
   const finalEffect = winner ? winner.effect : "deny";
   const finalReasonCode = winner ? winner.reasonCode : "policy_default_deny";
