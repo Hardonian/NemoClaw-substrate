@@ -13,6 +13,7 @@ import { readJsonFileSync } from "../core/json-file";
 // host-initiated (security invariant).
 
 const fs = require("fs");
+const { readJsonFileSync } = require("../core/json-file");
 const path = require("path");
 const { fork } = require("child_process");
 const { run, runCapture, validateName, shellQuote } = require("../runner");

@@ -3,6 +3,7 @@ import { readJsonFileSync } from "../core/json-file";
 // SPDX-License-Identifier: Apache-2.0
 
 import fs from "node:fs";
+import { readJsonFileSync } from "../core/json-file";
 import os from "node:os";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";

@@ -3,6 +3,8 @@ import { readJsonFileSync } from "../core/json-file";
 // SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { readJsonFileSync } from "../core/json-file";
 import fs from "node:fs";
 import { createRequire } from "node:module";
 import os from "node:os";

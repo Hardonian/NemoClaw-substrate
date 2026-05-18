@@ -9,6 +9,7 @@ import { readJsonFileSync } from "../core/json-file";
  */
 
 import fs from "node:fs";
+import { readJsonFileSync } from "../core/json-file";
 import path from "node:path";
 
 import { isErrnoException } from "../core/errno";

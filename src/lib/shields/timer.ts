@@ -10,6 +10,7 @@ import { readJsonFileSync } from "../core/json-file";
 //   node shields-timer.js <sandbox-name> <snapshot-path> <restore-at-iso> <config-path> <config-dir>
 
 import fs from "node:fs";
+import { readJsonFileSync } from "../core/json-file";
 import path from "node:path";
 
 import { buildPolicySetCommand } from "../policies";
