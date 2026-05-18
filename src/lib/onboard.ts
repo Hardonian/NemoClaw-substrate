@@ -3539,7 +3539,7 @@ async function ensureNamedCredential(
   return replaceNamedCredential(envName, label, helpUrl);
 }
 
-function waitForSandboxReady(sandboxName: string, attempts = 10, delaySeconds = 2): boolean {
+async function waitForSandboxReady(sandboxName: string, attempts = 10, delaySeconds = 2): Promise<boolean> {
   for (let i = 0; i < attempts; i += 1) {
     const podPhase = runCaptureOpenshell(
       [
@@ -3558,7 +3558,7 @@ function waitForSandboxReady(sandboxName: string, attempts = 10, delaySeconds = 
       { ignoreError: true },
     );
     if (podPhase === "Running") return true;
-    sleep(delaySeconds);
+    await new Promise((r) => setTimeout(r, delaySeconds * 1000));
   }
   return false;
 }
@@ -4074,7 +4074,7 @@ async function preflight(
             `  Cleaning up orphaned SSH port-forward on port ${port} (PID ${portCheck.pid})...`,
           );
           run(["kill", String(portCheck.pid)], { ignoreError: true });
-          sleep(1);
+          await new Promise(r => setTimeout(r, 1000));
           portCheck = await checkPortAvailable(port);
           if (portCheck.ok) {
             console.log(`  ✓ Port ${port} available after orphaned forward cleanup (${label})`);
@@ -4519,7 +4519,9 @@ async function recoverGatewayRuntime() {
       }
       return true;
     }
-    if (i < recoveryPollCount - 1) sleep(recoveryPollInterval);
+    if (i < recoveryPollCount - 1) {
+      await new Promise((resolve) => setTimeout(resolve, recoveryPollInterval * 1000));
+    }
   }
 
   return false;
@@ -7984,7 +7986,7 @@ async function _setupPolicies(
       process.exit(1);
     }
 
-    if (!waitForSandboxReady(sandboxName)) {
+    if (!(await waitForSandboxReady(sandboxName))) {
       console.error(`  Sandbox '${sandboxName}' was not ready for policy application.`);
       process.exit(1);
     }
@@ -8022,7 +8024,7 @@ async function _setupPolicies(
       return;
     }
 
-    if (!waitForSandboxReady(sandboxName)) {
+    if (!(await waitForSandboxReady(sandboxName))) {
       console.error(`  Sandbox '${sandboxName}' was not ready for policy application.`);
       process.exit(1);
     }
@@ -8617,7 +8619,7 @@ async function setupPoliciesWithSelection(
   if (selectedPresets && selectedPresets.length > 0) {
     const resumeSelection = chosen || [];
     if (onSelection) onSelection(resumeSelection);
-    if (!waitForSandboxReady(sandboxName)) {
+    if (!(await waitForSandboxReady(sandboxName))) {
       console.error(`  Sandbox '${sandboxName}' was not ready for policy application.`);
       process.exit(1);
     }
@@ -8702,7 +8704,7 @@ async function setupPoliciesWithSelection(
     }
 
     if (onSelection) onSelection(chosen);
-    if (!waitForSandboxReady(sandboxName)) {
+    if (!(await waitForSandboxReady(sandboxName))) {
       console.error(`  Sandbox '${sandboxName}' was not ready for policy application.`);
       process.exit(1);
     }
@@ -8724,7 +8726,7 @@ async function setupPoliciesWithSelection(
   const interactiveChoice = resolvedPresets.map((p) => p.name);
 
   if (onSelection) onSelection(interactiveChoice);
-  if (!waitForSandboxReady(sandboxName)) {
+  if (!(await waitForSandboxReady(sandboxName))) {
     console.error(`  Sandbox '${sandboxName}' was not ready for policy application.`);
     process.exit(1);
   }
