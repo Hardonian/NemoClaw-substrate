@@ -88,12 +88,14 @@ export interface PolicyMutationRecord {
 
 // ── Evaluation ─────────────────────────────────────────────────────────────
 
-export function evaluatePolicyEngine(inheritance: PolicyInheritance, context: PolicyEvaluationContext): PolicyEvaluationTrace {
-  const nodes: PolicyDecisionGraphNode[] = [];
-  const edges: PolicyDecisionGraphEdge[] = [];
+type FlattenedRule = { rule: PolicyRule; scope: PolicyScope; overriddenBy?: PolicyOverride };
+type MatchedRule = { ruleId: string; scope: PolicyScope; effect: PolicyEffect; reasonCode: PolicyReasonCode; isOverride: boolean };
 
-  // 1. Flatten all rules and overrides
-  const allRules: Array<{ rule: PolicyRule; scope: PolicyScope; overriddenBy?: PolicyOverride }> = [];
+function flattenRulesAndOverrides(
+  inheritance: PolicyInheritance,
+  edges: PolicyDecisionGraphEdge[]
+): FlattenedRule[] {
+  const allRules: FlattenedRule[] = [];
   const allOverrides = inheritance.packs.flatMap(p => p.overrides);
 
   for (const pack of inheritance.packs) {
@@ -118,9 +120,15 @@ export function evaluatePolicyEngine(inheritance: PolicyInheritance, context: Po
       }
     }
   }
+  return allRules;
+}
 
-  // 2. Evaluate all rules
-  const matchedRules: Array<{ ruleId: string; scope: PolicyScope; effect: PolicyEffect; reasonCode: PolicyReasonCode; isOverride: boolean }> = [];
+function evaluateAllRules(
+  allRules: FlattenedRule[],
+  context: PolicyEvaluationContext,
+  nodes: PolicyDecisionGraphNode[]
+): MatchedRule[] {
+  const matchedRules: MatchedRule[] = [];
 
   for (const item of allRules) {
     let matches = false;
@@ -153,6 +161,8 @@ export function evaluatePolicyEngine(inheritance: PolicyInheritance, context: Po
       });
     }
   }
+  return matchedRules;
+}
 
   // 3. Determine winner
   // Precedence:
