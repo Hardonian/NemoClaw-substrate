@@ -11,6 +11,8 @@ import { captureOpenshell } from "../../adapters/openshell/runtime";
 import { ensureLiveSandboxOrExit } from "./gateway-state";
 import * as skillInstall from "../../skill-install";
 import { D, G, R, YW } from "../../cli/terminal-style";
+import { readJsonSync } from "../../core/json-file";
+
 
 const agentRuntime = require("../../../../bin/lib/agent-runtime");
 
@@ -39,7 +41,7 @@ export function looksLikeOpenClawPlugin(candidatePath: string): boolean {
   const packageJsonPath = path.join(dir, "package.json");
   if (!fs.existsSync(packageJsonPath)) return false;
   try {
-    const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf-8"));
+    const packageJson = readJsonSync(packageJsonPath);
     const openclawBlock = packageJson?.openclaw;
     return Boolean(
       packageJson?.["openclaw.plugin"] === true ||

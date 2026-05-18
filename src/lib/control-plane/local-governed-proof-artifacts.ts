@@ -4,6 +4,8 @@
 import { createHash } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
+import { readJsonSync } from "../core/json-file";
+
 
 export interface LocalProofReadResult {
   runDir: string;

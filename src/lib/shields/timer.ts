@@ -15,6 +15,8 @@ import { buildPolicySetCommand } from "../policies";
 import { run } from "../runner";
 import { DEFAULT_AGENT_CONFIG, resolveAgentConfig } from "../sandbox-config";
 import { lockAgentConfig } from "./index";
+import { readJsonSync } from "../core/json-file";
+
 
 type UnknownRecord = { [key: string]: unknown };
 
@@ -79,7 +81,7 @@ function readStateFile(stateFile: string): UnknownRecord {
     if (!fs.existsSync(stateFile)) {
       return {};
     }
-    const parsed = JSON.parse(fs.readFileSync(stateFile, "utf-8"));
+    const parsed = readJsonSync(stateFile);
     return isRecord(parsed) ? parsed : {};
   } catch {
     return {};
